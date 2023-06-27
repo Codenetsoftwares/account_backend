@@ -1,35 +1,13 @@
-/**
- * @desc this file will define the schema for deposit user table
- * @author Alok Kaushik alokkaushik5953@gmail.com
- */
-import Sequelize from 'sequelize';
-import dbObj from '../config/db.config.js';
+import mongoose from "mongoose";
 
-const Transaction = dbObj.define(
-  'Transaction',
-  {
-    transactionID: {
-      type: Sequelize.STRING(65),
-      allowNull: false,
-    },
-    transactionType: {
-      type: Sequelize.STRING(65),
-      allowNull: true,
-    },
-    withdrawAmount: {
-      type: Sequelize.INTEGER(11),
-      allowNull: true,
-    },
-    depositAmount: {
-      type: Sequelize.INTEGER(11),
-      allowNull: true,
-    },
-    status: {
-      type: Sequelize.STRING(65),
-      allowNull: true,
-    },
-  },
-  { timestamps: true, freezeTableName: true, tableName: 'transaction' }
+export const Transaction = mongoose.model(
+  "Transaction",
+  new mongoose.Schema({
+    transactionID: { type: Number, required: true },
+    transactionType: { type: String, required: true },
+    withdrawAmount: { type: Number },
+    depositAmount: { type: String },
+    status: { type: Boolean, default: false, required: true },
+  }),
+  "Transaction"
 );
-
-export default Transaction;

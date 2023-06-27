@@ -1,9 +1,9 @@
 import { generatePassword } from '../helpers/encryptPassword.js';
 import { generateTokens } from '../helpers/generateToken.js';
-import AdminUser from '../models/admin_user.js';
-import DepositUser from '../models/deposit_user.js';
+import { Admin } from '../models/admin_user.js';
+import { DepositUser } from '../models/deposit_user.js';
 import bcrypt from 'bcrypt';
-import WithdrawUser from '../models/withdraw_user.js';
+import { WithdrawUser } from '../models/withdraw_user.js';
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -12,14 +12,11 @@ const AccountServices = {
       const password = req.body.password;
       const persist = req.body.persist;
       let data;
-      data = await AdminUser.findOne({
-        where: { adminEmail: email.toLowerCase() },
-      });
+      data = await Admin.find({ adminEmail: email }).exec();
       if (data) {
-        const checkPassword = bcrypt.compare(password, data.adminPassword);
+        const checkPassword = await bcrypt.compare(password, data[0].adminPassword);
         if (checkPassword) {
-          const token = generateTokens({
-            id: data.adminID,
+          const token = await generateTokens({
             email: data.adminEmail,
             username: data.adminName,
             role: 'admin',
@@ -48,14 +45,12 @@ const AccountServices = {
     const username = req.body.username;
     const role = req.body.role;
     if (role === 'admin') {
-      const data = await AdminUser.findOne({
-        where: { adminEmail: email.toLowerCase() },
-      });
-      if (data) {
+      const data = await Admin.find({ adminEmail: email }).exec();
+      if (data.length != 0) {
         res.send({ status: 409, message: 'User already exists.' });
       } else {
         const hassPass = await generatePassword(password);
-        await AdminUser.create({
+        await Admin.create({
           adminEmail: email.toLowerCase(),
           adminName: username,
           adminPassword: hassPass,
@@ -69,9 +64,7 @@ const AccountServices = {
           .catch((err) => res.send({ status: 500, message: err }));
       }
     } else if (role === 'deposit') {
-      const data = await DepositUser.findOne({
-        where: { userEmail: email.toLowerCase() },
-      });
+      const data = await DepositUser.findOne({ adminEmail: email });
       if (data) {
         res.send({ status: 409, message: 'User already exists.' });
       } else {
@@ -90,9 +83,7 @@ const AccountServices = {
           .catch((err) => res.send({ status: 500, message: err }));
       }
     } else if (role === 'withdraw') {
-      const data = await WithdrawUser.findOne({
-        where: { userEmail: email.toLowerCase() },
-      });
+      const data = await WithdrawUser.findOne({ adminEmail: email });
       if (data) {
         res.send({ status: 409, message: 'User already exists.' });
       } else {
@@ -121,9 +112,7 @@ const AccountServices = {
       const password = req.body.password;
       const persist = req.body.persist;
       let data;
-      data = await DepositUser.findOne({
-        where: { userEmail: email.toLowerCase() },
-      });
+      data = await DepositUser.findOne({ adminEmail: email });
       if (data) {
         const matchResult = await bcrypt.compare(password, data.userPassword);
         if (matchResult) {
@@ -161,9 +150,8 @@ const AccountServices = {
       const persist = req.body.persist;
 
       let data;
-      data = await WithdrawUser.findOne({
-        where: { userEmail: email.toLowerCase() },
-      });
+      data = await WithdrawUser.findOne({ adminEmail: email });
+
       if (data) {
         const matchResult = await bcrypt.compare(password, data.userPassword);
         if (matchResult) {

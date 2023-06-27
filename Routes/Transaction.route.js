@@ -35,6 +35,18 @@ const TransactionRoutes = (app) => {
       }
     }
   );
+
+  app.get(
+    '/api/deposit/view',
+    authenticateToken('admin'),
+    async (req, res) => {
+      try {
+        await TransactionServices.depositTransaction(req, res);
+      } catch (error) {
+        res.status(500).json({ status: false, message: error });
+      }
+    }
+  );
 };
 
 export default TransactionRoutes;

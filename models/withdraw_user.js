@@ -1,34 +1,13 @@
-/**
- * @desc this file will define the schema for admin user table
- * @author Alok Kaushik alokkaushik5953@gmail.com
- */
+import mongoose from "mongoose";
 
-import Sequelize from 'sequelize';
-import dbObj from '../config/db.config.js';
-
-const WithdrawUser = dbObj.define(
-  'WithdrawUser',
-  {
-    userID: {
-      type: Sequelize.INTEGER(11),
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    userEmail: {
-      type: Sequelize.STRING(65),
-      allowNull: false,
-    },
-    userName: {
-      type: Sequelize.STRING(65),
-      allowNull: false,
-    },
-    userPassword: {
-      type: Sequelize.STRING(65),
-      allowNull: false,
-    },
-  },
-  { timestamps: false, freezeTableName: true, tableName: 'withdraw_user' }
+export const WithdrawUser = mongoose.model(
+  "WithdrawUser",
+  new mongoose.Schema({
+    // userID: { type: Number, required: true },
+    userEmail: { type: String, required: true },
+    userName: { type: String, required: true },
+    userPassword: { type: String, required: true },
+    timestamps: { type: Boolean, default: false },
+  }),
+  "WithdrawUser"
 );
-
-export default WithdrawUser;

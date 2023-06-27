@@ -1,9 +1,9 @@
-import Transaction from '../models/transaction.js';
+import { Transaction } from '../models/transaction.js';
 
 const TransactionService = {
   adminTransaction: async (req, res) => {
     try {
-      const data = await Transaction.findAll();
+      const data = await Transaction.find();
       if (data) {
         res.status(200).json({ status: true, result: data });
       } else {
@@ -17,18 +17,21 @@ const TransactionService = {
     try {
       const { transactionID, transactionType, depositAmount, status } =
         req.body;
+      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
+      if (existingTransaction) { throw { code: 400, message: "Transaction already exists" } }
       await Transaction.create({
         transactionID: transactionID,
         transactionType: transactionType,
         depositAmount: depositAmount,
-        status: status,
+        status: status
       })
-        .then(() =>
-          res.status(200).json({ message: 'Transaction saved successfully.' })
-        )
-        .catch((error) =>
-          res.status(500).json({ status: false, message: error })
-        );
+        .then(() => {
+          return res.send({
+            status: 200,
+            message: 'Transaction created successfully',
+          });
+        })
+        .catch((err) => res.send({ status: 500, message: err }));
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
@@ -37,18 +40,22 @@ const TransactionService = {
     try {
       const { transactionID, transactionType, withdrawAmount, status } =
         req.body;
+
+      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
+      if (existingTransaction) { throw { code: 400, message: "Transaction already exists" } }
       await Transaction.create({
         transactionID: transactionID,
         transactionType: transactionType,
         withdrawAmount: withdrawAmount,
-        status: status,
+        status: status
       })
-        .then(() =>
-          res.status(200).json({ message: 'Transaction saved successfully.' })
-        )
-        .catch((error) =>
-          res.status(500).json({ status: false, message: error })
-        );
+        .then(() => {
+          return res.send({
+            status: 200,
+            message: 'Transaction created successfully',
+          });
+        })
+        .catch((err) => res.send({ status: 500, message: err }));
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
