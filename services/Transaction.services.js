@@ -23,7 +23,8 @@ const TransactionService = {
         transactionID: transactionID,
         transactionType: transactionType,
         depositAmount: depositAmount,
-        status: status
+        status: status,
+        createdAt:new Date()
       })
         .then(() => {
           return res.send({
@@ -47,7 +48,8 @@ const TransactionService = {
         transactionID: transactionID,
         transactionType: transactionType,
         withdrawAmount: withdrawAmount,
-        status: status
+        status: status,
+        createdAt:new Date()
       })
         .then(() => {
           return res.send({
