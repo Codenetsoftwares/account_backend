@@ -148,7 +148,19 @@ const TransactionRoutes = (app) => {
     authenticateToken('admin'),
     async (req, res) => {
       try {
-        await TransactionServices.depositTransaction(req, res);
+        await TransactionServices.depositView(req, res);
+      } catch (error) {
+        res.status(500).json({ status: false, message: error });
+      }
+    }
+  );
+
+  app.get(
+    '/api/withdraw/view',
+    authenticateToken('admin'),
+    async (req, res) => {
+      try {
+        await TransactionServices.withdrawView(req, res);
       } catch (error) {
         res.status(500).json({ status: false, message: error });
       }
