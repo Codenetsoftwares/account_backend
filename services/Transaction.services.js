@@ -64,7 +64,11 @@ const TransactionService = {
   depositView: async (req, res) => {
     try {
       const deposits = await Transaction.find({ transactionType: "deposit" }).sort({ createdAt: -1 }).exec();
-      res.send(deposits);
+      let sum = 0;
+      for (let i = 0; i < deposits.length; i++) {
+        sum = sum + deposits[i].depositAmount;
+      }
+      res.send({ totalDeposits: sum, deposits: deposits });
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
@@ -73,7 +77,11 @@ const TransactionService = {
   withdrawView: async (req, res) => {
     try {
       const withdraws = await Transaction.find({ transactionType: "withdraw" }).sort({ createdAt: -1 }).exec();
-      res.send(withdraws);
+      let sum = 0;
+      for (let i = 0; i < withdraws.length; i++) {
+        sum = sum + withdraws[i].withdrawAmount;
+      }
+      res.send({ totalWithdraws: sum, withdraws: withdraws });
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
