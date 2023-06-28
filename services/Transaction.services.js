@@ -60,6 +60,24 @@ const TransactionService = {
       return res.status(500).json({ status: false, message: error });
     }
   },
+
+  depositView: async (req, res) => {
+    try {
+      const deposits = await Transaction.find({ transactionType: "deposit" }).sort({ createdAt: -1 }).exec();
+      res.send(deposits);
+    } catch (error) {
+      return res.status(500).json({ status: false, message: error });
+    }
+  },
+
+  withdrawView: async (req, res) => {
+    try {
+      const withdraws = await Transaction.find({ transactionType: "withdraw" }).sort({ createdAt: -1 }).exec();
+      res.send(withdraws);
+    } catch (error) {
+      return res.status(500).json({ status: false, message: error });
+    }
+  }
 };
 
 export default TransactionService;
