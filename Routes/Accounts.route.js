@@ -1,9 +1,8 @@
-import authenticateToken from '../middleware/AuthenticateToken.js';
-import AccountServices from '../services/Accounts.services.js';
-import AccountsServices from '../services/Accounts.services.js';
+import authenticateToken from "../middleware/AuthenticateToken.js";
+import AccountServices from "../services/Accounts.services.js";
+import AccountsServices from "../services/Accounts.services.js";
 
 const AccountsRoute = (app) => {
-  
   /**
    * @swagger
    * /admin/login:
@@ -37,7 +36,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post('/admin/login', async (req, res) => {
+  app.post("/admin/login", async (req, res) => {
     try {
       await AccountsServices.adminLogin(req, res);
     } catch (error) {
@@ -78,15 +77,14 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-
-  app.post('/deposit/login', async (req, res) => {
+  app.post("/deposit/login", async (req, res) => {
     try {
       await AccountsServices.depositLogin(req, res);
     } catch (error) {
       res.send({ status: 500, message: error });
     }
   });
-  
+
   /**
    * @swagger
    * /create/admin:
@@ -124,14 +122,14 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post('/create/admin', authenticateToken('admin'), async (req, res) => {
+  app.post("/create/admin", authenticateToken("admin"), async (req, res) => {
     try {
       await AccountServices.createUser(req, res);
     } catch (error) {
       res.send({ status: 500, message: error });
     }
   });
- 
+
   /**
    * @swagger
    * /withdraw/login:
@@ -165,14 +163,13 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post('/withdraw/login', async (req, res) => {
+  app.post("/withdraw/login", async (req, res) => {
     try {
       await AccountsServices.withdrawLogin(req, res);
     } catch (error) {
       res.send({ status: 500, message: error });
     }
   });
-  
 };
 
 export default AccountsRoute;
