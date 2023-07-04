@@ -36,7 +36,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/admin/login", async (req, res) => {
+  app.post("/admin/login", authenticateToken("admin"),  async (req, res) => {
     try {
       await AccountsServices.adminLogin(req, res);
     } catch (error) {
@@ -77,7 +77,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/deposit/login", async (req, res) => {
+  app.post("/deposit/login", authenticateToken("deposit"), async (req, res) => {
     try {
       await AccountsServices.depositLogin(req, res);
     } catch (error) {
@@ -122,7 +122,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/create/admin", authenticateToken("admin"), async (req, res) => {
+  app.post("/create/admin", async (req, res) => {
     try {
       await AccountServices.createUser(req, res);
     } catch (error) {
