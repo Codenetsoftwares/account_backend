@@ -180,8 +180,11 @@ const TransactionRoutes = (app) => {
         transactionType: "deposit",
         createdAt: { $gte: start, $lt: end }
       }).exec();
-  
-      res.status(200).send(depositView);
+      let sum = 0;
+      for (let i = 0; i < depositView.length; i++) {
+        sum = sum + depositView[i].depositAmount;
+      }
+      res.send({ totalDeposits: sum, depositView: depositView });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
@@ -200,8 +203,11 @@ const TransactionRoutes = (app) => {
         transactionType: "withdraw",
         createdAt: { $gte: start, $lt: end }
       }).exec();
-  
-      res.status(200).send(withdrawView);
+      let sum = 0;
+      for (let i = 0; i < withdrawView.length; i++) {
+        sum = sum + withdrawView[i].withdrawAmount;
+      }
+      res.send({ totalWithdraws: sum, withdrawView: withdrawView });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
