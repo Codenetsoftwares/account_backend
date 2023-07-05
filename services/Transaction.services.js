@@ -49,7 +49,7 @@ const TransactionService = {
         transactionType: transactionType,
         withdrawAmount: withdrawAmount,
         status: status,
-        createdAt:new Date()
+        createdAt: new Date()
       })
         .then(() => {
           return res.send({

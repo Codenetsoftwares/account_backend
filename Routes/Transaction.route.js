@@ -1,5 +1,6 @@
 import authenticateToken from '../middleware/AuthenticateToken.js';
 import TransactionServices from '../services/Transaction.services.js';
+import { Transaction } from '../models/transaction.js';
 
 const TransactionRoutes = (app) => {
 
@@ -166,6 +167,47 @@ const TransactionRoutes = (app) => {
       }
     }
   );
+
+  app.post("/api/deposit/filter-dates", authenticateToken("admin"), async (req, res) => {
+    try {
+      const { startDate, endDate } = req.body;
+  
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+  
+      const depositView = await Transaction.find({
+        transactionType: "deposit",
+        createdAt: { $gte: start, $lt: end }
+      }).exec();
+  
+      res.status(200).send(depositView);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+  app.post("/api/withdraw/filter-dates", authenticateToken("admin"), async (req, res) => {
+    try {
+      const { startDate, endDate } = req.body;
+  
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+  
+      const withdrawView = await Transaction.find({
+        transactionType: "withdraw",
+        createdAt: { $gte: start, $lt: end }
+      }).exec();
+  
+      res.status(200).send(withdrawView);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+  
 };
 
 export default TransactionRoutes;
