@@ -7,7 +7,7 @@ export const Transaction = mongoose.model(
     transactionType: { type: String, required: true },
     withdrawAmount: { type: Number },
     depositAmount: { type: Number },
-    status: { type: Boolean, default: false, required: true },
+    paymentMethod: { type: String },
     createdAt: { type: Date, required: true }
   }),
   "Transaction"
