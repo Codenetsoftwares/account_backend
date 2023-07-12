@@ -10,13 +10,11 @@ const AccountServices = {
     try {
       const email = req.body.email;
       const password = req.body.password;
-      const persist = req.body.persist;
-      let data;
-      data = await Admin.find({ adminEmail: email }).exec();
-      if (!data) {
-        res.status(404).send("Admin not found");
+      const data = await Admin.findOne({ adminEmail: email }).exec();
+      if (data === null) {
+        throw { code: 400, message: "Unknown Admin" };
       }
-      const checkPassword = await bcrypt.compare(password, data[0].adminPassword);
+      const checkPassword = await bcrypt.compare(password, data.adminPassword);
       if (checkPassword) {
         const token = await generateTokens({
           email: data.adminEmail,
@@ -25,13 +23,10 @@ const AccountServices = {
         });
         return res.send({ status: 200, message: 'success', result: token });
       } else {
-        return res.status(404).json({
-          status: false,
-          message: 'Username or Password is incorrect',
-        });
+        throw { code: 400, message: "Wrong Password" };
       }
     } catch (error) {
-      return res.send({ status: 500, message: error });
+      return res.send(error);
     }
   },
 
@@ -106,16 +101,13 @@ const AccountServices = {
     try {
       const email = req.body.email;
       const password = req.body.password;
-      const persist = req.body.persist;
-      let data;
-      data = await DepositUser.findOne({ adminEmail: email });
-      if (!data) {
-        res.status(404).send("Deposit not found !")
+      const data = await DepositUser.findOne({ userEmail: email }).exec();
+      if (data === null) {
+        throw { code: 400, message: "Unknown Depositer" };
       }
       const matchResult = await bcrypt.compare(password, data.userPassword);
       if (matchResult) {
         const accessToken = generateTokens({
-          id: data.userID,
           email: data.userEmail,
           username: data.userName,
           role: 'deposit',
@@ -126,13 +118,10 @@ const AccountServices = {
           result: accessToken,
         });
       } else {
-        res
-          .status(404)
-          .json({ message: 'Invalid Username or Password', status: true });
+        throw { code: 400, message: "Wrong Password" };
       }
-
     } catch (error) {
-      return res.send({ status: 500, message: error });
+      return res.send(error);
     }
   },
 
@@ -140,12 +129,9 @@ const AccountServices = {
     try {
       const email = req.body.email;
       const password = req.body.password;
-      const persist = req.body.persist;
-
-      let data;
-      data = await WithdrawUser.findOne({ adminEmail: email });
-      if (!data) {
-        res.status(404).send("Deposit not found !")
+      const data = await WithdrawUser.findOne({ adminEmail: email });
+      if (data === null) {
+        throw { code: 400, message: "Unknown Withdrawer" };
       }
       const matchResult = await bcrypt.compare(password, data.userPassword);
       if (matchResult) {
@@ -156,9 +142,11 @@ const AccountServices = {
           role: 'withdraw',
         });
         return res.send({ status: 200, message: 'success', result: token });
+      } else {
+        throw { code: 400, message: "Wrong Password" };
       }
     } catch (error) {
-      return res.send({ status: 500, message: error });
+      return res.send(error);
     }
   },
 };
