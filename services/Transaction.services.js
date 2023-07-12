@@ -15,7 +15,7 @@ const TransactionService = {
   },
   depositTransaction: async (req, res) => {
     try {
-      const { transactionID, transactionType, depositAmount, status } =
+      const { transactionID, transactionType, depositAmount, paymentMethod } =
         req.body;
       const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
       if (existingTransaction) { throw { code: 400, message: "Transaction already exists" } }
@@ -23,7 +23,7 @@ const TransactionService = {
         transactionID: transactionID,
         transactionType: transactionType,
         depositAmount: depositAmount,
-        status: status,
+        paymentMethod: paymentMethod,
         createdAt:new Date()
       })
         .then(() => {
@@ -39,7 +39,7 @@ const TransactionService = {
   },
   withdrawTranscation: async (req, res) => {
     try {
-      const { transactionID, transactionType, withdrawAmount, status } =
+      const { transactionID, transactionType, withdrawAmount, paymentMethod } =
         req.body;
 
       const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
@@ -48,7 +48,7 @@ const TransactionService = {
         transactionID: transactionID,
         transactionType: transactionType,
         withdrawAmount: withdrawAmount,
-        status: status,
+        paymentMethod: paymentMethod,
         createdAt: new Date()
       })
         .then(() => {

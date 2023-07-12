@@ -13,24 +13,20 @@ const AccountServices = {
       const persist = req.body.persist;
       let data;
       data = await Admin.find({ adminEmail: email }).exec();
-      if (data) {
-        const checkPassword = await bcrypt.compare(password, data[0].adminPassword);
-        if (checkPassword) {
-          const token = await generateTokens({
-            email: data.adminEmail,
-            username: data.adminName,
-            role: 'admin',
-          });
-          return res.send({ status: 200, message: 'success', result: token });
-        } else {
-          return res.status(404).json({
-            status: false,
-            message: 'Username or Password is incorrect',
-          });
-        }
+      if (!data) {
+        res.status(404).send("Admin not found");
+      }
+      const checkPassword = await bcrypt.compare(password, data[0].adminPassword);
+      if (checkPassword) {
+        const token = await generateTokens({
+          email: data.adminEmail,
+          username: data.adminName,
+          role: 'admin',
+        });
+        return res.send({ status: 200, message: 'success', result: token });
       } else {
-        return res.send({
-          status: 404,
+        return res.status(404).json({
+          status: false,
           message: 'Username or Password is incorrect',
         });
       }
@@ -113,31 +109,28 @@ const AccountServices = {
       const persist = req.body.persist;
       let data;
       data = await DepositUser.findOne({ adminEmail: email });
-      if (data) {
-        const matchResult = await bcrypt.compare(password, data.userPassword);
-        if (matchResult) {
-          const accessToken = generateTokens({
-            id: data.userID,
-            email: data.userEmail,
-            username: data.userName,
-            role: 'deposit',
-          });
-          return res.send({
-            status: 200,
-            message: 'success',
-            result: accessToken,
-          });
-        } else {
-          res
-            .status(404)
-            .json({ message: 'Invalid Username or Password', status: true });
-        }
-      } else {
-        return res.send({
-          status: 404,
-          message: 'Username or Password is incorrect',
-        });
+      if (!data) {
+        res.status(404).send("Deposit not found !")
       }
+      const matchResult = await bcrypt.compare(password, data.userPassword);
+      if (matchResult) {
+        const accessToken = generateTokens({
+          id: data.userID,
+          email: data.userEmail,
+          username: data.userName,
+          role: 'deposit',
+        });
+        return res.send({
+          status: 200,
+          message: 'success',
+          result: accessToken,
+        });
+      } else {
+        res
+          .status(404)
+          .json({ message: 'Invalid Username or Password', status: true });
+      }
+
     } catch (error) {
       return res.send({ status: 500, message: error });
     }
@@ -151,23 +144,18 @@ const AccountServices = {
 
       let data;
       data = await WithdrawUser.findOne({ adminEmail: email });
-
-      if (data) {
-        const matchResult = await bcrypt.compare(password, data.userPassword);
-        if (matchResult) {
-          const token = generateTokens({
-            id: data.userID,
-            email: data.userEmail,
-            username: data.userName,
-            role: 'withdraw',
-          });
-          return res.send({ status: 200, message: 'success', result: token });
-        }
-      } else {
-        return res.send({
-          status: 404,
-          message: 'Username or Password is incorrect',
+      if (!data) {
+        res.status(404).send("Deposit not found !")
+      }
+      const matchResult = await bcrypt.compare(password, data.userPassword);
+      if (matchResult) {
+        const token = generateTokens({
+          id: data.userID,
+          email: data.userEmail,
+          username: data.userName,
+          role: 'withdraw',
         });
+        return res.send({ status: 200, message: 'success', result: token });
       }
     } catch (error) {
       return res.send({ status: 500, message: error });
