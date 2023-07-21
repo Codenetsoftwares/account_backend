@@ -1,6 +1,5 @@
-import authenticateToken from "../middleware/AuthenticateToken.js";
 import AccountServices from "../services/Accounts.services.js";
-import AccountsServices from "../services/Accounts.services.js";
+import { Admin } from '../models/admin_user.js';
 
 const AccountsRoute = (app) => {
   /**
@@ -36,54 +35,44 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/admin/login",  async (req, res) => {
+  app.post("/admin/login", async (req, res) => {
     try {
-      await AccountsServices.adminLogin(req, res);
-    } catch (error) {
-      res.send({ status: 500, message: error });
+      const { email, password, persist } = req.body;
+
+      if (!email) {
+        throw { code: 400, message: "Email ID is required" };
+      }
+
+      if (!password) {
+        throw { code: 400, message: "Password is required" };
+      }
+
+      const user = await Admin.findOne({ email: email });
+      console.log(user);
+      if (!user) {
+        throw { code: 404, message: "User not found" };
+      }
+
+      const accessToken = await AccountServices.generateAccessToken(
+        email,
+        password,
+        persist
+      );
+
+      if (!accessToken) {
+        throw { code: 500, message: "Failed to generate access token" };
+      }
+
+      res.status(200).send({
+        token: accessToken,
+      });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
   });
 
-  /**
-   * @swagger
-   * /deposit/login:
-   *   post:
-   *     tags: [Accounts]
-   *     summary: Login and generate access token
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             properties:
-   *              email:
-   *                type: string
-   *                description: The email address of the user
-   *                example: john.doe@example.com
-   *              password:
-   *                type: string
-   *                description: The login password
-   *                example: secret@123
-   *              persist:
-   *                type: boolean
-   *                description: Use persistent token or short-term token
-   *                example: true
-   *     responses:
-   *       200:
-   *        description: The user was logged in successfully
-   *       400:
-   *        description: Bad Request
-   *       500:
-   *        description: Internal Server Error
-   */
-
-  app.post("/deposit/login", async (req, res) => {
-    try {
-      await AccountsServices.depositLogin(req, res);
-    } catch (error) {
-      res.send({ status: 500, message: error });
-    }
-  });
+  
 
   /**
    * @swagger
@@ -122,11 +111,15 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/create/admin", async (req, res) => {
+  app.post("/api/create/user-admin", async (req, res) => {
     try {
-      await AccountServices.createUser(req, res);
-    } catch (error) {
-      res.send({ status: 500, message: error });
+      await AccountServices.createUser(req.body);
+      res
+        .status(200)
+        .send({ code: 200, message: "Admin registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
   });
 
@@ -163,13 +156,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/withdraw/login", async (req, res) => {
-    try {
-      await AccountsServices.withdrawLogin(req, res);
-    } catch (error) {
-      res.send({ status: 500, message: error });
-    }
-  });
+  
 };
 
 export default AccountsRoute;

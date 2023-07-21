@@ -1,6 +1,7 @@
-import authenticateToken from '../middleware/AuthenticateToken.js';
+import { Authorize } from '../middleware/Authorize.js';
 import TransactionServices from '../services/Transaction.services.js';
 import { Transaction } from '../models/transaction.js';
+import { EditRequest } from '../models/EditRequest.model.js';
 
 const TransactionRoutes = (app) => {
 
@@ -21,7 +22,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/admin/transaction',
-    authenticateToken('admin'),
+    Authorize('superAdmin'),
     async (req, res) => {
       try {
         await TransactionServices.adminTransaction(req, res);
@@ -70,7 +71,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/withdraw/transaction',
-    authenticateToken('withdraw'),
+    Authorize('withdraw'),
     async (req, res) => {
       try {
         await TransactionServices.withdrawTranscation(req, res);
@@ -119,7 +120,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/deposit/transaction',
-    authenticateToken('deposit'),
+    Authorize('deposit'),
     async (req, res) => {
       try {
         await TransactionServices.depositTransaction(req, res);
@@ -146,7 +147,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/api/deposit/view',
-    authenticateToken('admin'),
+    Authorize(['admin', 'superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.depositView(req, res);
@@ -158,7 +159,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/api/withdraw/view',
-    authenticateToken('admin'),
+    Authorize(['admin', 'superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.withdrawView(req, res);
@@ -168,7 +169,7 @@ const TransactionRoutes = (app) => {
     }
   );
 
-  app.post("/api/deposit/filter-dates", authenticateToken("admin"), async (req, res) => {
+  app.post("/api/deposit/filter-dates", Authorize(["admin", 'superAdmin']), async (req, res) => {
     try {
       const { startDate, endDate } = req.body;
 
@@ -191,7 +192,7 @@ const TransactionRoutes = (app) => {
     }
   });
 
-  app.post("/api/withdraw/filter-dates", authenticateToken("admin"), async (req, res) => {
+  app.post("/api/withdraw/filter-dates", Authorize(["admin", "superAdmin"]), async (req, res) => {
     try {
       const { startDate, endDate } = req.body;
 
@@ -210,11 +211,11 @@ const TransactionRoutes = (app) => {
       res.send({ totalWithdraws: sum, withdrawView: withdrawView });
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+      res.status(e.code || 500).send({ message: e.message || "Inte rnal server error" });
     }
   });
 
-  app.post("/api/admin/edit-transaction/:id", authenticateToken("admin"), async (req, res) => {
+  app.post("/api/superAdmin/edit-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const trans = await Transaction.findById(req.params.id);
       const { amount, id, paymentMethod } = req.body;
@@ -234,6 +235,103 @@ const TransactionRoutes = (app) => {
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
+
+  app.post("/api/admin/edit-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const trans = await Transaction.findById(req.params.id);
+      if (!trans) {
+        return res.status(404).send({ message: "Transaction not found" });
+      }
+
+      const { amount, id, paymentMethod } = req.body;
+      let changes = [];
+
+      if (amount) {
+        changes.push({
+          field: "amount",
+          oldValue: trans.transactionType === "withdraw" ? trans.withdrawAmount : trans.depositAmount,
+          newValue: amount,
+        });
+      }
+
+      if (id) {
+        changes.push({ field: "id", oldValue: trans.transactionID, newValue: id });
+      }
+
+      if (paymentMethod) {
+        changes.push({ field: "paymentMethod", oldValue: trans.paymentMethod, newValue: paymentMethod });
+      }
+
+      const editRequest = new EditRequest({
+        transaction: trans._id,
+        changes,
+        isApproved: false,
+      });
+
+      await editRequest.save();
+
+      res.status(200).send({ message: "edit request submitted for approval" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+
+  app.post("/api/admin/approve-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const editRequest = await EditRequest.findById(req.params.requestId);
+      if (!editRequest) {
+        return res.status(404).send({ message: "Edit request not found" });
+      }
+
+      const { isApproved } = req.body;
+
+      if (typeof isApproved !== "boolean") {
+        return res.status(400).send({ message: "isApproved field must be a boolean value" });
+      }
+
+      if (!editRequest.isApproved) {
+        const transaction = await Transaction.findById(editRequest.transaction);
+        if (!transaction) {
+          return res.status(404).send({ message: "Transaction not found" });
+        }
+
+        for (const change of editRequest.changes) {
+          switch (change.field) {
+            case "amount":
+              if (transaction.transactionType === "withdraw") {
+                transaction.withdrawAmount = change.newValue;
+              } else if (transaction.transactionType === "deposit") {
+                transaction.depositAmount = change.newValue;
+              }
+              break;
+            case "id":
+              transaction.transactionID = change.newValue;
+              break;
+            case "paymentMethod":
+              transaction.paymentMethod = change.newValue;
+              break;
+          }
+        }
+
+        await transaction.save();
+
+        editRequest.isApproved = isApproved;
+        await editRequest.save();
+
+        return res.status(200).send({ message: "Edit request approved and data updated" });
+      } else {
+        return res.status(400).send({ message: "Edit request has already been approved" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+
+
 
 };
 

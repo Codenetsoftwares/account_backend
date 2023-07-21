@@ -1,9 +1,7 @@
-import { generatePassword } from '../helpers/encryptPassword.js';
 import { generateTokens } from '../helpers/generateToken.js';
 import { Admin } from '../models/admin_user.js';
-import { DepositUser } from '../models/deposit_user.js';
+import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
-import { WithdrawUser } from '../models/withdraw_user.js';
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -30,124 +28,222 @@ const AccountServices = {
     }
   },
 
-  createUser: async (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const username = req.body.username;
-    const role = req.body.role;
-    if (role === 'admin') {
-      const data = await Admin.find({ adminEmail: email }).exec();
-      if (data.length != 0) {
-        res.send({ status: 409, message: 'User already exists.' });
-      } else {
-        const hassPass = await generatePassword(password);
-        await Admin.create({
-          adminEmail: email.toLowerCase(),
-          adminName: username,
-          adminPassword: hassPass,
-        })
-          .then(() => {
-            return res.send({
-              status: 200,
-              message: 'Admin created successfully',
-            });
-          })
-          .catch((err) => res.send({ status: 500, message: err }));
-      }
-    } else if (role === 'deposit') {
-      const data = await DepositUser.findOne({ adminEmail: email });
-      if (data) {
-        res.send({ status: 409, message: 'User already exists.' });
-      } else {
-        const hassPass = await generatePassword(password);
-        await DepositUser.create({
-          userEmail: email.toLowerCase(),
-          userName: username,
-          userPassword: hassPass,
-        })
-          .then(() => {
-            return res.send({
-              status: 200,
-              message: 'Depositor created successfully',
-            });
-          })
-          .catch((err) => res.send({ status: 500, message: err }));
-      }
-    } else if (role === 'withdraw') {
-      const data = await WithdrawUser.findOne({ adminEmail: email });
-      if (data) {
-        res.send({ status: 409, message: 'User already exists.' });
-      } else {
-        const hassPass = await generatePassword(password);
-        await WithdrawUser.create({
-          userEmail: email.toLowerCase(),
-          userName: username,
-          userPassword: hassPass,
-        })
-          .then(() => {
-            return res.send({
-              status: 200,
-              message: 'Withdraw user saved successfully',
-            });
-          })
-          .catch((err) => res.send({ status: 500, message: err }));
-      }
-    } else {
-      res.send({ status: 500, message: 'Invalid role' });
+  // createUser: async (req, res) => {
+  //   const email = req.body.email;
+  //   const password = req.body.password;
+  //   const username = req.body.username;
+  //   const role = req.body.role;
+  //   if (role === 'admin') {
+  //     const data = await Admin.find({ adminEmail: email }).exec();
+  //     if (data.length != 0) {
+  //       res.send({ status: 409, message: 'User already exists.' });
+  //     } else {
+  //       const hassPass = await generatePassword(password);
+  //       await Admin.create({
+  //         adminEmail: email.toLowerCase(),
+  //         adminName: username,
+  //         adminPassword: hassPass,
+  //       })
+  //         .then(() => {
+  //           return res.send({
+  //             status: 200,
+  //             message: 'Admin created successfully',
+  //           });
+  //         })
+  //         .catch((err) => res.send({ status: 500, message: err }));
+  //     }
+  //   } else if (role === 'deposit') {
+  //     const data = await DepositUser.findOne({ adminEmail: email });
+  //     if (data) {
+  //       res.send({ status: 409, message: 'User already exists.' });
+  //     } else {
+  //       const hassPass = await generatePassword(password);
+  //       await DepositUser.create({
+  //         userEmail: email.toLowerCase(),
+  //         userName: username,
+  //         userPassword: hassPass,
+  //       })
+  //         .then(() => {
+  //           return res.send({
+  //             status: 200,
+  //             message: 'Depositor created successfully',
+  //           });
+  //         })
+  //         .catch((err) => res.send({ status: 500, message: err }));
+  //     }
+  //   } else if (role === 'withdraw') {
+  //     const data = await WithdrawUser.findOne({ adminEmail: email });
+  //     if (data) {
+  //       res.send({ status: 409, message: 'User already exists.' });
+  //     } else {
+  //       const hassPass = await generatePassword(password);
+  //       await WithdrawUser.create({
+  //         userEmail: email.toLowerCase(),
+  //         userName: username,
+  //         userPassword: hassPass,
+  //       })
+  //         .then(() => {
+  //           return res.send({
+  //             status: 200,
+  //             message: 'Withdraw user saved successfully',
+  //           });
+  //         })
+  //         .catch((err) => res.send({ status: 500, message: err }));
+  //     }
+  //   } else {
+  //     res.send({ status: 500, message: 'Invalid role' });
+  //   }
+  // },
+
+  createUser: async (data) => {
+    const existingUser = await Admin.findOne({ email: data.email }).exec();
+    if (existingUser) {
+      throw { code: 409, message: `User already exists: ${data.email}` };
     }
+  
+    const passwordSalt = await bcrypt.genSalt();
+    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
+    
+    if (!data.firstname) {
+      throw { code: 400, message: "Firstname is required" };
+    }
+    if (!data.lastname) {
+      throw { code: 400, message: "Lastname is required" };
+    }
+    if (!data.email) {
+      throw { code: 400, message: "Email is required" };
+    }
+    if (!data.password) {
+      throw { code: 400, message: "Password is required" };
+    }
+    if (!data.roles || !data.roles.length) {
+      throw { code: 400, message: "Roles are required" };
+    }
+  
+    const newAdmin = new Admin({
+      firstname: data.firstname,
+      lastname: data.lastname,
+      email: data.email,
+      password: encryptedPassword,
+      roles: data.roles
+    });
+  
+    newAdmin.save().catch((err) => {
+      console.error(err);
+      throw { code: 500, message: "Failed to Save New Admin" };
+    });
+  
+    return true;
+  },
+  
+
+  // depositLogin: async (req, res) => {
+  //   try {
+  //     const email = req.body.email;
+  //     const password = req.body.password;
+  //     const data = await DepositUser.findOne({ userEmail: email }).exec();
+  //     if (data === null) {
+  //       throw { code: 400, message: "Unknown Depositer" };
+  //     }
+  //     const matchResult = await bcrypt.compare(password, data.userPassword);
+  //     if (matchResult) {
+  //       const accessToken = generateTokens({
+  //         email: data.userEmail,
+  //         username: data.userName,
+  //         role: 'deposit',
+  //       });
+  //       return res.send({
+  //         status: 200,
+  //         message: 'success',
+  //         result: accessToken,
+  //       });
+  //     } else {
+  //       throw { code: 400, message: "Wrong Password" };
+  //     }
+  //   } catch (error) {
+  //     return res.send(error);
+  //   }
+  // },
+
+  // withdrawLogin: async (req, res) => {
+  //   try {
+  //     const email = req.body.email;
+  //     const password = req.body.password;
+  //     const data = await WithdrawUser.findOne({ adminEmail: email });
+  //     if (data === null) {
+  //       throw { code: 400, message: "Unknown Withdrawer" };
+  //     }
+  //     const matchResult = await bcrypt.compare(password, data.userPassword);
+  //     if (matchResult) {
+  //       const token = generateTokens({
+  //         id: data.userID,
+  //         email: data.userEmail,
+  //         username: data.userName,
+  //         role: 'withdraw',
+  //       });
+  //       return res.send({ status: 200, message: 'success', result: token });
+  //     } else {
+  //       throw { code: 400, message: "Wrong Password" };
+  //     }
+  //   } catch (error) {
+  //     return res.send(error);
+  //   }
+  // },
+
+  generateAccessToken: async (email, password, persist) => {
+    if (!email) {
+      throw { code: 400, message: "Invalid value for: email" };
+    }
+    if (!password) {
+      throw { code: 400, message: "Invalid value for: password" };
+    }
+
+    const existingUser = await AccountServices.findUser({ email: email });
+    if (!existingUser) {
+      throw { code: 401, message: "Invalid email address or password" };
+    }
+
+    const passwordValid = await bcrypt.compare(password, existingUser.password);
+    if (!passwordValid) {
+      throw { code: 401, message: "Invalid email address or password" };
+    }
+
+    const accessTokenResponse = {
+      id: existingUser._id,
+      firstname: existingUser.firstname,
+      lastname: existingUser.lastname,
+      email: existingUser.email,
+      role: existingUser.roles,
+    };
+
+    const accessToken = jwt.sign(
+      accessTokenResponse,
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: persist ? "1y" : "8h",
+      }
+    );
+
+    return {
+      email: existingUser.email,
+      accessToken: accessToken,
+    };
   },
 
-  depositLogin: async (req, res) => {
-    try {
-      const email = req.body.email;
-      const password = req.body.password;
-      const data = await DepositUser.findOne({ userEmail: email }).exec();
-      if (data === null) {
-        throw { code: 400, message: "Unknown Depositer" };
-      }
-      const matchResult = await bcrypt.compare(password, data.userPassword);
-      if (matchResult) {
-        const accessToken = generateTokens({
-          email: data.userEmail,
-          username: data.userName,
-          role: 'deposit',
-        });
-        return res.send({
-          status: 200,
-          message: 'success',
-          result: accessToken,
-        });
-      } else {
-        throw { code: 400, message: "Wrong Password" };
-      }
-    } catch (error) {
-      return res.send(error);
+
+  findAdminById: async (id) => {
+    if (!id) {
+      throw { code: 409, message: "Required parameter: id" };
     }
+
+    return Admin.findById(id).exec();
   },
 
-  withdrawLogin: async (req, res) => {
-    try {
-      const email = req.body.email;
-      const password = req.body.password;
-      const data = await WithdrawUser.findOne({ adminEmail: email });
-      if (data === null) {
-        throw { code: 400, message: "Unknown Withdrawer" };
-      }
-      const matchResult = await bcrypt.compare(password, data.userPassword);
-      if (matchResult) {
-        const token = generateTokens({
-          id: data.userID,
-          email: data.userEmail,
-          username: data.userName,
-          role: 'withdraw',
-        });
-        return res.send({ status: 200, message: 'success', result: token });
-      } else {
-        throw { code: 400, message: "Wrong Password" };
-      }
-    } catch (error) {
-      return res.send(error);
+  findUser: async (filter) => {
+    if (!filter) {
+      throw { code: 409, message: "Required parameter: filter" };
     }
+    return Admin.findOne(filter).exec();
   },
 };
 
