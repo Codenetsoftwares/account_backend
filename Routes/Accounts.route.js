@@ -1,5 +1,6 @@
 import AccountServices from "../services/Accounts.services.js";
 import { Admin } from '../models/admin_user.js';
+import { Authorize } from "../middleware/Authorize.js";
 
 const AccountsRoute = (app) => {
   /**
@@ -111,7 +112,7 @@ const AccountsRoute = (app) => {
    *        description: Internal Server Error
    */
 
-  app.post("/api/create/user-admin", async (req, res) => {
+  app.post("/api/create/user-admin",Authorize(["superAdmin"]), async (req, res) => {
     try {
       await AccountServices.createUser(req.body);
       res
