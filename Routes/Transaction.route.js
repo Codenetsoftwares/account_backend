@@ -277,6 +277,7 @@ const TransactionRoutes = (app) => {
     }
   });
 
+  
 
   app.post("/api/admin/approve-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -330,7 +331,15 @@ const TransactionRoutes = (app) => {
     }
   });
 
-
+  app.get('/api/superadmin/view-edit-requests', Authorize(["superadmin", "Alert"]), async (req, res) => {
+    try {
+      const resultArray = await EditRequest.find().exec();
+      res.status(200).send(resultArray);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal Server error");
+    }
+  });
 
 
 };

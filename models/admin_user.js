@@ -7,7 +7,7 @@ export const Admin = mongoose.model(
     lastname: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    emailVerified: { type: Boolean, default: false },
+    // emailVerified: { type: Boolean, default: false },
     roles: [{ type: String, required: true }]
   }),
   "Admin"
