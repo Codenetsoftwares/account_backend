@@ -331,7 +331,7 @@ const TransactionRoutes = (app) => {
     }
   });
 
-  app.get('/api/superadmin/view-edit-requests', Authorize(["superadmin", "Alert"]), async (req, res) => {
+  app.get('/api/superadmin/view-edit-requests', Authorize(["admin"]), async (req, res) => {
     try {
       const resultArray = await EditRequest.find().exec();
       res.status(200).send(resultArray);
