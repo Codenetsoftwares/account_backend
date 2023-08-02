@@ -25,7 +25,7 @@ export const Authorize = (roles) => {
       }
 
       const user = jwt.verify(tokenParts[1], process.env.TOKEN_SECRET);
-      console.log(user.id)
+      console.log('user from jwt',user.id)
       if (!user) {
         return res
           .status(401)
@@ -35,6 +35,7 @@ export const Authorize = (roles) => {
       let existingUser;
       if (roles.includes("superAdmin")) {
         existingUser = await Admin.findById(user.id).exec();
+        console.log('existing user',existingUser.roles)
         if (!existingUser) {
           return res
             .status(401)
@@ -71,13 +72,13 @@ export const Authorize = (roles) => {
           });
         }
       }
-      console.log(existingUser.roles)
       if (roles && roles.length > 0) {
         let userHasRequiredRole = false;
         roles.forEach((role) => {
           const rolesArray = existingUser.roles;
           for(const element of rolesArray) {
-            if (role.toLowerCase() === element){
+            console.log(element,role)
+            if (role === element){
               userHasRequiredRole = true;
             }
           }

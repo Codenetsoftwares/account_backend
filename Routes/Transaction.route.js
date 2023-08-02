@@ -22,7 +22,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/admin/transaction',
-    Authorize('superAdmin'),
+    Authorize(['superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.adminTransaction(req, res);
@@ -71,7 +71,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/withdraw/transaction',
-    Authorize('withdraw'),
+    Authorize(['withdraw']),
     async (req, res) => {
       try {
         await TransactionServices.withdrawTranscation(req, res);
@@ -120,7 +120,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/deposit/transaction',
-    Authorize('deposit'),
+    Authorize(['deposit']),
     async (req, res) => {
       try {
         await TransactionServices.depositTransaction(req, res);
