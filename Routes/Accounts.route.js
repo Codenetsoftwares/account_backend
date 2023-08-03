@@ -2,6 +2,8 @@ import AccountServices from "../services/Accounts.services.js";
 import { Admin } from '../models/admin_user.js';
 import { User } from "../models/user.model.js";
 import { Authorize } from "../middleware/Authorize.js";
+import { Bank } from "../models/bank.model.js"
+import { Website} from "../models/website.model.js"
 
 const AccountsRoute = (app) => {
 
@@ -18,7 +20,7 @@ const AccountsRoute = (app) => {
       }
 
       const user = await Admin.findOne({ email: email });
-      console.log( "user", user);
+      console.log("user", user);
       if (!user) {
         throw { code: 404, message: "User not found" };
       }
@@ -42,7 +44,7 @@ const AccountsRoute = (app) => {
     }
   });
 
-  app.post("/api/create/user-admin",Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/create/user-admin", Authorize(["superAdmin"]), async (req, res) => {
     try {
       await AccountServices.createAdmin(req.body);
       res
@@ -53,7 +55,7 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
+
   app.post("/user/login", async (req, res) => {
     try {
       const { email, password, persist } = req.body;
@@ -102,9 +104,50 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
 
-  
+  app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+
+      const bankName = req.body.name;
+      if (!bankName) {
+        throw { code: 400, message: "Please give a bank name to add" };
+      }
+      const newBankName = new Bank({
+        name: bankName
+      });
+      newBankName.save();
+      res
+        .status(200)
+        .send({ message: "Bank registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+  app.post("/api/add-website-name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+
+      const websiteName = req.body.name;
+      if (!websiteName) {
+        throw { code: 400, message: "Please give a website name to add" };
+      }
+      const newWebsiteName = new Website({
+        name: websiteName
+      });
+      newWebsiteName.save();
+      res
+        .status(200)
+        .send({ message: "Website registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+
+
+
 };
 
 export default AccountsRoute;
