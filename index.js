@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import AccountsRoute from './Routes/Accounts.route.js';
+import UserRoutes from './Routes/user.route.js';
 import TransactionRoute from './Routes/Transaction.route.js';
 import crypto from 'crypto';
 
@@ -77,6 +78,7 @@ mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.MONGODB_NAME });
 
 AccountsRoute(app);
 TransactionRoute(app);
+UserRoutes(app);
 
 app.listen(process.env.PORT, () => {
   console.log(`Read the docs - http://localhost:${process.env.PORT || 8080}/api/docs`);
