@@ -8,7 +8,14 @@ export const User = mongoose.model(
     email: { type: String, required: true },
     password: { type: String, required: true },
     emailVerified: { type: Boolean, default: false },
-    roles: [{ type: String, required: true }],
+    wallet: { type: Number},
+    profilePicture: { type: String },
+    role: { type: String, default: "player" },
+    bankDetail: {
+      accountName: { type: String },
+      accountNumber: { type: Number },
+      ifscCode: { type: String },
+    },
     tokens: {
       emailVerification: { type: String },
       passwordReset: { type: String },
