@@ -32,6 +32,7 @@ export const userservice = {
       firstname: data.firstname,
       lastname : data.lastname,
       email: data.email,
+      contactNumber : data.contactNumber,
       password: encryptedPassword,
       profilePicture: null,
       role: null,

@@ -7,6 +7,7 @@ export const User = mongoose.model(
     lastname: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
+    contactNumber : { type:Number, required: true },
     emailVerified: { type: Boolean, default: false },
     wallet: { type: Number},
     profilePicture: { type: String },
