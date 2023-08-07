@@ -30,9 +30,9 @@ export const userservice = {
     const emailVerificationCode = await crypto.randomBytes(6).toString("hex");
     const newUser = new User({
       firstname: data.firstname,
-      lastname : data.lastname,
+      lastname: data.lastname,
       email: data.email,
-      contactNumber : data.contactNumber,
+      contactNumber: data.contactNumber,
       password: encryptedPassword,
       profilePicture: null,
       role: null,
@@ -44,9 +44,9 @@ export const userservice = {
       emailVerified: false,
       tokens: {
         emailVerification: emailVerificationCode,
-        passwordReset: null
+        passwordReset: null,
       },
-      wallet: 0
+      wallet: 0,
     });
 
     newUser.save().catch((err) => {
@@ -94,7 +94,7 @@ export const userservice = {
   },
 
   verifyEmail: async (email, code) => {
-    const existingUser = await AccountService.findUser({ email: email });
+    const existingUser = await userservice.findUser({ email: email });
     if (!existingUser) throw { code: 404, message: `Invalid user: ${email}` };
 
     if (existingUser.emailVerified) {
@@ -219,4 +219,4 @@ export const userservice = {
 
     return true;
   },
-}
+};
