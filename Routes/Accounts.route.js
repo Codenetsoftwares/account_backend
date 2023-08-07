@@ -1,6 +1,5 @@
 import AccountServices from "../services/Accounts.services.js";
 import { Admin } from '../models/admin_user.js';
-import { User } from "../models/user.model.js";
 import { Authorize } from "../middleware/Authorize.js";
 import { Bank } from "../models/bank.model.js"
 import { Website} from "../models/website.model.js"
@@ -77,6 +76,16 @@ const AccountsRoute = (app) => {
     }
   });
 
+  app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const bankData = await Bank.find({}).exec();
+      res.status(200).send(bankData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
   app.post("/api/add-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
 
@@ -96,7 +105,16 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-
+  
+  app.get("/api/get-website-name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const websiteData = await Website.find({}).exec();
+      res.status(200).send(websiteData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
 
 
 
