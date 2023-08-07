@@ -134,10 +134,10 @@ export const userservice = {
 
     const accessTokenResponse = {
       id: existingUser._id,
-      name: existingUser.name,
+      name: existingUser.firstname,
       email: existingUser.email,
     };
-
+    console.log(accessTokenResponse);
     const accessToken = jwt.sign(
       accessTokenResponse,
       process.env.JWT_SECRET_KEY,
