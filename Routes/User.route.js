@@ -1,4 +1,4 @@
-import { Authorize } from "../middlewares/auth.js";
+import { Authorize } from "../middleware/Authorize.js";
 import { User } from "../models/user.model.js";
 import { userservice } from "../services/user.service.js";
 
@@ -125,3 +125,5 @@ export const UserRoutes = (app) => {
     }
   );
 };
+
+export default UserRoutes;
