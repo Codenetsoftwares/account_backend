@@ -34,13 +34,6 @@ export const userservice = {
       email: data.email,
       contactNumber: data.contactNumber,
       password: encryptedPassword,
-      profilePicture: null,
-      role: null,
-      bankDetail: {
-        accountName: null,
-        accountNumber: null,
-        ifscCode: null,
-      },
       emailVerified: false,
       tokens: {
         emailVerification: emailVerificationCode,

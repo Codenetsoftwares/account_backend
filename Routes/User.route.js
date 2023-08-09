@@ -1,12 +1,10 @@
 import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
-import { userBank } from '../models/userBank.model.js'
-import { userWebsite } from "../models/userWebsite.model.js"
+import { userBank } from "../models/userBank.model.js";
+import { userWebsite } from "../models/userWebsite.model.js";
 import { userservice } from "../services/user.service.js";
 
-
 export const UserRoutes = (app) => {
-
   app.post("/api/accounts/user/login", async (req, res) => {
     try {
       const { email, password, persist } = req.body;
@@ -17,7 +15,11 @@ export const UserRoutes = (app) => {
       if (!password) {
         throw { code: 400, message: "Password is required" };
       }
-      const accessToken = await userservice.generateAccessToken(email, password, persist);
+      const accessToken = await userservice.generateAccessToken(
+        email,
+        password,
+        persist
+      );
 
       if (!accessToken) {
         throw { code: 500, message: "Failed to generate access token" };
@@ -29,7 +31,7 @@ export const UserRoutes = (app) => {
       const balance = user.wallet.amount;
       if (user && accessToken) {
         res.status(200).send({
-          token: accessToken
+          token: accessToken,
         });
       } else {
         // User not found or access token is invalid
@@ -54,7 +56,6 @@ export const UserRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-
 
   app.post("/api/accounts/verify-email", async (req, res) => {
     try {
@@ -115,7 +116,7 @@ export const UserRoutes = (app) => {
             ? user.bankDetail.accountNumber
             : null,
           profileUrl: user.profilePicture,
-          id: user.id
+          id: user.id,
         };
         res.status(200).send(response);
       } catch (e) {
@@ -125,66 +126,45 @@ export const UserRoutes = (app) => {
     }
   );
 
-  app.post("/api/user/add-bank-name", AuthorizeRole(["user"]), async (req, res) => {
-    try {
-
-      const bankName = req.body.name;
-      if (!bankName) {
-        throw { code: 400, message: "Please give a bank name to add" };
+  app.post(
+    "/api/user/add-bank-name",
+    AuthorizeRole(["user"]),
+    async (req, res) => {
+      try {
+        const userData = req.body;
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        user.bankDetail.accountHolderName = userData.accountHolderName;
+        user.bankDetail.bankName = userData.bankName;
+        user.bankDetail.ifscCode = userData.ifscCode;
+        user.bankDetail.accountNumber = userData.accountNumber;
+        await user.save();
+        res.status(200).send({ message: "Bank details updated successfully." });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
       }
-      const userBankdata = new userBank({
-        name: bankName
-      });
-      userBankdata.save();
-      res
-        .status(200)
-        .send({ message: "Bank registered successfully!" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
     }
-  });
+);
 
-  app.get("/api/user/get-bank-name", AuthorizeRole(["user"]), async (req, res) => {
-    try {
-      const bankData = await userBank.find({}).exec();
-      res.status(200).send(bankData);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  })
 
-  app.post("/api/user/add-website-name", AuthorizeRole(["user"]), async (req, res) => {
-    try {
-
-      const websiteName = req.body.name;
-      if (!websiteName) {
-        throw { code: 400, message: "Please give a website name to add" };
+  app.post(
+    "/api/user/add-website-name",
+    AuthorizeRole(["user"]),
+    async (req, res) => {
+      try {
+        const userData = req.body;
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        user.webSiteDetail = userData.webSiteDetail;
+        await user.save();
+        res.status(200).send({ message: "Website details updated successfully." });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
       }
-      const userWebsiteData = new userWebsite({
-        name: websiteName
-      });
-      userWebsiteData.save();
-      res
-        .status(200)
-        .send({ message: "Website registered successfully!" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
     }
-  });
-  
-  app.get("/api/user/get-website-name", AuthorizeRole(["user"]), async (req, res) => {
-    try {
-      const websiteData = await userWebsite.find({}).exec();
-      res.status(200).send(websiteData);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  })
-
+  );
 
 };
 
