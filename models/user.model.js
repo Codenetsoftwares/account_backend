@@ -11,7 +11,7 @@ export const User = mongoose.model(
     emailVerified: { type: Boolean, default: false },
     wallet: { type: Number},
     profilePicture: { type: String },
-    role: { type: String, default: "player" },
+    role: { type: String, default: "user" },
     bankDetail: {
       accountName: { type: String },
       accountNumber: { type: Number },

@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import AccountServices from "../services/Accounts.services.js";
 import { Admin } from "../models/admin_user.js";
 import { use } from "bcrypt/promises.js";
+import { User } from "../models/user.model.js";
 
 export const Authorize = (roles) => {
   return async (req, res, next) => {
@@ -24,7 +25,7 @@ export const Authorize = (roles) => {
           .send({ code: 401, message: "Invalid login attempt (2)" });
       }
 
-      const user = jwt.verify(tokenParts[1], process.env.TOKEN_SECRET);
+      const user = jwt.verify(tokenParts[1], process.env.JWT_SECRET_KEY);
       console.log('user from jwt',user.id)
       if (!user) {
         return res
@@ -65,6 +66,16 @@ export const Authorize = (roles) => {
 
       if (roles.includes("withdraw")) {
         existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+
+      if (roles.includes("user")) {
+        existingUser = await User.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
             code: 401,
