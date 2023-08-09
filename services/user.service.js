@@ -129,8 +129,9 @@ export const userservice = {
       id: existingUser._id,
       name: existingUser.firstname,
       email: existingUser.email,
+      role: existingUser.role
     };
-    console.log(accessTokenResponse);
+    console.log('access',accessTokenResponse);
     const accessToken = jwt.sign(
       accessTokenResponse,
       process.env.JWT_SECRET_KEY,
