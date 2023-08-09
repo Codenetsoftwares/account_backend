@@ -13,10 +13,12 @@ export const User = mongoose.model(
     profilePicture: { type: String },
     role: { type: String, default: "user" },
     bankDetail: {
-      accountName: { type: String },
+      accountHolderName: { type: String },
+      bankName: { type: String },
       accountNumber: { type: Number },
       ifscCode: { type: String },
     },
+    webSiteDetail: { type: String },
     tokens: {
       emailVerification: { type: String },
       passwordReset: { type: String },
