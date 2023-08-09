@@ -1,5 +1,7 @@
-import { Authorize } from "../middleware/Authorize.js";
+import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
+import { userBank } from '../models/userBank.model.js'
+import { userWebsite } from "../models/userWebsite.model.js"
 import { userservice } from "../services/user.service.js";
 
 
@@ -93,7 +95,7 @@ export const UserRoutes = (app) => {
 
   app.get(
     "/api/accounts/profileUserData",
-    Authorize(["player"]),
+    AuthorizeRole(["user"]),
     async (req, res) => {
       try {
         const user = req.user;
@@ -105,8 +107,6 @@ export const UserRoutes = (app) => {
           kycVerified: user.kycVerified,
           wallet: user.wallet.amount,
           role: user.role,
-          lichess_username: user.lichess.username,
-
           account_name: user.bankDetail.accountName
             ? user.bankDetail.accountName
             : null,
@@ -124,6 +124,68 @@ export const UserRoutes = (app) => {
       }
     }
   );
+
+  app.post("/api/user/add-bank-name", AuthorizeRole(["user"]), async (req, res) => {
+    try {
+
+      const bankName = req.body.name;
+      if (!bankName) {
+        throw { code: 400, message: "Please give a bank name to add" };
+      }
+      const userBankdata = new userBank({
+        name: bankName
+      });
+      userBankdata.save();
+      res
+        .status(200)
+        .send({ message: "Bank registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+  app.get("/api/user/get-bank-name", AuthorizeRole(["user"]), async (req, res) => {
+    try {
+      const bankData = await userBank.find({}).exec();
+      res.status(200).send(bankData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
+  app.post("/api/user/add-website-name", AuthorizeRole(["user"]), async (req, res) => {
+    try {
+
+      const websiteName = req.body.name;
+      if (!websiteName) {
+        throw { code: 400, message: "Please give a website name to add" };
+      }
+      const userWebsiteData = new userWebsite({
+        name: websiteName
+      });
+      userWebsiteData.save();
+      res
+        .status(200)
+        .send({ message: "Website registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+  
+  app.get("/api/user/get-website-name", AuthorizeRole(["user"]), async (req, res) => {
+    try {
+      const websiteData = await userWebsite.find({}).exec();
+      res.status(200).send(websiteData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
+
 };
 
 export default UserRoutes;
