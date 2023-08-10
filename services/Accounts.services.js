@@ -99,7 +99,7 @@ const AccountServices = {
 
     const accessToken = jwt.sign(
       accessTokenResponse,
-      process.env.TOKEN_SECRET,
+      process.env.JWT_SECRET_KEY,
       {
         expiresIn: persist ? "1y" : "8h",
       }
