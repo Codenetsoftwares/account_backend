@@ -18,7 +18,7 @@ export const User = mongoose.model(
       accountNumber: { type: Number },
       ifscCode: { type: String },
     },
-    webSiteDetail: { type: String },
+    webSiteDetail: [],
     tokens: {
       emailVerification: { type: String },
       passwordReset: { type: String },
