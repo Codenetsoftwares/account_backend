@@ -234,7 +234,7 @@ const TransactionRoutes = (app) => {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
-  });
+  });   
 
   app.post("/api/admin/edit-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -331,7 +331,7 @@ const TransactionRoutes = (app) => {
     }
   });
 
-  app.get('/api/superadmin/view-edit-requests', Authorize(["admin"]), async (req, res) => {
+  app.get('/api/superadmin/view-edit-requests', Authorize(["superAdmin"]), async (req, res) => {
     try {
       const resultArray = await EditRequest.find().exec();
       res.status(200).send(resultArray);

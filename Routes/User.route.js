@@ -154,9 +154,11 @@ export const UserRoutes = (app) => {
     async (req, res) => {
       try {
         const userData = req.body;
+        console.log(userData)
         const userId = req.user.id;
         const user = await User.findById(userId);
-        user.webSiteDetail = userData.webSiteDetail;
+        user.webSiteDetail.push(userData);
+        console.log(user.webSiteDetail)
         await user.save();
         res.status(200).send({ message: "Website details updated successfully." });
       } catch (e) {
@@ -167,5 +169,6 @@ export const UserRoutes = (app) => {
   );
 
 };
+
 
 export default UserRoutes;
