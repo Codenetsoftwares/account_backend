@@ -105,7 +105,7 @@ export const UserRoutes = (app) => {
           lastname: user.lastname,
           email: user.email,
           emailVerified: user.emailVerified,
-          kycVerified: user.kycVerified,
+          contactNumber: user.contactNumber,
           wallet: user.wallet.amount,
           role: user.role,
           account_name: user.bankDetail.accountName

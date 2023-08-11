@@ -76,6 +76,17 @@ const AccountsRoute = (app) => {
     }
   });
 
+  app.post("/api/delete-bank-name/:id", Authorize(["superAdmin"]), async(req, res)=>{
+    try {
+      const bankName = req.params.id;
+      const deleteData = await Bank.deleteOne({ id: bankName })
+      res.status(200).send({ message: "Bank name removed successfully!" })
+    }catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
   app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const bankData = await Bank.find({}).exec();
@@ -105,6 +116,17 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
+
+  app.post("/api/delete-wesite-name/:id", Authorize(["superAdmin"]), async(req, res)=>{
+    try {
+      const WebsiteName = req.params.id;
+      const deleteData = await Website.deleteOne({ id: WebsiteName })
+      res.status(200).send({ message: "Website name removed successfully!" })
+    }catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
   
   app.get("/api/get-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
