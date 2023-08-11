@@ -147,6 +147,18 @@ export const UserRoutes = (app) => {
     }
 );
 
+// app.post("/api/delete-website-name", AuthorizeRole(["user"]), async(req, res)=>{
+//   try {
+//     const { webSiteDetail } = req.body;
+//     const deleteData = await User.deleteOne({ webSiteDetail: webSiteDetail })
+//     console.log(deleteData)
+//     res.status(200).send({ message: "Website name removed successfully!" })
+//   }catch (e) {
+//     console.error(e);
+//     res.status(e.code).send({ message: e.message });
+//   }
+// });
+
 
   app.post(
     "/api/user/add-website-name",
@@ -168,6 +180,25 @@ export const UserRoutes = (app) => {
     }
   );
 
+
+  app.post(
+    "/api/user/add-upi-name",
+    AuthorizeRole(["user"]),
+    async (req, res) => {
+      try {
+        const userData = req.body;
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        user.upiDetail.upiId = userData.upiId;
+        user.upiDetail.upiApp = userData.upiApp;
+        await user.save();
+        res.status(200).send({ message: "UPI details updated successfully." });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+);
 };
 
 

@@ -18,6 +18,10 @@ export const User = mongoose.model(
       accountNumber: { type: Number },
       ifscCode: { type: String },
     },
+    upiDetail: {
+      upiId: { type: String },
+      upiApp: { type: String }
+    },
     webSiteDetail: [],
     tokens: {
       emailVerification: { type: String },
