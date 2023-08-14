@@ -3,6 +3,7 @@ import { Admin } from '../models/admin_user.js';
 import { Authorize } from "../middleware/Authorize.js";
 import { Bank } from "../models/bank.model.js"
 import { Website} from "../models/website.model.js"
+import { User } from "../models/user.model.js";
 
 const AccountsRoute = (app) => {
 
@@ -76,16 +77,16 @@ const AccountsRoute = (app) => {
     }
   });
 
-  app.post("/api/delete-bank-name/:id", Authorize(["superAdmin"]), async(req, res)=>{
+  app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const bankName = req.params.id;
-      const deleteData = await Bank.deleteOne({ id: bankName })
-      res.status(200).send({ message: "Bank name removed successfully!" })
-    }catch (e) {
+      const bankName = req.body.id;
+      const deleteData = await Bank.deleteOne({ id: bankName });
+      res.status(200).send({ message: "Bank name removed successfully!" });
+    } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message });
+      res.status(e.code || 500).send({ message: e.message });
     }
-  })
+  });  
 
   app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -117,9 +118,9 @@ const AccountsRoute = (app) => {
     }
   });
 
-  app.post("/api/delete-wesite-name/:id", Authorize(["superAdmin"]), async(req, res)=>{
+  app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async(req, res)=>{
     try {
-      const WebsiteName = req.params.id;
+      const WebsiteName = req.body.id;
       const deleteData = await Website.deleteOne({ id: WebsiteName })
       res.status(200).send({ message: "Website name removed successfully!" })
     }catch (e) {
@@ -136,8 +137,17 @@ const AccountsRoute = (app) => {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
+  });
+  
+  app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
+    try{
+      const user = await User.find({}).exec()
+      res.send(user);
+    }catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
   })
-
 
 
 };

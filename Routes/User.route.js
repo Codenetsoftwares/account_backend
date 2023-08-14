@@ -202,7 +202,7 @@ export const UserRoutes = (app) => {
 
 app.put(
   "/api/user-profile-edit/:id",
-  Authorize(["user"]),
+  AuthorizeRole(["user"]),
   async (req, res) => {
     try {
       const id = await User.findById(req.params.id);
@@ -217,7 +217,6 @@ app.put(
     }
   }
 );
-
 };
 
 
