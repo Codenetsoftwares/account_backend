@@ -79,14 +79,26 @@ const AccountsRoute = (app) => {
 
   app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const bankName = req.body.id;
-      const deleteData = await Bank.deleteOne({ id: bankName });
+      const { name } = req.body;
+      console.log("req.body", name);
+      
+      const bankToDelete = await Bank.findOne({ name: name }).exec();
+      if (!bankToDelete) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+  
+      console.log("bankToDelete", bankToDelete);
+  
+      const deleteData = await Bank.deleteOne({ _id: bankToDelete._id }).exec();
+      console.log("deleteData", deleteData);
+  
       res.status(200).send({ message: "Bank name removed successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
     }
-  });  
+  });
+  
 
   app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -117,17 +129,28 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-
-  app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async(req, res)=>{
+  
+  app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const WebsiteName = req.body.id;
-      const deleteData = await Website.deleteOne({ id: WebsiteName })
-      res.status(200).send({ message: "Website name removed successfully!" })
-    }catch (e) {
+      const { name } = req.body;
+      console.log("req.body", name);
+      
+      const WebsiteToDelete = await Website.findOne({ name: name }).exec();
+      if (!WebsiteToDelete) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+  
+      console.log("WebsiteToDelete", WebsiteToDelete);
+  
+      const deleteData = await Website.deleteOne({ _id: WebsiteToDelete._id }).exec();
+      console.log("deleteData", deleteData);
+  
+      res.status(200).send({ message: "Website name removed successfully!" });
+    } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message });
+      res.status(e.code || 500).send({ message: e.message });
     }
-  })
+  });
   
   app.get("/api/get-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -139,9 +162,9 @@ const AccountsRoute = (app) => {
     }
   });
   
-  app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/user-profile", Authorize(["user"]), async (req, res) => {
     try{
-      const user = await User.find({}).exec()
+      const user = await User.find({}).exe
       res.send(user);
     }catch (e) {
       console.error(e);
