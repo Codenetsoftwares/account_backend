@@ -199,6 +199,25 @@ export const UserRoutes = (app) => {
       }
     }
 );
+
+app.put(
+  "/api/user-profile-edit/:id",
+  Authorize(["user"]),
+  async (req, res) => {
+    try {
+      const id = await User.findById(req.params.id);
+      const updateResult = await userservice.updateUserProfile(id, req.body);
+      console.log(updateResult);
+      if (updateResult) {
+        res.status(201).send("Profile updated");
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
+
 };
 
 

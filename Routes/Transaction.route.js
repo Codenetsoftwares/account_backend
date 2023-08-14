@@ -236,46 +236,46 @@ const TransactionRoutes = (app) => {
     }
   });   
 
-  app.post("/api/admin/edit-transaction/:id", Authorize(["admin"]), async (req, res) => {
-    try {
-      const trans = await Transaction.findById(req.params.id);
-      if (!trans) {
-        return res.status(404).send({ message: "Transaction not found" });
-      }
+  // app.post("/api/admin/edit-transaction/:id", Authorize(["admin"]), async (req, res) => {
+  //   try {
+  //     const trans = await Transaction.findById(req.params.id);
+  //     if (!trans) {
+  //       return res.status(404).send({ message: "Transaction not found" });
+  //     }
 
-      const { amount, id, paymentMethod } = req.body;
-      let changes = [];
+  //     const { amount, id, paymentMethod } = req.body;
+  //     let changes = [];
 
-      if (amount) {
-        changes.push({
-          field: "amount",
-          oldValue: trans.transactionType === "withdraw" ? trans.withdrawAmount : trans.depositAmount,
-          newValue: amount,
-        });
-      }
+  //     if (amount) {
+  //       changes.push({
+  //         field: "amount",
+  //         oldValue: trans.transactionType === "withdraw" ? trans.withdrawAmount : trans.depositAmount,
+  //         newValue: amount,
+  //       });
+  //     }
 
-      if (id) {
-        changes.push({ field: "id", oldValue: trans.transactionID, newValue: id });
-      }
+  //     if (id) {
+  //       changes.push({ field: "id", oldValue: trans.transactionID, newValue: id });
+  //     }
 
-      if (paymentMethod) {
-        changes.push({ field: "paymentMethod", oldValue: trans.paymentMethod, newValue: paymentMethod });
-      }
+  //     if (paymentMethod) {
+  //       changes.push({ field: "paymentMethod", oldValue: trans.paymentMethod, newValue: paymentMethod });
+  //     }
 
-      const editRequest = new EditRequest({
-        transaction: trans._id,
-        changes,
-        isApproved: false,
-      });
+  //     const editRequest = new EditRequest({
+  //       transaction: trans._id,
+  //       changes,
+  //       isApproved: false,
+  //     });
 
-      await editRequest.save();
+  //     await editRequest.save();
 
-      res.status(200).send({ message: "edit request submitted for approval" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
-    }
-  });
+  //     res.status(200).send({ message: "edit request submitted for approval" });
+  //   } catch (e) {
+  //     console.error(e);
+  //     res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  //   }
+  // });
 
   // app.post("/api/admin/approve-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
   //   try {
@@ -360,37 +360,42 @@ const TransactionRoutes = (app) => {
   
   app.post("/api/admin/approve-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const editRequest = await EditRequest.findById(req.params.requestId);
-      if (!editRequest) {
-        return res.status(404).send({ message: "Edit request not found" });
-      }
-      const { isApproved } = req.body;
-      if (typeof isApproved !== "boolean") {
-        return res.status(400).send({ message: "isApproved field must be a boolean value" });
-      }
-      if (!editRequest.isApproved) {
-        const transaction = await Transaction.find(editRequest.id);
-        if (!transaction) {
-          return res.status(404).send({ message: "Transaction not found" });
-        }
-        console.log("transaction", transaction) 
-        transaction.transactionID = editRequest.transactionID;
-        transaction.transactionType = editRequest.transactionType;
-        transaction.withdrawAmount = editRequest.withdrawAmount;
-        transaction.depositAmount = editRequest.depositAmount;
-        transaction.paymentMethod = editRequest.paymentMethod;
-        await transaction.save();
-        editRequest.isApproved = true;
-        await editRequest.save();
-        return res.status(200).send({ message: "Edit request approved and data updated", updatedTransaction: transaction });
-      } else {
-        return res.status(200).send({ message: "Edit request rejected" });
-      }
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    const editRequest = await EditRequest.findById(req.params.requestId);
+    if (!editRequest) {
+    return res.status(404).send({ message: "Edit request not found" });
     }
-  });
+    const { isApproved } = req.body;
+    if (typeof isApproved !== "boolean") {
+    return res.status(400).send({ message: "isApproved field must be a boolean value" });
+    }
+    if (!editRequest.isApproved) {
+    const updatedTransaction = await Transaction.updateOne({ _id: editRequest.id }, {
+    transactionID: editRequest.transactionID,
+    transactionType: editRequest.transactionType,
+    withdrawAmount: editRequest.withdrawAmount,
+    depositAmount: editRequest.depositAmount,
+    paymentMethod: editRequest.paymentMethod,
+    });
+    if (updatedTransaction.matchedCount === 0) {
+    return res.status(404).send({ message: "Transaction not found" });
+    }
+    editRequest.isApproved = true;
+    if (editRequest.isApproved) {
+    const deletedEditRequest = await EditRequest.deleteOne({_id : req.params.id});
+    console.log(deletedEditRequest)
+    if (!deletedEditRequest) {
+    return res.status(500).send({ message: "Error deleting edit request" });
+    }
+    }
+    return res.status(200).send({ message: "Edit request approved and data updated", updatedTransaction: updatedTransaction });
+    } else {
+    return res.status(200).send({ message: "Edit request rejected" });
+    }
+    } catch (e) {
+    console.error(e);
+    res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+    });
 
 };
 
