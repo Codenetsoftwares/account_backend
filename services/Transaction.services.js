@@ -1,3 +1,4 @@
+import { EditRequest } from '../models/EditRequest.model.js';
 import { Transaction } from '../models/transaction.js';
 
 const TransactionService = {
@@ -87,7 +88,36 @@ const TransactionService = {
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
-  }
+  },
+
+  update: async (trans, data) => {
+    if (!data.transactionID || !data.transactionType || !data.withdrawAmount || !data.depositAmount || !data.paymentMethod) {
+    throw { code: 400, message: "Missing required fields. Please provide values for all fields.",};
+    }
+    const existingTransaction = await Transaction.findById(trans);
+    if (!existingTransaction) {
+        throw {
+            code: 404,
+            message: `Transaction not found with id: ${trans}`,
+        };
+    }
+    const updatedTransactionData = {
+        id : trans._id,
+        transactionID: data.transactionID,
+        transactionType: data.transactionType,
+        withdrawAmount: data.withdrawAmount,
+        depositAmount: data.depositAmount,
+        paymentMethod: data.paymentMethod,
+    };
+    const backupTransaction = new EditRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+    });
+    await backupTransaction.save();
+
+    return true;
+}
+
 };
 
 export default TransactionService;
