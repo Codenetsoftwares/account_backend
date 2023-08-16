@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const userservice = {
+
   createUser: async (data) => {
     if (!data.firstname) {
       throw { code: 400, message: "Firstname is required" };
@@ -28,12 +29,14 @@ export const userservice = {
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
     const emailVerificationCode = await crypto.randomBytes(6).toString("hex");
+    const id = crypto.randomBytes(4).toString("hex");
     const newUser = new User({
       firstname: data.firstname,
       lastname: data.lastname,
       email: data.email,
       contactNumber: data.contactNumber,
       password: encryptedPassword,
+      userId: id,
       emailVerified: false,
       tokens: {
         emailVerification: emailVerificationCode,
@@ -70,7 +73,19 @@ export const userservice = {
 
     return true;
   },
-
+  
+  generateRandomAlphanumeric: async(length) => {
+    const alphanumericChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * alphanumericChars.length);
+      result += alphanumericChars.charAt(randomIndex);
+    }
+    
+    return result;
+  },
+  
   findUserById: async (id) => {
     if (!id) {
       throw { code: 409, message: "Required parameter: id" };

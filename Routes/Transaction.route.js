@@ -26,8 +26,9 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         await TransactionServices.adminTransaction(req, res);
-      } catch (error) {
-        res.status(500).json({ status: false, message: error });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
       }
     }
   );
@@ -70,13 +71,14 @@ const TransactionRoutes = (app) => {
    */
 
   app.post(
-    '/withdraw/transaction',
-    Authorize(['withdraw']),
+    '/api/admin/create/transaction',
+    Authorize(['admin', 'superAdmin']),
     async (req, res) => {
       try {
-        await TransactionServices.withdrawTranscation(req, res);
-      } catch (error) {
-        res.status(500).json({ status: false, message: error });
+        await TransactionServices.createTransaction(req, res);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
       }
     }
   );
@@ -118,17 +120,18 @@ const TransactionRoutes = (app) => {
   *        description: Internal Server Error
   */
 
-  app.post(
-    '/deposit/transaction',
-    Authorize(['deposit']),
-    async (req, res) => {
-      try {
-        await TransactionServices.depositTransaction(req, res);
-      } catch (error) {
-        res.status(500).json({ status: false, message: error });
-      }
-    }
-  );
+  // app.post(
+  //   '/deposit/transaction',
+  //   Authorize(['admin', 'superAdmin']),
+  //   async (req, res) => {
+  //     try {
+  //       await TransactionServices.depositTransaction(req, res);
+  //     } catch (e) {
+  //       console.error(e);
+  //       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  //     }
+  //   }
+  // );
 
   /**
    * @swagger
@@ -151,8 +154,9 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         await TransactionServices.depositView(req, res);
-      } catch (error) {
-        res.status(500).json({ status: false, message: error });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
       }
     }
   );
@@ -163,8 +167,9 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         await TransactionServices.withdrawView(req, res);
-      } catch (error) {
-        res.status(500).json({ status: false, message: error });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
       }
     }
   );

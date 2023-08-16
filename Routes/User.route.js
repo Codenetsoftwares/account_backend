@@ -94,37 +94,36 @@ export const UserRoutes = (app) => {
     }
   });
 
-  app.get(
-    "/api/accounts/profileUserData",
-    AuthorizeRole(["user"]),
-    async (req, res) => {
-      try {
-        const user = req.user;
-        const response = {
-          firstname: user.firstname,
-          lastname: user.lastname,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          contactNumber: user.contactNumber,
-          wallet: user.wallet.amount,
-          role: user.role,
-          account_name: user.bankDetail.accountName
-            ? user.bankDetail.accountName
-            : null,
-          ifsc_code: user.bankDetail.ifscCode ? user.bankDetail.ifscCode : null,
-          account_number: user.bankDetail.accountNumber
-            ? user.bankDetail.accountNumber
-            : null,
-          profileUrl: user.profilePicture,
-          id: user.id,
-        };
-        res.status(200).send(response);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
+  // app.get(
+  //   "/api/accounts/profileUserData",
+  //   AuthorizeRole(["user"]),
+  //   async (req, res) => {
+  //     try {
+  //       const user = req.user;
+  //       const response = {
+  //         firstname: user.firstname,
+  //         lastname: user.lastname,
+  //         userId: user.userId,
+  //         email: user.email,
+  //         emailVerified: user.emailVerified,
+  //         contactNumber: user.contactNumber,
+  //         wallet: user.wallet.amount,
+  //         role: user.role,
+  //         account_name: user.bankDetail.accountName ? user.bankDetail.accountName : null,
+  //         ifsc_code: user.bankDetail.ifscCode ? user.bankDetail.ifscCode : null,
+  //         account_number: user.bankDetail.accountNumber
+  //           ? user.bankDetail.accountNumber
+  //           : null,
+  //         profileUrl: user.profilePicture,
+  //         id: user.id,
+  //       };
+  //       res.status(200).send(response);
+  //     } catch (e) {
+  //       console.error(e);
+  //       res.status(e.code).send({ message: e.message });
+  //     }
+  //   }
+  // );
 
   app.post(
     "/api/user/add-bank-name",
@@ -191,6 +190,7 @@ export const UserRoutes = (app) => {
         const user = await User.findById(userId);
         user.upiDetail.upiId = userData.upiId;
         user.upiDetail.upiApp = userData.upiApp;
+        user.upiDetail.upiNumber = userData.upiNumber;
         await user.save();
         res.status(200).send({ message: "UPI details updated successfully." });
       } catch (e) {
@@ -217,6 +217,21 @@ app.put(
     }
   }
 );
+
+app.get("/api/user-profile-data/:userId", AuthorizeRole(["user"]), async (req, res) => {
+  try {
+    const userId = req.params.userId; 
+    const userData = await User.findById(userId).exec();
+    if (!userData) {
+      return res.status(404).send({ message: "User not found" });
+    }
+    res.status(200).send(userData);
+  } catch (e) {
+     console.error(e);
+     res.status(500).send({ message: "Internal server error" });
+  }
+});
+
 };
 
 
