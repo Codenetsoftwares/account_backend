@@ -5,10 +5,9 @@ export const Transaction = mongoose.model(
   new mongoose.Schema({
     transactionID: { type: String, required: true },
     transactionType: { type: String, required: true },
-    withdrawAmount: { type: Number },
-    depositAmount: { type: Number },
+    amount: { type: String, required: true },
     paymentMethod: { type: String },
-    createdAt: { type: Date }
+    createdAt: { type: Date },
   }),
   "Transaction"
 );
