@@ -13,9 +13,11 @@ import crypto from 'crypto';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: process.env.AllowedOrigins }));
-app.use(express.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.urlencoded({ extended: true }));
+const  allowedOrigins = process.env.FRONTEND_URI.split(",");
+app.use(cors({ origin: allowedOrigins }));
 
 app.use(
   "/api/docs",
@@ -31,7 +33,7 @@ app.use(
         },
         servers: [
           {
-            url: `${process.env.BASE_URL}`,
+            url: `http://localhost:${process.env.PORT || 8000}`,
             description: "Local Dev Server",
           },
           {
@@ -81,5 +83,5 @@ TransactionRoute(app);
 UserRoutes(app);
 
 app.listen(process.env.PORT, () => {
-  console.log(`Read the docs - http://localhost:${process.env.PORT || 8080}/api/docs`);
+  console.log(`Read the docs - http://localhost:${process.env.PORT || 8000}/api/docs`);
 });

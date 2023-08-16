@@ -3,6 +3,7 @@ import { Admin } from '../models/admin_user.js';
 import { User } from '../models/user.model.js';
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
+import { Bank } from '../models/bank.model.js';
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -143,6 +144,55 @@ const AccountServices = {
     }
     return User.findOne(filter).exec();
   },
+
+  updateBank: async(id, data) => {
+    const existingBank = await Bank.findById(id);
+    console.log("existingBank", existingBank)
+    if (!existingBank) { throw { code: 404, message: `Existing Bank not found with id : ${id}`, };}
+
+    existingBank.accountHolderName = data.accountHolderName || existingBank.accountHolderName;
+    existingBank.bankName = data.bankName || existingBank.bankName;
+    existingBank.accountNumber = data.accountNumber || existingBank.accountNumber;
+    existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
+
+    existingBank.save().catch((err) => {
+      console.error(err);
+      throw {
+        code: 500,
+        message: `Failed to update Bank Name with : ${id}`,
+      };
+    });
+  
+    return true;
+  },
+  updateUserProfile: async(id, data) => {
+    const existingUser = await User.findById(id);
+    if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
+
+    // existingUser.firstname = data.firstname ? data.firstname : existingUser.firstname;
+    // existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
+    // existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
+    // existingUser.bankDetail = data.bankDetail ? JSON.parse(data.bankDetail) : existingUser.bankDetail;
+    // existingUser.upiDetail = data.upiDetail ? JSON.parse(data.upiDetail) : existingUser.upiDetail;
+    // existingUser.webSiteDetail = data.webSiteDetail ? JSON.parse(data.webSiteDetail) : existingUser.webSiteDetail;
+    
+    existingUser.firstname = data.firstname || existingUser.firstname;
+    existingUser.lastname = data.lastname || existingUser.lastname;
+    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
+    existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
+    existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
+    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+
+    existingUser.save().catch((err) => {
+      console.error(err);
+      throw {
+        code: 500,
+        message: `Failed to update User Profile with id : ${id}`,
+      };
+    });
+  
+    return true;
+  }
 };
 
 export default AccountServices;

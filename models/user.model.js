@@ -5,6 +5,7 @@ export const User = mongoose.model(
   new mongoose.Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
+    userId: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
     contactNumber : { type:Number, required: true },
@@ -20,13 +21,23 @@ export const User = mongoose.model(
     },
     upiDetail: {
       upiId: { type: String },
-      upiApp: { type: String }
+      upiApp: { type: String },
+      upiNumber: { type: Number }
     },
     webSiteDetail: [],
     tokens: {
       emailVerification: { type: String },
       passwordReset: { type: String },
-    }
+    },
+    transactionDetail: [
+      {
+       transactionID: { type: String },
+      transactionType: { type: String },
+      amount: { type: String },
+      paymentMethod: { type: String },
+      createdAt: { type: Date },
+      }
+  ]
   }),
   "users"
 );

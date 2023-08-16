@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 export const Bank = mongoose.model(
   "Bank",
   new mongoose.Schema({
-    name: { type: String, required: true },
+    accountHolderName: { type: String, required: true },
+    bankName: { type: String, required: true },
+    accountNumber: { type: Number, required: true },
+    ifscCode: { type: String, required: true }
   }),
   "Bank"
 );

@@ -1,5 +1,6 @@
 import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
+import { User } from "../models/user.model.js";
 
 const TransactionService = {
   adminTransaction: async (req, res) => {
@@ -14,63 +15,79 @@ const TransactionService = {
       res.status(500).json({ status: false, message: error });
     }
   },
-  depositTransaction: async (req, res) => {
-    try {
-      const { transactionID, transactionType, amount, paymentMethod } =
-        req.body;
-      const existingTransaction = await Transaction.findOne({
-        transactionID: transactionID,
-      }).exec();
-      if (existingTransaction) {
-        throw { code: 400, message: "Transaction already exists" };
-      }
-      await Transaction.create({
-        transactionID: transactionID,
-        transactionType: transactionType,
-        amount: amount,
-        paymentMethod: paymentMethod,
-        createdAt: new Date(),
-      })
-        .then(() => {
-          return res.send({
-            status: 200,
-            message: "Transaction created successfully",
-          });
-        })
-        .catch((err) => res.send({ status: 500, message: err }));
-    } catch (error) {
-      return res.status(500).json({ status: false, message: error });
-    }
-  },
-  withdrawTranscation: async (req, res) => {
-    try {
-      const { transactionID, transactionType, amount, paymentMethod } =
-        req.body;
 
+  createTransaction: async (req, res) => {
+    try {
+      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId } = req.body;
+  
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
       }).exec();
+  
       if (existingTransaction) {
-        throw { code: 400, message: "Transaction already exists" };
+        return res.status(400).json({ status: false, message: "Transaction already exists" });
       }
-      await Transaction.create({
+  
+      const newTransaction = new Transaction({
         transactionID: transactionID,
         transactionType: transactionType,
         amount: amount,
         paymentMethod: paymentMethod,
+        subAdminId: subAdminId,
         createdAt: new Date(),
-      })
-        .then(() => {
-          return res.send({
-            status: 200,
-            message: "Transaction created successfully",
-          });
-        })
-        .catch((err) => res.send({ status: 500, message: err }));
-    } catch (error) {
-      return res.status(500).json({ status: false, message: error });
+      });
+  
+      await newTransaction.save();
+
+      const user = await User.findOne({ userId: userId });
+  
+      if (!user) {
+        return res.status(404).json({ status: false, message: "User not found" });
+      }
+      user.transactionDetail.push(newTransaction);
+      await user.save();
+  
+      return res.status(200).json({ status: true, message: "Transaction created successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   },
+  
+  // withdrawTranscation: async (req, res) => {
+  //   try {
+  //     const { transactionID, transactionType, amount, paymentMethod, userId } =
+  //       req.body;
+
+  //     const existingTransaction = await Transaction.findOne({
+  //       transactionID: transactionID,
+  //     }).exec();
+  //     if (existingTransaction) {
+  //       throw { code: 400, message: "Transaction already exists" };
+  //     }
+  //     const newTransaction = new Transaction({
+  //       transactionID: transactionID,
+  //       transactionType: transactionType,
+  //       amount: amount,
+  //       paymentMethod: paymentMethod,
+  //       createdAt: new Date(),
+  //     })
+  //     await newTransaction.save();
+
+  //     const user = await User.findOne({ userId: userId });
+  
+  //     if (!user) {
+  //       return res.status(404).json({ status: false, message: "User not found" });
+  //     }
+  //     user.transactionDetail.push(newTransaction);
+  //     await user.save();
+  
+  //     return res.status(200).json({ status: true, message: "Transaction created successfully" });
+  //   } catch (e) {
+  //     console.error(e);
+  //     res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  //   }
+  // },
 
   depositView: async (req, res) => {
     try {

@@ -60,29 +60,48 @@ const AccountsRoute = (app) => {
   app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
 
-      const bankName = req.body.name;
+      const { accountHolderName, bankName, accountNumber, ifscCode } = req.body;
       if (!bankName) {
         throw { code: 400, message: "Please give a bank name to add" };
       }
       const newBankName = new Bank({
-        name: bankName
+        accountHolderName: accountHolderName,
+        bankName: bankName,
+        accountNumber: accountNumber,
+        ifscCode: ifscCode
       });
       newBankName.save();
       res
         .status(200)
-        .send({ message: "Bank registered successfully!" });
+        .send({ message: "Bank name registered successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
   });
 
+  app.put("/api/bank-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+      try {
+        const id = await Bank.findById(req.params.id);
+        console.log("id", id)
+        const updateResult = await AccountServices.updateBank(id, req.body);
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Bank Detail's updated");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
   app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const { name } = req.body;
-      console.log("req.body", name);
+      const { bankName } = req.body;
+      console.log("req.body", bankName);
       
-      const bankToDelete = await Bank.findOne({ name: name }).exec();
+      const bankToDelete = await Bank.findOne({ bankName: bankName }).exec();
       if (!bankToDelete) {
         return res.status(404).send({ message: "Bank not found" });
       }
@@ -162,16 +181,33 @@ const AccountsRoute = (app) => {
     }
   });
   
-  app.get("/api/user-profile", Authorize(["user"]), async (req, res) => {
+  app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
     try{
-      const user = await User.find({}).exe
+      const user = await User.find({}).exec();
       res.send(user);
     }catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
   })
-
+  
+  app.put(
+    "/api/admin/user-profile-edit/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = await User.findById(req.params.id);
+        const updateResult = await AccountServices.updateUserProfile(id, req.body);
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Profile updated");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
 
 };
 
