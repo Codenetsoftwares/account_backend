@@ -2,7 +2,7 @@ import AccountServices from "../services/Accounts.services.js";
 import { Admin } from '../models/admin_user.js';
 import { Authorize } from "../middleware/Authorize.js";
 import { Bank } from "../models/bank.model.js"
-import { Website} from "../models/website.model.js"
+import { Website } from "../models/website.model.js"
 import { User } from "../models/user.model.js";
 
 const AccountsRoute = (app) => {
@@ -84,47 +84,58 @@ const AccountsRoute = (app) => {
   });
 
   app.put("/api/bank-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
-      try {
-        const id = await Bank.findById(req.params.id);
-        console.log("id", id)
-        const updateResult = await AccountServices.updateBank(id, req.body);
-        console.log(updateResult);
-        if (updateResult) {
-          res.status(201).send("Bank Detail's updated");
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
+    try {
+      const id = await Bank.findById(req.params.id);
+      console.log("id", id)
+      const updateResult = await AccountServices.updateBank(id, req.body);
+      console.log(updateResult);
+      if (updateResult) {
+        res.status(201).send("Bank Detail's updated");
       }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
+  }
   );
 
   app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const { bankName } = req.body;
       console.log("req.body", bankName);
-      
+
       const bankToDelete = await Bank.findOne({ bankName: bankName }).exec();
       if (!bankToDelete) {
         return res.status(404).send({ message: "Bank not found" });
       }
-  
+
       console.log("bankToDelete", bankToDelete);
-  
+
       const deleteData = await Bank.deleteOne({ _id: bankToDelete._id }).exec();
       console.log("deleteData", deleteData);
-  
+
       res.status(200).send({ message: "Bank name removed successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
     }
   });
-  
+
 
   app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const bankData = await Bank.find({}).exec();
+      res.status(200).send(bankData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
+  app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const bankData = await Bank.findOne({ _id: id }).exec();
       res.status(200).send(bankData);
     } catch (e) {
       console.error(e);
@@ -151,7 +162,7 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
+
   app.put("/api/website-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const id = await Website.findById(req.params.id);
@@ -166,30 +177,30 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   }
-);
+  );
 
   app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const { name } = req.body;
       console.log("req.body", name);
-      
+
       const WebsiteToDelete = await Website.findOne({ name: name }).exec();
       if (!WebsiteToDelete) {
         return res.status(404).send({ message: "Bank not found" });
       }
-  
+
       console.log("WebsiteToDelete", WebsiteToDelete);
-  
+
       const deleteData = await Website.deleteOne({ _id: WebsiteToDelete._id }).exec();
       console.log("deleteData", deleteData);
-  
+
       res.status(200).send({ message: "Website name removed successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
     }
   });
-  
+
   app.get("/api/get-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const websiteData = await Website.find({}).exec();
@@ -199,17 +210,17 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
+
   app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
-    try{
+    try {
       const user = await User.find({}).exec();
       res.send(user);
-    }catch (e) {
+    } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
   })
-  
+
   app.put(
     "/api/admin/user-profile-edit/:id",
     Authorize(["superAdmin"]),
