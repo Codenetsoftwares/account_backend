@@ -232,14 +232,7 @@ export const userservice = {
   updateUserProfile: async(id, data) => {
     const existingUser = await User.findById(id);
     if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
-
-    // existingUser.firstname = data.firstname ? data.firstname : existingUser.firstname;
-    // existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
-    // existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
-    // existingUser.bankDetail = data.bankDetail ? JSON.parse(data.bankDetail) : existingUser.bankDetail;
-    // existingUser.upiDetail = data.upiDetail ? JSON.parse(data.upiDetail) : existingUser.upiDetail;
-    // existingUser.webSiteDetail = data.webSiteDetail ? JSON.parse(data.webSiteDetail) : existingUser.webSiteDetail;
-    
+        
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
     existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;

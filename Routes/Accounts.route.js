@@ -7,6 +7,8 @@ import { User } from "../models/user.model.js";
 
 const AccountsRoute = (app) => {
 
+  // API For Admin Login
+
   app.post("/admin/login", async (req, res) => {
     try {
       const { email, password, persist } = req.body;
@@ -44,6 +46,8 @@ const AccountsRoute = (app) => {
     }
   });
 
+  // API To Create Admin User
+
   app.post("/api/create/user-admin", Authorize(["superAdmin"]), async (req, res) => {
     try {
       await AccountServices.createAdmin(req.body);
@@ -55,7 +59,8 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-
+  
+  // API To Add Bank Name
 
   app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -83,6 +88,8 @@ const AccountsRoute = (app) => {
     }
   });
 
+  // API To Edit Bank Details
+
   app.put("/api/bank-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const id = await Bank.findById(req.params.id);
@@ -98,6 +105,8 @@ const AccountsRoute = (app) => {
     }
   }
   );
+
+  // API To Delete Bank Name
 
   app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -121,6 +130,7 @@ const AccountsRoute = (app) => {
     }
   });
 
+  // API To View Bank Name
 
   app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -132,6 +142,8 @@ const AccountsRoute = (app) => {
     }
   })
 
+  // API To View Single Bank Name
+
   app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const id = req.params.id;
@@ -142,6 +154,8 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   })
+
+  // API To Add Website Name
 
   app.post("/api/add-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -163,6 +177,8 @@ const AccountsRoute = (app) => {
     }
   });
 
+  // API To Edit Website Name
+
   app.put("/api/website-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const id = await Website.findById(req.params.id);
@@ -178,6 +194,8 @@ const AccountsRoute = (app) => {
     }
   }
   );
+
+  // API To Delete Website Name
 
   app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -200,6 +218,8 @@ const AccountsRoute = (app) => {
       res.status(e.code || 500).send({ message: e.message });
     }
   });
+  
+  // API To View Website Name
 
   app.get("/api/get-website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -211,6 +231,8 @@ const AccountsRoute = (app) => {
     }
   });
 
+  // API To View User Profiles
+
   app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const user = await User.find({}).exec();
@@ -220,6 +242,8 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   })
+
+  // API To Edit User Profiles
 
   app.put(
     "/api/admin/user-profile-edit/:id",
