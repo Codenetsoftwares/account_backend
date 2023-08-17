@@ -117,7 +117,7 @@ const TransactionService = {
 
   withdrawView: async (req, res) => {
     try {
-      const withdraws = await Transaction.find({ transactionType: "withdraw" })
+      const withdraws = await Transaction.find({ transactionType: "Withdraw" })
         .sort({ createdAt: -1 })
         .exec();
       let sum = 0;
