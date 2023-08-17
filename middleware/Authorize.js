@@ -9,7 +9,7 @@ export const Authorize = (roles) => {
     try {
       const authToken = req.headers.authorization;
 
-      if (!authToken) {
+      if (!authToken) {  
         return res
           .status(401)
           .send({ code: 401, message: "Invalid login attempt (1)" });
@@ -44,7 +44,7 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("admin")) {
+      if (roles.includes("Dashboard")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -54,7 +54,7 @@ export const Authorize = (roles) => {
         }
       }
       
-      if (roles.includes("deposit")) {
+      if (roles.includes("BankView")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -64,7 +64,37 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("withdraw")) {
+      if (roles.includes("CreateSubAdmin")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+
+      if (roles.includes("WebsiteView")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+
+      if (roles.includes("Profile")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+
+      if (roles.includes("EditRequest")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({

@@ -9,7 +9,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/api/admin/create/transaction',
-    Authorize(['admin', 'superAdmin']),
+    Authorize(['superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.createTransaction(req, res);
@@ -24,7 +24,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/api/deposit/view',
-    Authorize(['admin', 'superAdmin']),
+    Authorize(['superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.depositView(req, res);
@@ -39,7 +39,7 @@ const TransactionRoutes = (app) => {
 
   app.get(
     '/api/withdraw/view',
-    Authorize(['admin', 'superAdmin']),
+    Authorize(['superAdmin']),
     async (req, res) => {
       try {
         await TransactionServices.withdrawView(req, res);
