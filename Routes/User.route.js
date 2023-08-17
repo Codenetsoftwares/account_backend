@@ -1,10 +1,11 @@
 import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
-import { userBank } from "../models/userBank.model.js";
-import { userWebsite } from "../models/userWebsite.model.js";
 import { userservice } from "../services/user.service.js";
 
 export const UserRoutes = (app) => {
+
+  // API For User Login
+
   app.post("/api/accounts/user/login", async (req, res) => {
     try {
       const { email, password, persist } = req.body;
@@ -45,6 +46,8 @@ export const UserRoutes = (app) => {
     }
   });
 
+  // API To Create User
+
   app.post("/api/accounts/user/register", async (req, res) => {
     try {
       await userservice.createUser(req.body);
@@ -56,6 +59,8 @@ export const UserRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
+
+  // API To Verify User Email-Id
 
   app.post("/api/accounts/verify-email", async (req, res) => {
     try {
@@ -70,6 +75,8 @@ export const UserRoutes = (app) => {
     }
   });
 
+  // API To Initiate Reset User Password
+
   app.post("/api/accounts/initiate-reset-password", async (req, res) => {
     try {
       const { email } = req.body;
@@ -80,6 +87,8 @@ export const UserRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
+
+  // API To Reset User Password
 
   app.post("/api/accounts/reset-password", async (req, res) => {
     try {
@@ -94,36 +103,7 @@ export const UserRoutes = (app) => {
     }
   });
 
-  // app.get(
-  //   "/api/accounts/profileUserData",
-  //   AuthorizeRole(["user"]),
-  //   async (req, res) => {
-  //     try {
-  //       const user = req.user;
-  //       const response = {
-  //         firstname: user.firstname,
-  //         lastname: user.lastname,
-  //         userId: user.userId,
-  //         email: user.email,
-  //         emailVerified: user.emailVerified,
-  //         contactNumber: user.contactNumber,
-  //         wallet: user.wallet.amount,
-  //         role: user.role,
-  //         account_name: user.bankDetail.accountName ? user.bankDetail.accountName : null,
-  //         ifsc_code: user.bankDetail.ifscCode ? user.bankDetail.ifscCode : null,
-  //         account_number: user.bankDetail.accountNumber
-  //           ? user.bankDetail.accountNumber
-  //           : null,
-  //         profileUrl: user.profilePicture,
-  //         id: user.id,
-  //       };
-  //       res.status(200).send(response);
-  //     } catch (e) {
-  //       console.error(e);
-  //       res.status(e.code).send({ message: e.message });
-  //     }
-  //   }
-  // );
+ // API To Add Bank Name
 
   app.post(
     "/api/user/add-bank-name",
@@ -146,18 +126,7 @@ export const UserRoutes = (app) => {
     }
 );
 
-// app.post("/api/delete-website-name", AuthorizeRole(["user"]), async(req, res)=>{
-//   try {
-//     const { webSiteDetail } = req.body;
-//     const deleteData = await User.deleteOne({ webSiteDetail: webSiteDetail })
-//     console.log(deleteData)
-//     res.status(200).send({ message: "Website name removed successfully!" })
-//   }catch (e) {
-//     console.error(e);
-//     res.status(e.code).send({ message: e.message });
-//   }
-// });
-
+// API To Add Website Name
 
   app.post(
     "/api/user/add-website-name",
@@ -179,6 +148,7 @@ export const UserRoutes = (app) => {
     }
   );
 
+  // API To Add UPI Details
 
   app.post(
     "/api/user/add-upi-name",
@@ -200,6 +170,8 @@ export const UserRoutes = (app) => {
     }
 );
 
+// API To Edit User Profiles
+
 app.put(
   "/api/user-profile-edit/:id",
   AuthorizeRole(["user"]),
@@ -217,6 +189,8 @@ app.put(
     }
   }
 );
+
+// API To View User Profiles
 
 app.get("/api/user-profile-data/:userId", AuthorizeRole(["user"]), async (req, res) => {
   try {

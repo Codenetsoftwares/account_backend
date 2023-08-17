@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import AccountsRoute from './Routes/Accounts.route.js';
-import UserRoutes from './Routes/user.route.js';
+import UserRoutes from './Routes/User.route.js';
 import TransactionRoute from './Routes/Transaction.route.js';
 import crypto from 'crypto';
 
