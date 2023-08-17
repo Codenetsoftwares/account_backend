@@ -377,15 +377,15 @@ const TransactionRoutes = (app) => {
     const updatedTransaction = await Transaction.updateOne({ _id: editRequest.id }, {
     transactionID: editRequest.transactionID,
     transactionType: editRequest.transactionType,
-    withdrawAmount: editRequest.withdrawAmount,
-    depositAmount: editRequest.depositAmount,
+    amount: editRequest.amount,
     paymentMethod: editRequest.paymentMethod,
     });
+    console.log("updatedTransaction", updatedTransaction)
     if (updatedTransaction.matchedCount === 0) {
     return res.status(404).send({ message: "Transaction not found" });
     }
     editRequest.isApproved = true;
-    if (editRequest.isApproved) {
+    if (editRequest.isApproved === true) {
     const deletedEditRequest = await EditRequest.deleteOne({_id : req.params.requestId});
     console.log(deletedEditRequest)
     if (!deletedEditRequest) {
