@@ -3,10 +3,18 @@ import { Transaction } from "../models/transaction.js";
 import { User } from "../models/user.model.js";
 
 const TransactionService = {
-
   createTransaction: async (req, res) => {
     try {
-      const {  transactionID, transactionType, amount, paymentMethod, userId, subAdminId, bankName, websiteName } = req.body;
+      const {
+        transactionID,
+        transactionType,
+        amount,
+        paymentMethod,
+        userId,
+        subAdminId,
+        bankName,
+        websiteName,
+      } = req.body;
 
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
@@ -55,7 +63,7 @@ const TransactionService = {
 
   depositView: async (req, res) => {
     try {
-      const deposits = await Transaction.find({ transactionType: "deposit" })
+      const deposits = await Transaction.find({ transactionType: "Deposit" })
         .sort({ createdAt: -1 })
         .exec();
       let sum = 0;
