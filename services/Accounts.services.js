@@ -155,7 +155,6 @@ const AccountServices = {
     existingBank.bankName = data.bankName || existingBank.bankName;
     existingBank.accountNumber = data.accountNumber || existingBank.accountNumber;
     existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
-    existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
     existingBank.upiId = data.upiId || existingBank.upiId;
     existingBank.upiAppName = data.upiAppName || existingBank.upiAppName;
     existingBank.upiNumber = data.upiNumber || existingBank.upiNumber;
