@@ -6,7 +6,10 @@ export const Bank = mongoose.model(
     accountHolderName: { type: String, required: true },
     bankName: { type: String, required: true },
     accountNumber: { type: Number, required: true },
-    ifscCode: { type: String, required: true }
+    ifscCode: { type: String, required: true },
+    upiId: { type: String },
+    upiAppName : { type: String },
+    upiNumber: { type: String }
   }),
   "Bank"
 );

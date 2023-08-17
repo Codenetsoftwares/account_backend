@@ -4,6 +4,7 @@ import { User } from '../models/user.model.js';
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
 import { Bank } from '../models/bank.model.js';
+import { Website } from '../models/website.model.js';
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -154,6 +155,10 @@ const AccountServices = {
     existingBank.bankName = data.bankName || existingBank.bankName;
     existingBank.accountNumber = data.accountNumber || existingBank.accountNumber;
     existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
+    existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
+    existingBank.upiId = data.upiId || existingBank.upiId;
+    existingBank.upiAppName = data.upiAppName || existingBank.upiAppName;
+    existingBank.upiNumber = data.upiNumber || existingBank.upiNumber;
 
     existingBank.save().catch((err) => {
       console.error(err);
@@ -165,6 +170,25 @@ const AccountServices = {
   
     return true;
   },
+
+  updateWebsite: async(id, data) => {
+    const existingWebsite = await Website.findById(id);
+    console.log("existingWebsite", existingWebsite)
+    if (!existingWebsite) { throw { code: 404, message: `Existing Website not found with id : ${id}`, };}
+
+    existingWebsite.name = data.name || existingWebsite.name;
+
+    existingWebsite.save().catch((err) => {
+      console.error(err);
+      throw {
+        code: 500,
+        message: `Failed to update Website Name with : ${id}`,
+      };
+    });
+  
+    return true;
+  },
+
   updateUserProfile: async(id, data) => {
     const existingUser = await User.findById(id);
     if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
