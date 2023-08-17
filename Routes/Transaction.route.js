@@ -386,7 +386,7 @@ const TransactionRoutes = (app) => {
     }
     editRequest.isApproved = true;
     if (editRequest.isApproved) {
-    const deletedEditRequest = await EditRequest.deleteOne({_id : req.params.id});
+    const deletedEditRequest = await EditRequest.deleteOne({_id : req.params.requestId});
     console.log(deletedEditRequest)
     if (!deletedEditRequest) {
     return res.status(500).send({ message: "Error deleting edit request" });

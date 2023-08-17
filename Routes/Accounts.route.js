@@ -60,7 +60,7 @@ const AccountsRoute = (app) => {
   app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
 
-      const { accountHolderName, bankName, accountNumber, ifscCode } = req.body;
+      const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
       if (!bankName) {
         throw { code: 400, message: "Please give a bank name to add" };
       }
@@ -68,7 +68,10 @@ const AccountsRoute = (app) => {
         accountHolderName: accountHolderName,
         bankName: bankName,
         accountNumber: accountNumber,
-        ifscCode: ifscCode
+        ifscCode: ifscCode,
+        upiId: upiId,
+        upiAppName: upiAppName,
+        upiNumber: upiNumber
       });
       newBankName.save();
       res
@@ -149,6 +152,22 @@ const AccountsRoute = (app) => {
     }
   });
   
+  app.put("/api/website-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = await Website.findById(req.params.id);
+      console.log("id", id)
+      const updateResult = await AccountServices.updateWebsite(id, req.body);
+      console.log(updateResult);
+      if (updateResult) {
+        res.status(201).send("Website Detail's updated");
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
+
   app.post("/api/delete-wesite-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const { name } = req.body;
