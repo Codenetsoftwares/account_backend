@@ -12,6 +12,9 @@ export const EditRequest = mongoose.model(
     transactionType: { type: String, required: true },
     amount: { type: String, required: true },
     paymentMethod: { type: String },
+    userId: { type: String, required: true },
+    bankName: { type: String },
+    websiteName: { type: String },
     isApproved: { type: Boolean, default: false, required: true },
   }),
   "EditRequest"

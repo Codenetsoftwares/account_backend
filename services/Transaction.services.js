@@ -18,16 +18,27 @@ const TransactionService = {
 
   createTransaction: async (req, res) => {
     try {
-      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId } = req.body;
-  
+      const {
+        transactionID,
+        transactionType,
+        amount,
+        paymentMethod,
+        userId,
+        subAdminId,
+        bankName,
+        websiteName,
+      } = req.body;
+
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
       }).exec();
-  
+
       if (existingTransaction) {
-        return res.status(400).json({ status: false, message: "Transaction already exists" });
+        return res
+          .status(400)
+          .json({ status: false, message: "Transaction already exists" });
       }
-  
+
       const newTransaction = new Transaction({
         transactionID: transactionID,
         transactionType: transactionType,
@@ -35,26 +46,34 @@ const TransactionService = {
         paymentMethod: paymentMethod,
         subAdminId: subAdminId,
         userId: userId,
+        bankName: bankName,
+        websiteName: websiteName,
         createdAt: new Date(),
       });
-  
+
       await newTransaction.save();
 
       const user = await User.findOne({ userId: userId });
-  
+
       if (!user) {
-        return res.status(404).json({ status: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "User not found" });
       }
       user.transactionDetail.push(newTransaction);
       await user.save();
-  
-      return res.status(200).json({ status: true, message: "Transaction created successfully" });
+
+      return res
+        .status(200)
+        .json({ status: true, message: "Transaction created successfully" });
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+      res
+        .status(e.code || 500)
+        .send({ message: e.message || "Internal server error" });
     }
   },
-  
+
   // withdrawTranscation: async (req, res) => {
   //   try {
   //     const { transactionID, transactionType, amount, paymentMethod, userId } =
@@ -76,13 +95,13 @@ const TransactionService = {
   //     await newTransaction.save();
 
   //     const user = await User.findOne({ userId: userId });
-  
+
   //     if (!user) {
   //       return res.status(404).json({ status: false, message: "User not found" });
   //     }
   //     user.transactionDetail.push(newTransaction);
   //     await user.save();
-  
+
   //     return res.status(200).json({ status: true, message: "Transaction created successfully" });
   //   } catch (e) {
   //     console.error(e);
@@ -125,7 +144,10 @@ const TransactionService = {
       !data.transactionID ||
       !data.transactionType ||
       !data.amount ||
-      !data.paymentMethod
+      !data.paymentMethod ||
+      !data.userId ||
+      !data.bankName ||
+      !data.websiteName
     ) {
       throw {
         code: 400,
@@ -146,6 +168,9 @@ const TransactionService = {
       transactionType: data.transactionType,
       amount: data.amount,
       paymentMethod: data.paymentMethod,
+      userId: data.userId,
+      bankName: data.bankName,
+      websiteName: data.websiteName,
     };
     const backupTransaction = new EditRequest({
       ...updatedTransactionData,
