@@ -18,16 +18,7 @@ const TransactionService = {
 
   createTransaction: async (req, res) => {
     try {
-      const {
-        transactionID,
-        transactionType,
-        amount,
-        paymentMethod,
-        userId,
-        subAdminId,
-        bankName,
-        websiteName,
-      } = req.body;
+      const {  transactionID, transactionType, amount, paymentMethod, userId, subAdminId, bankName, websiteName } = req.body;
 
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
@@ -169,6 +160,7 @@ const TransactionService = {
       amount: data.amount,
       paymentMethod: data.paymentMethod,
       userId: data.userId,
+      subAdminId: data.subAdminId,
       bankName: data.bankName,
       websiteName: data.websiteName,
     };
