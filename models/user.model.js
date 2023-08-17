@@ -8,9 +8,9 @@ export const User = mongoose.model(
     userId: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    contactNumber : { type:Number, required: true },
+    contactNumber: { type: Number, required: true },
     emailVerified: { type: Boolean, default: false },
-    wallet: { type: Number},
+    wallet: { type: Number },
     profilePicture: { type: String },
     role: { type: String, default: "user" },
     bankDetail: {
@@ -22,7 +22,7 @@ export const User = mongoose.model(
     upiDetail: {
       upiId: { type: String },
       upiApp: { type: String },
-      upiNumber: { type: Number }
+      upiNumber: { type: Number },
     },
     webSiteDetail: [],
     tokens: {
@@ -31,13 +31,17 @@ export const User = mongoose.model(
     },
     transactionDetail: [
       {
-       transactionID: { type: String },
-      transactionType: { type: String },
-      amount: { type: String },
-      paymentMethod: { type: String },
-      createdAt: { type: Date },
-      }
-  ]
+        subAdminId: { type: String },
+        transactionID: { type: String },
+        transactionType: { type: String },
+        amount: { type: String },
+        paymentMethod: { type: String },
+        userId: { type: String },
+        bankName: { type: String },
+        websiteName: { type: String },
+        createdAt: { type: Date },
+      },
+    ],
   }),
   "users"
 );
