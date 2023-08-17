@@ -34,6 +34,7 @@ const TransactionService = {
         amount: amount,
         paymentMethod: paymentMethod,
         subAdminId: subAdminId,
+        userId: userId,
         createdAt: new Date(),
       });
   
