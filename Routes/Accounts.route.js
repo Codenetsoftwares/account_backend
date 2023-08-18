@@ -325,6 +325,9 @@ const AccountsRoute = (app) => {
       bank.subAdminId = userId.email;
       bank.subAdminName = userId.firstname;
       await bank.save();
+
+      let beforeBal = (bank.walletBalance) - (amount)
+      console.log('before',beforeBal)
       
       const bankTransaction = new BankTransaction({
         accountHolderName: bank.accountHolderName,
@@ -335,9 +338,9 @@ const AccountsRoute = (app) => {
         upiId: bank.upiId,
         upiAppName: bank.upiAppName,
         upiNumber: bank.upiNumber,
-        afterBalance: bank.afterBalance,
-        beforeBalance: bank.beforeBalance,
-        currentBalance: bank.currentBalance,
+        // afterBalance: bank.walletBalance,
+        beforeBalance: beforeBal,
+        currentBalance: bank.walletBalance,
         withdrawAmount: amount,
         subAdminId: userId.email,
         subAdminName: userId.firstname,
