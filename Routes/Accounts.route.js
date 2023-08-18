@@ -4,6 +4,7 @@ import { Authorize } from "../middleware/Authorize.js";
 import { Bank } from "../models/bank.model.js"
 import { Website } from "../models/website.model.js"
 import { User } from "../models/user.model.js";
+import { BankTransaction } from "../models/bankTransaction.model.js"
 
 const AccountsRoute = (app) => {
 
@@ -65,7 +66,7 @@ const AccountsRoute = (app) => {
   app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
 
-      const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
+      const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber  } = req.body;
       if (!bankName) {
         throw { code: 400, message: "Please give a bank name to add" };
       }
@@ -76,12 +77,11 @@ const AccountsRoute = (app) => {
         ifscCode: ifscCode,
         upiId: upiId,
         upiAppName: upiAppName,
-        upiNumber: upiNumber
+        upiNumber: upiNumber,
+        walletBalance: 0  
       });
       newBankName.save();
-      res
-        .status(200)
-        .send({ message: "Bank name registered successfully!" });
+      res.status(200).send({ message: "Bank name registered successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
@@ -165,7 +165,8 @@ const AccountsRoute = (app) => {
         throw { code: 400, message: "Please give a website name to add" };
       }
       const newWebsiteName = new Website({
-        name: websiteName
+        name: websiteName,
+        walletBalance : 0
       });
       newWebsiteName.save();
       res
@@ -262,6 +263,95 @@ const AccountsRoute = (app) => {
       }
     }
   );
+
+  app.post("/api/admin/add-bank-balance/:id", Authorize(["superAdmin"]), async (req, res) =>{
+    try {
+      const id = req.params.id;
+      const userId = req.user;
+      const { amount, transactionType }  = req.body;
+      const bank = await Bank.findOne({ _id: id }).exec();
+      console.log("bank", bank)
+      if (!bank) {
+        return res.status(404).send({ message: "Bank account not found" });
+      }
+      bank.walletBalance += amount.amount;
+      bank.subAdminId = userId.email;
+      bank.subAdminName = userId.firstname;
+      bank.transactionType = transactionType.transactionType;
+      await bank.save();
+      res.status(200).send({ message: "Wallet Balance Added to Bank Account" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
+  app.post("/api/admin/add-website-balance/:id", Authorize(["superAdmin"]), async (req, res) =>{
+    try {
+      const id = req.params.id;
+      const userId = req.user;
+      const { amount, transactionType } = req.body;
+      const website = await Website.findOne({ _id: id }).exec();
+      console.log("website", website)
+      if (!website) {
+        return res.status(404).send({ message: "Website  not found" });
+      }
+      website.walletBalance += amount.amount;
+      website.subAdminId = userId.email;
+      website.subAdminName = userId.firstname;
+      website.transactionType = transactionType.transactionType;
+      await website.save();
+      res.status(200).send({ message: "Wallet Balance Added to Website" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
+
+  app.post("/api/admin/withdraw-bank-balance/:id", Authorize(["superAdmin"]), async (req, res) =>{
+    try {
+      const id = req.params.id;
+      const userId = req.user;
+      const { amount, transactionType }  = req.body;
+      console.log('amount',amount)
+      const bank = await Bank.findOne({ _id: id }).exec();
+      console.log("bank", bank)
+      if (!bank) {
+        return res.status(404).send({ message: "Bank account not found" });
+      }
+      bank.walletBalance -= amount;
+      console.log('bankwallet',bank.walletBalance)
+      bank.transactionType = transactionType;
+      bank.subAdminId = userId.email;
+      bank.subAdminName = userId.firstname;
+      await bank.save();
+      
+      const bankTransaction = new BankTransaction({
+        accountHolderName: bank.accountHolderName,
+        bankName: bank.bankName,
+        accountNumber: bank.accountNumber,
+        ifscCode: bank.ifscCode,
+        transactionType: transactionType,
+        upiId: bank.upiId,
+        upiAppName: bank.upiAppName,
+        upiNumber: bank.upiNumber,
+        afterBalance: bank.afterBalance,
+        beforeBalance: bank.beforeBalance,
+        currentBalance: bank.currentBalance,
+        withdrawAmount: amount,
+        subAdminId: userId.email,
+        subAdminName: userId.firstname,
+        date: new Date()
+    });
+    console.log('banktrans',bankTransaction)
+
+    await bankTransaction.save();
+    res.status(200).send({ message: "Wallet Balance Deducted from your Bank Account" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  })
 
 };
 

@@ -1,80 +1,91 @@
 import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
+import { Bank } from "../models/bank.model.js"
+import { Website } from "../models/website.model.js"
 import { User } from "../models/user.model.js";
 
 const TransactionService = {
   createTransaction: async (req, res) => {
     try {
-      const {
-        transactionID,
-        transactionType,
-        amount,
-        paymentMethod,
-        userId,
-        subAdminId,
-        bankName,
-        websiteName,
-      } = req.body;
+      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, bankName, websiteName } = req.body;
 
-      const existingTransaction = await Transaction.findOne({
-        transactionID: transactionID,
-      }).exec();
+      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
+      if (existingTransaction) { return res.status(400).json({ status: false, message: "Transaction already exists" });}
 
-      if (existingTransaction) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Transaction already exists" });
+      const wesiteId = await Website.findOne({ name: websiteName }).exec();
+      console.log("wesiteId", wesiteId)
+      const bankId = await Bank.findOne({ accountHolderName:bankName }).exec();
+      console.log("bankId", bankId)
+
+      if (transactionType === "Deposit") {
+        const websiteBalance = wesiteId.walletBalance;
+        if (websiteBalance < amount) {
+          throw new Error("Insufficient balance");
+        }
+        const newWebsiteBalance = websiteBalance - amount;
+        console.log("newWebsiteBalance", newWebsiteBalance)
+        wesiteId.walletBalance = newWebsiteBalance;
+        await wesiteId.save();
+
+        const bankBalance = bankId.walletBalance;
+        const newBankBalance = parseInt(bankBalance) + parseInt(amount);
+        console.log("newBankBalance", newBankBalance)
+        bankId.walletBalance = newBankBalance;
+        await bankId.save();
+      }
+
+      if (transactionType === "Withdraw") {
+        const bankBalance = bankId.walletBalance;
+        if (bankBalance < amount) {
+          throw new Error("Insufficient balance");
+        }
+        const newbankBalance = bankBalance - amount;
+        console.log("newbankBalance", newbankBalance)
+        bankId.walletBalance = newbankBalance;
+        await wesiteId.save();
+
+        const websiteBalance = wesiteId.walletBalance;
+        const newWebsiteBalance = Number(websiteBalance) + Number(amount);
+        console.log("newWebsiteBalance", newWebsiteBalance)
+        wesiteId.walletBalance = newWebsiteBalance;
+        await wesiteId.save();
       }
 
       const newTransaction = new Transaction({
-        transactionID: transactionID,
-        transactionType: transactionType,
-        amount: amount,
-        paymentMethod: paymentMethod,
-        subAdminId: subAdminId,
-        userId: userId,
-        bankName: bankName,
-        websiteName: websiteName,
-        createdAt: new Date(),
-      });
+          transactionID: transactionID,
+          transactionType: transactionType,
+          amount: amount,
+          paymentMethod: paymentMethod,
+          subAdminId: subAdminId,
+          userId: userId,
+          bankName: bankName,
+          websiteName: websiteName,
+          createdAt: new Date(),
+          });
 
-      await newTransaction.save();
 
-      const user = await User.findOne({ userId: userId });
+  await newTransaction.save();
 
-      if (!user) {
-        return res
-          .status(404)
-          .json({ status: false, message: "User not found" });
-      }
-      user.transactionDetail.push(newTransaction);
-      await user.save();
+  const user = await User.findOne({ userId: userId });
 
-      return res
-        .status(200)
-        .json({ status: true, message: "Transaction created successfully" });
-    } catch (e) {
-      console.error(e);
-      res
-        .status(e.code || 500)
-        .send({ message: e.message || "Internal server error" });
-    }
-  },
+  if (!user) {
+    return res
+      .status(404)
+      .json({ status: false, message: "User not found" });
+  }
+  user.transactionDetail.push(newTransaction);
+  await user.save();
 
-  depositView: async (req, res) => {
-    try {
-      const deposits = await Transaction.find({ transactionType: "Deposit" })
-        .sort({ createdAt: -1 })
-        .exec();
-      let sum = 0;
-      for (let i = 0; i < deposits.length; i++) {
-        sum = sum + deposits[i].depositAmount;
-      }
-      res.send({ totalDeposits: sum, deposits: deposits });
-    } catch (error) {
-      return res.status(500).json({ status: false, message: error });
-    }
-  },
+  return res
+    .status(200)
+    .json({ status: true, message: "Transaction created successfully" });
+} catch (e) {
+  console.error(e);
+  res
+    .status(e.code || 500)
+    .send({ message: e.message || "Internal server error" });
+}
+},
 
   withdrawView: async (req, res) => {
     try {
