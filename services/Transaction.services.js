@@ -14,7 +14,7 @@ const TransactionService = {
 
       const wesiteId = await Website.findOne({ name: websiteName }).exec();
       console.log("wesiteId", wesiteId)
-      const bankId = await Bank.findOne({ accountHolderName:bankName }).exec();
+      const bankId = await Bank.findOne({ accountNumber:bankName }).exec();
       console.log("bankId", bankId)
 
       if (transactionType === "Deposit") {
@@ -97,6 +97,21 @@ const TransactionService = {
         sum = sum + withdraws[i].withdrawAmount;
       }
       res.send({ totalWithdraws: sum, withdraws: withdraws });
+    } catch (error) {
+      return res.status(500).json({ status: false, message: error });
+    }
+  },
+
+  depositView: async (req, res) => {
+    try {
+      const deposits = await Transaction.find({ transactionType: "Deposit" })
+        .sort({ createdAt: -1 })
+        .exec();
+      let sum = 0;
+      for (let i = 0; i < deposits.length; i++) {
+        sum = sum + deposits[i].depositAmount;
+      }
+      res.send({ totalDeposits: sum, deposits: deposits });
     } catch (error) {
       return res.status(500).json({ status: false, message: error });
     }
