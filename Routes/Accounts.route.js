@@ -313,6 +313,9 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
+        if (transactionType !== "Deposit") {
+          return res.status(500).send({ message: "Invalid transaction type" });
+        }
         const bank = await Bank.findOne({ _id: id }).exec();
         console.log("bank", bank);
         if (!bank) {
@@ -324,9 +327,6 @@ const AccountsRoute = (app) => {
         bank.transactionType = transactionType.transactionType;
         await bank.save();
 
-        let currentBal = bank.walletBalance + amount;
-        console.log("currentBal", currentBal);
-
         const bankTransaction = new BankTransaction({
           accountHolderName: bank.accountHolderName,
           bankName: bank.bankName,
@@ -336,8 +336,8 @@ const AccountsRoute = (app) => {
           upiId: bank.upiId,
           upiAppName: bank.upiAppName,
           upiNumber: bank.upiNumber,
-          beforeBalance: bank.walletBalance,
-          currentBalance: currentBal,
+          beforeBalance: bank.walletBalance - amount,
+          currentBalance: bank.walletBalance,
           depositAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
@@ -365,6 +365,9 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
+        if (transactionType !== "Deposit") {
+          return res.status(500).send({ message: "Invalid transaction type" });
+        }
         const website = await Website.findOne({ _id: id }).exec();
         console.log("website", website);
         if (!website) {
@@ -376,9 +379,9 @@ const AccountsRoute = (app) => {
         website.transactionType = transactionType.transactionType;
         await website.save();
 
-        let currentBal = website.walletBalance + amount;
+        let beforBal = website.walletBalance - amount;
+        let  currentBal = website.walletBalance;
         console.log("currentBal", currentBal);
-        let beforBal = website.walletBalance;
 
         const websiteTransaction = new WebsiteTransaction({
           name: website.name,
@@ -411,6 +414,9 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
+        if (transactionType !== "Withdraw") {
+          return res.status(500).send({ message: "Invalid transaction type" });
+        }
         console.log("amount", amount);
         const bank = await Bank.findOne({ _id: id }).exec();
         console.log("bank", bank);
@@ -424,8 +430,7 @@ const AccountsRoute = (app) => {
         bank.subAdminName = userId.firstname;
         await bank.save();
 
-        let currentBal = bank.walletBalance - amount;
-        console.log("before", beforeBal);
+        let currentBal = bank.walletBalance;
 
         const bankTransaction = new BankTransaction({
           accountHolderName: bank.accountHolderName,
@@ -436,7 +441,7 @@ const AccountsRoute = (app) => {
           upiId: bank.upiId,
           upiAppName: bank.upiAppName,
           upiNumber: bank.upiNumber,
-          beforeBalance: bank.walletBalance,
+          beforeBalance: bank.walletBalance + amount,
           currentBalance: currentBal,
           withdrawAmount: amount,
           subAdminId: userId.email,
@@ -464,6 +469,9 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
+        if (transactionType !== "Withdraw") {
+          return res.status(500).send({ message: "Invalid transaction type" });
+        }
         console.log("amount", amount);
         const website = await Website.findOne({ _id: id }).exec();
         console.log("website", website);
@@ -477,13 +485,12 @@ const AccountsRoute = (app) => {
         website.subAdminName = userId.firstname;
         await website.save();
 
-        let currentBal = website.walletBalance - amount;
-        console.log("before", beforeBal);
+        let currentBal = website.walletBalance ;
 
         const websiteTransaction = new WebsiteTransaction({
           name: website.name,
           transactionType: transactionType,
-          beforeBalance: beforBal,
+          beforeBalance: website.walletBalance + amount ,
           currentBalance: currentBal,
           withdrawAmount: amount,
           subAdminId: userId.email,
