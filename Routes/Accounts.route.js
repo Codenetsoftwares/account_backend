@@ -6,6 +6,7 @@ import { Website } from "../models/website.model.js";
 import { User } from "../models/user.model.js";
 import { BankTransaction } from "../models/bankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
+import { Transaction } from "../models/transaction.js";
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -509,6 +510,72 @@ const AccountsRoute = (app) => {
       }
     }
   );
+
+  app.get("/api/admin/sub-admin-name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const superAdmin = await Admin.find({ roles: "superAdmin" }, "firstname").exec();
+      res.status(200).send(superAdmin);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
+    }
+  });
+  
+
+  app.get("/api/admin/bank-name", Authorize(["superAdmin"]), async(req, res) => {
+    try {
+       const bankName = await Bank.find({}, "bankName").exec();
+       res.status(200).send(bankName);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+  app.get("/api/admin/website-name", Authorize(["superAdmin"]), async(req, res) => {
+    try {
+       const websiteName = await Website.find({}, "name").exec();
+       res.status(200).send(websiteName);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+  app.get("/api/admin/bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const accountNumber = req.params.accountNumber;
+      const bankSummary = await BankTransaction.find({ accountNumber }).exec();
+      res.status(200).send(bankSummary);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message }); 
+    }
+  });
+
+  app.get("/api/admin/website-account-summary/:name", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const name = req.params.name;
+      const websiteSummary = await WebsiteTransaction.find({ name  }).exec();
+      res.status(200).send(websiteSummary);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message }); 
+    }
+  });
+
+  app.get("/api/admin/account-summary", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+        const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
+        const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
+        const bankTransactions = await BankTransaction.find({}).sort({ date: -1 }).exec();
+        const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
+        res.status(200).send(allTransactions);
+    } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+    }
+});
 };
 
 export default AccountsRoute;
