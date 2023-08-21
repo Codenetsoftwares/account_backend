@@ -32,6 +32,7 @@ export const User = mongoose.model(
     transactionDetail: [
       {
         subAdminId: { type: String },
+        subAdminName: { type: String },
         transactionID: { type: String },
         transactionType: { type: String },
         amount: { type: String },

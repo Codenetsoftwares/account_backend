@@ -5,7 +5,7 @@ import { Website } from "../models/website.model.js"
 import { User } from "../models/user.model.js";
 
 const TransactionService = {
-  createTransaction: async (req, res) => {
+  createTransaction: async (req, res, subAdminName) => {
     try {
       const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, accountNumber, websiteName, bankName } = req.body;
 
@@ -57,6 +57,7 @@ const TransactionService = {
           amount: amount,
           paymentMethod: paymentMethod,
           subAdminId: subAdminId,
+          subAdminName: subAdminName.firstname,
           userId: userId,
           accountNumber: accountNumber,
           bankName: bankName,
