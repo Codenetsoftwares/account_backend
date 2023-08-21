@@ -7,14 +7,14 @@ import { User } from "../models/user.model.js";
 const TransactionService = {
   createTransaction: async (req, res) => {
     try {
-      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, bankName, websiteName } = req.body;
+      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, accountNumber, websiteName, bankName } = req.body;
 
       const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
       if (existingTransaction) { return res.status(400).json({ status: false, message: "Transaction already exists" });}
 
       const wesiteId = await Website.findOne({ name: websiteName }).exec();
       console.log("wesiteId", wesiteId)
-      const bankId = await Bank.findOne({ accountNumber:bankName }).exec();
+      const bankId = await Bank.findOne({ accountNumber:accountNumber }).exec();
       console.log("bankId", bankId)
 
       if (transactionType === "Deposit") {
@@ -42,7 +42,7 @@ const TransactionService = {
         const newbankBalance = bankBalance - amount;
         console.log("newbankBalance", newbankBalance)
         bankId.walletBalance = newbankBalance;
-        await wesiteId.save();
+        await bankId.save();
 
         const websiteBalance = wesiteId.walletBalance;
         const newWebsiteBalance = Number(websiteBalance) + Number(amount);
@@ -58,6 +58,7 @@ const TransactionService = {
           paymentMethod: paymentMethod,
           subAdminId: subAdminId,
           userId: userId,
+          accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
           createdAt: new Date(),
