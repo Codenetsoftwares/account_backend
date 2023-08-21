@@ -576,6 +576,40 @@ const AccountsRoute = (app) => {
         res.status(e.code || 500).send({ message: e.message });
     }
 });
+
+app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const accountNumber = req.params.accountNumber;
+    const transaction = await Transaction.findOne({ accountNumber }).exec();
+    console.log("transaction", transaction)
+    if (!transaction) {
+      return res.status(404).send({ message: "Account not found" });
+    }
+    const userId = transaction.userId;
+    const accountSummary = await Transaction.find({ accountNumber, userId }).exec();
+    res.status(200).send(accountSummary);
+  } catch (e) {
+    console.error(e);
+    res.status(e.code || 500).send({ message: e.message });
+}
+});
+
+app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const websiteName = req.params.websiteName;
+    const transaction = await Transaction.findOne({ websiteName }).exec();
+    console.log("transaction", transaction)
+    if (!transaction) {
+      return res.status(404).send({ message: "Website Name not found" });
+    }
+    const userId = transaction.userId;
+    const accountSummary = await Transaction.find({ websiteName, userId }).exec();
+    res.status(200).send(accountSummary);
+  } catch (e) {
+    console.error(e);
+    res.status(e.code || 500).send({ message: e.message });
+}
+});
 };
 
 export default AccountsRoute;
