@@ -12,7 +12,9 @@ const TransactionRoutes = (app) => {
     Authorize(['superAdmin']),
     async (req, res) => {
       try {
-        await TransactionServices.createTransaction(req, res);
+        const subAdminName = req.user;
+        console.log("subAdminName", subAdminName)
+        await TransactionServices.createTransaction(req, res, subAdminName);
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message || "Internal server error" });
