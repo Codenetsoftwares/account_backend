@@ -342,7 +342,7 @@ const AccountsRoute = (app) => {
           depositAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
-          date: new Date(),
+          createdAt: new Date(),
         });
         console.log("banktrans", bankTransaction);
 
@@ -392,7 +392,7 @@ const AccountsRoute = (app) => {
           depositAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
-          date: new Date(),
+          createdAt: new Date(),
         });
         console.log("websiteTransaction", websiteTransaction);
 
@@ -447,7 +447,7 @@ const AccountsRoute = (app) => {
           withdrawAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
-          date: new Date(),
+          createdAt: new Date(),
         });
         console.log("banktrans", bankTransaction);
 
@@ -496,7 +496,7 @@ const AccountsRoute = (app) => {
           withdrawAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
-          date: new Date(),
+          createdAt: new Date(),
         });
         console.log("websiteTransaction", websiteTransaction);
 
