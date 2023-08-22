@@ -173,7 +173,7 @@ const AccountServices = {
     console.log("existingWebsite", existingWebsite)
     if (!existingWebsite) { throw { code: 404, message: `Existing Website not found with id : ${id}`, };}
 
-    existingWebsite.name = data.name || existingWebsite.name;
+    existingWebsite.websiteName = data.websiteName || existingWebsite.websiteName;
 
     existingWebsite.save().catch((err) => {
       console.error(err);

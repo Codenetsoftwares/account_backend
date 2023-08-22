@@ -192,7 +192,7 @@ const AccountsRoute = (app) => {
           throw { code: 400, message: "Please give a website name to add" };
         }
         const newWebsiteName = new Website({
-          name: websiteName,
+          websiteName: websiteName,
           walletBalance: 0,
         });
         newWebsiteName.save();
@@ -232,12 +232,12 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin"]),
     async (req, res) => {
       try {
-        const { name } = req.body;
-        console.log("req.body", name);
+        const { websiteName } = req.body;
+        console.log("req.body", websiteName);
 
-        const WebsiteToDelete = await Website.findOne({ name: name }).exec();
+        const WebsiteToDelete = await Website.findOne({ websiteName: websiteName }).exec();
         if (!WebsiteToDelete) {
-          return res.status(404).send({ message: "Bank not found" });
+          return res.status(404).send({ message: "Website not found" });
         }
 
         console.log("WebsiteToDelete", WebsiteToDelete);
@@ -385,7 +385,7 @@ const AccountsRoute = (app) => {
         console.log("currentBal", currentBal);
 
         const websiteTransaction = new WebsiteTransaction({
-          name: website.name,
+          websiteName: website.websiteName,
           transactionType: transactionType,
           beforeBalance: beforBal,
           currentBalance: currentBal,
@@ -489,7 +489,7 @@ const AccountsRoute = (app) => {
         let currentBal = website.walletBalance ;
 
         const websiteTransaction = new WebsiteTransaction({
-          name: website.name,
+          websiteName: website.websiteName,
           transactionType: transactionType,
           beforeBalance: website.walletBalance + amount ,
           currentBalance: currentBal,
