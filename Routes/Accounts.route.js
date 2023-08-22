@@ -187,7 +187,7 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin"]),
     async (req, res) => {
       try {
-        const websiteName = req.body.name;
+        const websiteName = req.body.websiteName;
         if (!websiteName) {
           throw { code: 400, message: "Please give a website name to add" };
         }
