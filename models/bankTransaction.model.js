@@ -18,7 +18,7 @@ export const BankTransaction = mongoose.model(
     depositAmount : { type: Number },
     subAdminId : { type: String },
     subAdminName : { type: String },
-    date : { type: Date }
+    createdAt : { type: Date }
   }),
   "BankTransaction"
 );
