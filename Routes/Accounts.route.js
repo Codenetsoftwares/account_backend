@@ -587,6 +587,9 @@ app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["super
       return res.status(404).send({ message: "Account not found" });
     }
     const userId = transaction.userId;
+    if (!userId) {
+      return res.status(404).send({ message: "User Id not found" });
+    }
     const accountSummary = await Transaction.find({ accountNumber, userId }).exec();
     res.status(200).send(accountSummary);
   } catch (e) {
@@ -604,6 +607,9 @@ app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["supe
       return res.status(404).send({ message: "Website Name not found" });
     }
     const userId = transaction.userId;
+    if (!userId) {
+      return res.status(404).send({ message: "User Id not found" });
+    }
     const accountSummary = await Transaction.find({ websiteName, userId }).exec();
     res.status(200).send(accountSummary);
   } catch (e) {
