@@ -534,7 +534,7 @@ const AccountsRoute = (app) => {
 
   app.get("/api/admin/website-name", Authorize(["superAdmin"]), async(req, res) => {
     try {
-       const websiteName = await Website.find({}, "name").exec();
+       const websiteName = await Website.find({}, "websiteName").exec();
        res.status(200).send(websiteName);
     } catch (e) {
       console.error(e);
@@ -553,10 +553,10 @@ const AccountsRoute = (app) => {
     }
   });
 
-  app.get("/api/admin/website-account-summary/:name", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const name = req.params.name;
-      const websiteSummary = await WebsiteTransaction.find({ name  }).exec();
+      const websiteName = req.params.websiteName;
+      const websiteSummary = await WebsiteTransaction.find({ websiteName  }).exec();
       res.status(200).send(websiteSummary);
     } catch (e) {
       console.error(e);
