@@ -314,7 +314,7 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
-        if (transactionType !== "Deposit") {
+        if (transactionType !== "Manual-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
         const bank = await Bank.findOne({ _id: id }).exec();
@@ -366,7 +366,7 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
-        if (transactionType !== "Deposit") {
+        if (transactionType !== "Manual-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
         const website = await Website.findOne({ _id: id }).exec();
@@ -415,7 +415,7 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
-        if (transactionType !== "Withdraw") {
+        if (transactionType !== "Manual-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
         console.log("amount", amount);
@@ -470,7 +470,7 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userId = req.user;
         const { amount, transactionType } = req.body;
-        if (transactionType !== "Withdraw") {
+        if (transactionType !== "Manual-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
         console.log("amount", amount);
