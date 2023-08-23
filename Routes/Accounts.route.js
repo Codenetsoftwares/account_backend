@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { BankTransaction } from "../models/bankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
+import { introducerUser } from "../services/introducer.services.js";
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -609,6 +610,18 @@ app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["supe
     console.error(e);
     res.status(e.code || 500).send({ message: e.message });
 }
+});
+
+app.post("/api/admin/accounts/introducer/register", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    await introducerUser.createintroducerUser(req.body);
+    res
+      .status(200)
+      .send({ code: 200, message: "Introducer User registered successfully!" });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
 });
 };
 

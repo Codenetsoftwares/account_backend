@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { userservice } from "../services/user.service.js";
+import { introducerUser } from "../services/introducer.services.js"
 
 export const AuthorizeRole = (roles) => {
   return async (req, res, next) => {
@@ -34,6 +35,15 @@ export const AuthorizeRole = (roles) => {
       let existingUser;
       if (roles.includes("user")) {
         existingUser = await userservice.findUserById(user.id);
+        if (!existingUser) {
+          return res
+            .status(401)
+            .send({ code: 401, message: "Invalid login attempt for user (4)" });
+        }
+      }
+
+      if (roles.includes("introducer")) {
+        existingUser = await introducerUser.findIntroducerUserById(user.id);
         if (!existingUser) {
           return res
             .status(401)

@@ -13,8 +13,6 @@ export const User = mongoose.model(
     wallet: { type: Number },
     profilePicture: { type: String },
     role: { type: String, default: "user" },
-    introducerId : {  type: String },
-    introducerPercentage : { type: Number },
     bankDetail: {
       accountHolderName: { type: String },
       bankName: { type: String },
