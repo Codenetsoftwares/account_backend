@@ -8,6 +8,7 @@ export const BankTransaction = mongoose.model(
     accountNumber: { type: Number, required: true },
     ifscCode: { type: String, required: true },
     transactionType: { type: String, required: true },
+    remark: { type: String, required: true },
     upiId: { type: String },
     upiAppName : { type: String },
     upiNumber: { type: String },
