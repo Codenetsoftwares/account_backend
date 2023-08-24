@@ -10,6 +10,7 @@ export const User = mongoose.model(
     password: { type: String, required: true },
     contactNumber: { type: Number, required: true },
     emailVerified: { type: Boolean, default: false },
+    introducersUserId : {  type: String },
     wallet: { type: Number },
     profilePicture: { type: String },
     role: { type: String, default: "user" },
