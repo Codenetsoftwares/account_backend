@@ -314,7 +314,7 @@ const AccountsRoute = (app) => {
       try {
         const id = req.params.id;
         const userId = req.user;
-        const { amount, transactionType } = req.body;
+        const { amount, transactionType, remark } = req.body;
         if (transactionType !== "Manual-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -343,6 +343,7 @@ const AccountsRoute = (app) => {
           depositAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
+          remark: remark,
           createdAt: new Date(),
         });
         console.log("banktrans", bankTransaction);
@@ -366,7 +367,7 @@ const AccountsRoute = (app) => {
       try {
         const id = req.params.id;
         const userId = req.user;
-        const { amount, transactionType } = req.body;
+        const { amount, transactionType, remark } = req.body;
         if (transactionType !== "Manual-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -393,6 +394,7 @@ const AccountsRoute = (app) => {
           depositAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
+          remark: remark,
           createdAt: new Date(),
         });
         console.log("websiteTransaction", websiteTransaction);
@@ -415,7 +417,7 @@ const AccountsRoute = (app) => {
       try {
         const id = req.params.id;
         const userId = req.user;
-        const { amount, transactionType } = req.body;
+        const { amount, transactionType, remark } = req.body;
         if (transactionType !== "Manual-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -448,6 +450,7 @@ const AccountsRoute = (app) => {
           withdrawAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
+          remark: remark,
           createdAt: new Date(),
         });
         console.log("banktrans", bankTransaction);
@@ -470,7 +473,7 @@ const AccountsRoute = (app) => {
       try {
         const id = req.params.id;
         const userId = req.user;
-        const { amount, transactionType } = req.body;
+        const { amount, transactionType, remark } = req.body;
         if (transactionType !== "Manual-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -497,6 +500,7 @@ const AccountsRoute = (app) => {
           withdrawAmount: amount,
           subAdminId: userId.email,
           subAdminName: userId.firstname,
+          remark: remark,
           createdAt: new Date(),
         });
         console.log("websiteTransaction", websiteTransaction);
