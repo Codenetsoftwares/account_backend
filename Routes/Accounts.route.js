@@ -383,7 +383,7 @@ const AccountsRoute = (app) => {
         await website.save();
 
         let beforBal = website.walletBalance - amount;
-        let  currentBal = website.walletBalance;
+        let currentBal = website.walletBalance;
         console.log("currentBal", currentBal);
 
         const websiteTransaction = new WebsiteTransaction({
@@ -490,12 +490,12 @@ const AccountsRoute = (app) => {
         website.subAdminName = userId.firstname;
         await website.save();
 
-        let currentBal = website.walletBalance ;
+        let currentBal = website.walletBalance;
 
         const websiteTransaction = new WebsiteTransaction({
           websiteName: website.websiteName,
           transactionType: transactionType,
-          beforeBalance: website.walletBalance + amount ,
+          beforeBalance: website.walletBalance + amount,
           currentBalance: currentBal,
           withdrawAmount: amount,
           subAdminId: userId.email,
@@ -525,22 +525,22 @@ const AccountsRoute = (app) => {
       res.status(e.code || 500).send({ message: e.message });
     }
   });
-  
 
-  app.get("/api/admin/bank-name", Authorize(["superAdmin"]), async(req, res) => {
+
+  app.get("/api/admin/bank-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-       const bankName = await Bank.find({}, "bankName").exec();
-       res.status(200).send(bankName);
+      const bankName = await Bank.find({}, "bankName").exec();
+      res.status(200).send(bankName);
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
   });
 
-  app.get("/api/admin/website-name", Authorize(["superAdmin"]), async(req, res) => {
+  app.get("/api/admin/website-name", Authorize(["superAdmin"]), async (req, res) => {
     try {
-       const websiteName = await Website.find({}, "websiteName").exec();
-       res.status(200).send(websiteName);
+      const websiteName = await Website.find({}, "websiteName").exec();
+      res.status(200).send(websiteName);
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
@@ -554,85 +554,98 @@ const AccountsRoute = (app) => {
       res.status(200).send(bankSummary);
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message }); 
+      res.status(e.code).send({ message: e.message });
     }
   });
 
   app.get("/api/admin/website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const websiteName = req.params.websiteName;
-      const websiteSummary = await WebsiteTransaction.find({ websiteName  }).exec();
+      const websiteSummary = await WebsiteTransaction.find({ websiteName }).exec();
       res.status(200).send(websiteSummary);
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message }); 
+      res.status(e.code).send({ message: e.message });
     }
   });
 
   app.get("/api/admin/account-summary", Authorize(["superAdmin"]), async (req, res) => {
     try {
-        const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
-        const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
-        const bankTransactions = await BankTransaction.find({}).sort({ date: -1 }).exec();
-        const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
-        res.status(200).send(allTransactions);
+      const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
+      const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
+      const bankTransactions = await BankTransaction.find({}).sort({ date: -1 }).exec();
+      const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
+      res.status(200).send(allTransactions);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
+    }
+  });
+
+  app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const accountNumber = req.params.accountNumber;
+      const transaction = await Transaction.findOne({ accountNumber }).exec();
+      console.log("transaction", transaction)
+      if (!transaction) {
+        return res.status(404).send({ message: "Account not found" });
+      }
+      const userId = transaction.userId;
+      if (!userId) {
+        return res.status(404).send({ message: "User Id not found" });
+      }
+      const accountSummary = await Transaction.find({ accountNumber, userId }).exec();
+      res.status(200).send(accountSummary);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
+    }
+  });
+
+  app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const websiteName = req.params.websiteName;
+      const transaction = await Transaction.findOne({ websiteName }).exec();
+      console.log("transaction", transaction)
+      if (!transaction) {
+        return res.status(404).send({ message: "Website Name not found" });
+      }
+      const userId = transaction.userId;
+      if (!userId) {
+        return res.status(404).send({ message: "User Id not found" });
+      }
+      const accountSummary = await Transaction.find({ websiteName, userId }).exec();
+      res.status(200).send(accountSummary);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
+    }
+  });
+
+  app.post("/api/admin/accounts/introducer/register", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      await introducerUser.createintroducerUser(req.body);
+      res
+        .status(200)
+        .send({ code: 200, message: "Introducer User registered successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
+
+  app.post("/api/introducer/introducerCut/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { startDate, endDate } = req.body;
+        await introducerUser.introducerPercentageCut(id, startDate,endDate); // Pass both parameters to the function
+        res.status(200).send({ code: 200, message: "Introducer Percentage Transferred successfully!" });
     } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+        res.status(e.code).send({ message: e.message });
     }
 });
 
-app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const accountNumber = req.params.accountNumber;
-    const transaction = await Transaction.findOne({ accountNumber }).exec();
-    console.log("transaction", transaction)
-    if (!transaction) {
-      return res.status(404).send({ message: "Account not found" });
-    }
-    const userId = transaction.userId;
-    if (!userId) {
-      return res.status(404).send({ message: "User Id not found" });
-    }
-    const accountSummary = await Transaction.find({ accountNumber, userId }).exec();
-    res.status(200).send(accountSummary);
-  } catch (e) {
-    console.error(e);
-    res.status(e.code || 500).send({ message: e.message });
-}
-});
-
-app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const websiteName = req.params.websiteName;
-    const transaction = await Transaction.findOne({ websiteName }).exec();
-    console.log("transaction", transaction)
-    if (!transaction) {
-      return res.status(404).send({ message: "Website Name not found" });
-    }
-    const userId = transaction.userId;
-    if (!userId) {
-      return res.status(404).send({ message: "User Id not found" });
-    }
-    const accountSummary = await Transaction.find({ websiteName, userId }).exec();
-    res.status(200).send(accountSummary);
-  } catch (e) {
-    console.error(e);
-    res.status(e.code || 500).send({ message: e.message });
-}
-});
-
-app.post("/api/admin/accounts/introducer/register", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    await introducerUser.createintroducerUser(req.body);
-    res
-      .status(200)
-      .send({ code: 200, message: "Introducer User registered successfully!" });
-  } catch (e) {
-    console.error(e);
-    res.status(e.code).send({ message: e.message });
-  }
-});
 };
 
 export default AccountsRoute;

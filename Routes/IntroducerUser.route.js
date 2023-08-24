@@ -1,5 +1,3 @@
-import { AuthorizeRole } from "../middleware/auth.js";
-import { User } from "../models/user.model.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 
@@ -19,7 +17,7 @@ export const IntroducerRoutes = (app) => {
             email,
             password,
             persist
-          );
+          );  
     
           if (!accessToken) {
             throw { code: 500, message: "Failed to generate access token" };
@@ -42,6 +40,8 @@ export const IntroducerRoutes = (app) => {
           res.status(e.code).send({ message: e.message });
         }
       });
+
+      
     
 };
 

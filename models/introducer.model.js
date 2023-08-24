@@ -23,6 +23,7 @@ export const IntroducerUser = mongoose.model(
         upiNumber: { type: Number },
       },
       webSiteDetail: [],
+      creditTransaction : []
   }),
   "IntroducerUser"
 );
