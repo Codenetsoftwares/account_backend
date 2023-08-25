@@ -672,6 +672,19 @@ app.get("/api/intoducer-profile", Authorize(["superAdmin"]), async (req, res) =>
   }
 });
 
+app.get("/api/intoducer/client-data/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const intoducer = await IntroducerUser.findOne({id}).exec();
+    const intoducerId = intoducer.introducerId;
+    const introducerUser = await User.find({introducersUserId:intoducerId}).exec();
+    res.send(introducerUser);
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
 };
 
 export default AccountsRoute;

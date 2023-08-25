@@ -31,14 +31,14 @@ export const introducerUser = {
     if (!data.password) {
       throw { code: 400, message: "Password is required" };
     }
-
+    const id = crypto.randomBytes(4).toString('hex');
     const newIntroducerUser = new IntroducerUser({
       firstname: data.firstname,
       lastname: data.lastname,
       email: data.email,
       password: encryptedPassword,
       role: data.role,
-      introducerId: data.introducerId,
+      introducerId: id,
       introducerPercentage: data.introducerPercentage
     });
 
