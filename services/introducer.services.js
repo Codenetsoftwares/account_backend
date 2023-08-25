@@ -37,7 +37,7 @@ export const introducerUser = {
       lastname: data.lastname,
       email: data.email,
       password: encryptedPassword,
-      roles: data.roles,
+      role: data.role,
       introducerId: data.introducerId,
       introducerPercentage: data.introducerPercentage
     });
@@ -88,7 +88,7 @@ export const introducerUser = {
       id: existingUser._id,
       name: existingUser.firstname,
       email: existingUser.email,
-      role: existingUser.roles
+      role: existingUser.role
     };
     console.log(accessTokenResponse);
     const accessToken = jwt.sign(
@@ -158,9 +158,30 @@ export const introducerUser = {
     } catch (error) {
       console.error(error);
     }
+  },
+
+  
+  updateIntroducerProfile: async(id, data) => {
+    const existingUser = await IntroducerUser.findById(id);
+    if (!existingUser) { throw { code: 404, message: `Existing Introducer User not found with id : ${id}`, };}
+        
+    existingUser.firstname = data.firstname || existingUser.firstname;
+    existingUser.lastname = data.lastname || existingUser.lastname;
+    existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
+    existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
+    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
+
+    existingUser.save().catch((err) => {
+      console.error(err);
+      throw {
+        code: 500,
+        message: `Failed to update Introducer User Profile with id : ${id}`,
+      };
+    });
+  
+    return true;
   }
-
-
 
 
 

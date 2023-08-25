@@ -8,6 +8,7 @@ import { BankTransaction } from "../models/bankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
+import { IntroducerUser } from "../models/introducer.model.js"
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -634,16 +635,41 @@ const AccountsRoute = (app) => {
     }
   });
 
-  app.post("/api/introducer/introducerCut/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/admin/introducer/introducerCut/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
         const id = req.params.id;
         const { startDate, endDate } = req.body;
-        await introducerUser.introducerPercentageCut(id, startDate,endDate); // Pass both parameters to the function
+        await introducerUser.introducerPercentageCut(id, startDate,endDate);
         res.status(200).send({ code: 200, message: "Introducer Percentage Transferred successfully!" });
     } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
     }
+});
+
+app.put("/api/admin/intoducer-profile-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = await IntroducerUser.findById(req.params.id);
+      const updateResult = await introducerUser.updateIntroducerProfile(id, req.body);
+      console.log(updateResult);
+      if (updateResult) {
+        res.status(201).send("Profile updated");
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
+
+app.get("/api/intoducer-profile", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const introducerUser = await IntroducerUser.find({}).exec();
+    res.send(introducerUser);
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
 });
 
 };
