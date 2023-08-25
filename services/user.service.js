@@ -36,7 +36,7 @@ export const userservice = {
       lastname: data.lastname,
       email: data.email,
       contactNumber: data.contactNumber,
-      introducerId : data.introducerId,
+      introducersUserId : data.introducersUserId,
       introducerPercentage : data.introducerPercentage,
       password: encryptedPassword,
       userId: id,
