@@ -7,7 +7,7 @@ export const IntroducerUser = mongoose.model(
     lastname: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
-    roles: { type: String, required: true, default: "introducer" },
+    role: { type: String, required: true, default: "introducer" },
     wallet: { type: Number },
     introducerId : {  type: String },
     introducerPercentage : { type: Number },
