@@ -4,11 +4,13 @@ import { Authorize } from "../middleware/Authorize.js";
 import { Bank } from "../models/bank.model.js";
 import { Website } from "../models/website.model.js";
 import { User } from "../models/user.model.js";
-import { BankTransaction } from "../models/bankTransaction.model.js";
+import { BankTransaction } from "../models/banktransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
-import { IntroducerUser } from "../models/introducer.model.js"
+import { IntroducerUser } from "../models/introducer.model.js";
+import { EditBankRequest } from "../models/EditBankRequest.model.js";
+import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -237,7 +239,9 @@ const AccountsRoute = (app) => {
         const { websiteName } = req.body;
         console.log("req.body", websiteName);
 
-        const WebsiteToDelete = await Website.findOne({ websiteName: websiteName }).exec();
+        const WebsiteToDelete = await Website.findOne({
+          websiteName: websiteName,
+        }).exec();
         if (!WebsiteToDelete) {
           return res.status(404).send({ message: "Website not found" });
         }
@@ -517,174 +521,512 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/sub-admin-name", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const superAdmin = await Admin.find({ roles: "superAdmin" }, "firstname").exec();
-      res.status(200).send(superAdmin);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
-    }
-  });
-
-
-  app.get("/api/admin/bank-name", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const bankName = await Bank.find({}, "bankName").exec();
-      res.status(200).send(bankName);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  app.get("/api/admin/website-name", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const websiteName = await Website.find({}, "websiteName").exec();
-      res.status(200).send(websiteName);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  app.get("/api/admin/bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const accountNumber = req.params.accountNumber;
-      const bankSummary = await BankTransaction.find({ accountNumber }).exec();
-      res.status(200).send(bankSummary);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  app.get("/api/admin/website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const websiteName = req.params.websiteName;
-      const websiteSummary = await WebsiteTransaction.find({ websiteName }).exec();
-      res.status(200).send(websiteSummary);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  app.get("/api/admin/account-summary", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
-      const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
-      const bankTransactions = await BankTransaction.find({}).sort({ date: -1 }).exec();
-      const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
-      res.status(200).send(allTransactions);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
-    }
-  });
-
-  app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const accountNumber = req.params.accountNumber;
-      const transaction = await Transaction.findOne({ accountNumber }).exec();
-      console.log("transaction", transaction)
-      if (!transaction) {
-        return res.status(404).send({ message: "Account not found" });
+  app.get(
+    "/api/admin/sub-admin-name",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const superAdmin = await Admin.find(
+          { roles: "superAdmin" },
+          "firstname"
+        ).exec();
+        res.status(200).send(superAdmin);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
       }
-      const userId = transaction.userId;
-      if (!userId) {
-        return res.status(404).send({ message: "User Id not found" });
-      }
-      const accountSummary = await Transaction.find({ accountNumber, userId }).exec();
-      res.status(200).send(accountSummary);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
     }
-  });
+  );
 
-  app.get("/api/admin/user-website-account-summary/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const websiteName = req.params.websiteName;
-      const transaction = await Transaction.findOne({ websiteName }).exec();
-      console.log("transaction", transaction)
-      if (!transaction) {
-        return res.status(404).send({ message: "Website Name not found" });
-      }
-      const userId = transaction.userId;
-      if (!userId) {
-        return res.status(404).send({ message: "User Id not found" });
-      }
-      const accountSummary = await Transaction.find({ websiteName, userId }).exec();
-      res.status(200).send(accountSummary);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
-    }
-  });
-
-  app.post("/api/admin/accounts/introducer/register", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      await introducerUser.createintroducerUser(req.body);
-      res
-        .status(200)
-        .send({ code: 200, message: "Introducer User registered successfully!" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  app.post("/api/admin/introducer/introducerCut/:id", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { startDate, endDate } = req.body;
-        await introducerUser.introducerPercentageCut(id, startDate,endDate);
-        res.status(200).send({ code: 200, message: "Introducer Percentage Transferred successfully!" });
-    } catch (e) {
+  app.get(
+    "/api/admin/bank-name",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const bankName = await Bank.find({}, "bankName").exec();
+        res.status(200).send(bankName);
+      } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
-    }
-});
-
-app.put("/api/admin/intoducer-profile-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const id = await IntroducerUser.findById(req.params.id);
-      const updateResult = await introducerUser.updateIntroducerProfile(id, req.body);
-      console.log(updateResult);
-      if (updateResult) {
-        res.status(201).send("Profile updated");
       }
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
     }
-  }
-);
+  );
 
-app.get("/api/intoducer-profile", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const introducerUser = await IntroducerUser.find({}).exec();
-    res.send(introducerUser);
-  } catch (e) {
-    console.error(e);
-    res.status(e.code).send({ message: e.message });
-  }
-});
+  app.get(
+    "/api/admin/website-name",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const websiteName = await Website.find({}, "websiteName").exec();
+        res.status(200).send(websiteName);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
 
-app.get("/api/intoducer/client-data/:id", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const id = req.params.id;
-    const intoducer = await IntroducerUser.findOne({id}).exec();
-    const intoducerId = intoducer.introducerId;
-    const introducerUser = await User.find({introducersUserId:intoducerId}).exec();
-    res.send(introducerUser);
-  } catch (e) {
-    console.error(e);
-    res.status(e.code).send({ message: e.message });
-  }
-});
+  app.get(
+    "/api/admin/bank-account-summary/:accountNumber",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const accountNumber = req.params.accountNumber;
+        const bankSummary = await BankTransaction.find({
+          accountNumber,
+        }).exec();
+        res.status(200).send(bankSummary);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
 
+  app.get(
+    "/api/admin/website-account-summary/:websiteName",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const websiteName = req.params.websiteName;
+        const websiteSummary = await WebsiteTransaction.find({
+          websiteName,
+        }).exec();
+        res.status(200).send(websiteSummary);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/admin/account-summary",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const transactions = await Transaction.find({})
+          .sort({ createdAt: -1 })
+          .exec();
+        const websiteTransactions = await WebsiteTransaction.find({})
+          .sort({ date: -1 })
+          .exec();
+        const bankTransactions = await BankTransaction.find({})
+          .sort({ date: -1 })
+          .exec();
+        const allTransactions = [
+          ...transactions,
+          ...websiteTransactions,
+          ...bankTransactions,
+        ];
+        res.status(200).send(allTransactions);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/admin/user-bank-account-summary/:accountNumber",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const accountNumber = req.params.accountNumber;
+        const transaction = await Transaction.findOne({ accountNumber }).exec();
+        console.log("transaction", transaction);
+        if (!transaction) {
+          return res.status(404).send({ message: "Account not found" });
+        }
+        const userId = transaction.userId;
+        if (!userId) {
+          return res.status(404).send({ message: "User Id not found" });
+        }
+        const accountSummary = await Transaction.find({
+          accountNumber,
+          userId,
+        }).exec();
+        res.status(200).send(accountSummary);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/admin/user-website-account-summary/:websiteName",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const websiteName = req.params.websiteName;
+        const transaction = await Transaction.findOne({ websiteName }).exec();
+        console.log("transaction", transaction);
+        if (!transaction) {
+          return res.status(404).send({ message: "Website Name not found" });
+        }
+        const userId = transaction.userId;
+        if (!userId) {
+          return res.status(404).send({ message: "User Id not found" });
+        }
+        const accountSummary = await Transaction.find({
+          websiteName,
+          userId,
+        }).exec();
+        res.status(200).send(accountSummary);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
+
+  app.post(
+    "/api/admin/accounts/introducer/register",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        await introducerUser.createintroducerUser(req.body);
+        res.status(200).send({
+          code: 200,
+          message: "Introducer User registered successfully!",
+        });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.post(
+    "/api/admin/introducer/introducerCut/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { startDate, endDate } = req.body;
+        await introducerUser.introducerPercentageCut(id, startDate, endDate);
+        res.status(200).send({
+          code: 200,
+          message: "Introducer Percentage Transferred successfully!",
+        });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.put(
+    "/api/admin/intoducer-profile-edit/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = await IntroducerUser.findById(req.params.id);
+        const updateResult = await introducerUser.updateIntroducerProfile(
+          id,
+          req.body
+        );
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Profile updated");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/intoducer-profile",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const introducerUser = await IntroducerUser.find({}).exec();
+        res.send(introducerUser);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/intoducer/client-data/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = req.params.id;
+        const intoducer = await IntroducerUser.findOne({ id }).exec();
+        const intoducerId = intoducer.introducerId;
+        const introducerUser = await User.find({
+          introducersUserId: intoducerId,
+        }).exec();
+        res.send(introducerUser);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.put(
+    "/api/admin/bank-edit-transaction-request/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = await BankTransaction.findById(req.params.id);
+        console.log("id", req.params.id);
+        const updateResult = await AccountServices.updateBankTransaction(
+          id,
+          req.body
+        );
+        console.log(updateResult);
+        if (updateResult) {
+          res
+            .status(201)
+            .send("Bank Transaction update request send to Super Admin");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/superadmin/view-bank-edit-transaction-requests",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const resultArray = await EditBankRequest.find().exec();
+        res.status(200).send(resultArray);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server error");
+      }
+    }
+  );
+
+  app.post(
+    "/api/admin/approve-bank-edit-request/:requestId",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const editRequest = await EditBankRequest.findById(
+          req.params.requestId
+        );
+        if (!editRequest) {
+          return res.status(404).send({ message: "Edit request not found" });
+        }
+        const { isApproved } = req.body;
+        if (typeof isApproved !== "boolean") {
+          return res
+            .status(400)
+            .send({ message: "isApproved field must be a boolean value" });
+        }
+        if (!editRequest.isApproved) {
+          const updatedTransaction = await BankTransaction.updateOne(
+            { _id: editRequest.id },
+            {
+              transactionType: editRequest.transactionType,
+              remark: editRequest.remark,
+              withdrawAmount: editRequest.withdrawAmount,
+              subAdminId: editRequest.subAdminId,
+              subAdminName: editRequest.subAdminName,
+              depositAmount: editRequest.depositAmount,
+            }
+          );
+          console.log("updatedTransaction", updatedTransaction);
+          if (updatedTransaction.matchedCount === 0) {
+            return res.status(404).send({ message: "Transaction not found" });
+          }
+          editRequest.isApproved = true;
+          if (editRequest.isApproved === true) {
+            const deletedEditRequest = await EditBankRequest.deleteOne({
+              _id: req.params.requestId,
+            });
+            console.log(deletedEditRequest);
+            if (!deletedEditRequest) {
+              return res
+                .status(500)
+                .send({ message: "Error deleting edit request" });
+            }
+          }
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction: updatedTransaction,
+          });
+        } else {
+          return res.status(200).send({ message: "Edit request rejected" });
+        }
+      } catch (e) {
+        console.error(e);
+        res
+          .status(e.code || 500)
+          .send({ message: e.message || "Internal server error" });
+      }
+    }
+  );
+
+  app.put(
+    "/api/admin/bank-website-transaction-request/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = await WebsiteTransaction.findById(req.params.id);
+        console.log("id", req.params.id);
+        const updateResult = await AccountServices.updateWebsiteTransaction(
+          id,
+          req.body
+        );
+        console.log(updateResult);
+        if (updateResult) {
+          res
+            .status(201)
+            .send("Bank Transaction update request send to Super Admin");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/superadmin/view-website-edit-transaction-requests",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const resultArray = await EditWebsiteRequest.find().exec();
+        res.status(200).send(resultArray);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server error");
+      }
+    }
+  );
+
+  app.post(
+    "/api/admin/approve-website-edit-request/:requestId",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const editRequest = await EditWebsiteRequest.findById(
+          req.params.requestId
+        );
+        if (!editRequest) {
+          return res.status(404).send({ message: "Edit request not found" });
+        }
+        const { isApproved } = req.body;
+        if (typeof isApproved !== "boolean") {
+          return res
+            .status(400)
+            .send({ message: "isApproved field must be a boolean value" });
+        }
+        if (!editRequest.isApproved) {
+          const updatedTransaction = await WebsiteTransaction.updateOne(
+            { _id: editRequest.id },
+            {
+              transactionType: editRequest.transactionType,
+              remark: editRequest.remark,
+              withdrawAmount: editRequest.withdrawAmount,
+              subAdminId: editRequest.subAdminId,
+              subAdminName: editRequest.subAdminName,
+              depositAmount: editRequest.depositAmount,
+            }
+          );
+          console.log("updatedTransaction", updatedTransaction);
+          if (updatedTransaction.matchedCount === 0) {
+            return res.status(404).send({ message: "Transaction not found" });
+          }
+          editRequest.isApproved = true;
+          if (editRequest.isApproved === true) {
+            const deletedEditRequest = await EditWebsiteRequest.deleteOne({
+              _id: req.params.requestId,
+            });
+            console.log(deletedEditRequest);
+            if (!deletedEditRequest) {
+              return res
+                .status(500)
+                .send({ message: "Error deleting edit request" });
+            }
+          }
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction: updatedTransaction,
+          });
+        } else {
+          return res.status(200).send({ message: "Edit request rejected" });
+        }
+      } catch (e) {
+        console.error(e);
+        res
+          .status(e.code || 500)
+          .send({ message: e.message || "Internal server error" });
+      }
+    }
+  );
+
+  app.get(
+    "/api/admin/account-summary/:accountNumber",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const accountNumber = req.params.accountNumber;
+        const userType = req.query.userType;
+
+        if (userType === "user") {
+          const transaction = await Transaction.findOne({
+            accountNumber,
+          }).exec();
+
+          if (!transaction) {
+            return res.status(404).send({ message: "Account not found" });
+          }
+
+          const userId = transaction.userId;
+
+          if (!userId) {
+            return res.status(404).send({ message: "User Id not found" });
+          }
+
+          const accountSummary = await Transaction.find({
+            accountNumber,
+            userId,
+          }).exec();
+
+          res.status(200).send(accountSummary);
+        } else if (userType === "bank") {
+          const bankSummary = await BankTransaction.find({
+            accountNumber,
+          }).exec();
+
+          res.status(200).send(bankSummary);
+        } else {
+          return res.status(400).send({ message: "Invalid user type" });
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/superadmin/user-id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const resultArray = await User.find({}, "userId").exec();
+        res.status(200).send(resultArray);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server error");
+      }
+    }
+  );
 };
 
 export default AccountsRoute;
