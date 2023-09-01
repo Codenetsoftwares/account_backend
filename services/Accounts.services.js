@@ -1,13 +1,16 @@
-import { generateTokens } from '../helpers/generateToken.js';
-import { Admin } from '../models/admin_user.js';
-import { User } from '../models/user.model.js';
+import { generateTokens } from "../helpers/generateToken.js";
+import { Admin } from "../models/admin_user.js";
+import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import bcrypt from 'bcrypt';
-import { Bank } from '../models/bank.model.js';
-import { Website } from '../models/website.model.js';
+import bcrypt from "bcrypt";
+import { Bank } from "../models/bank.model.js";
+import { Website } from "../models/website.model.js";
+import { BankTransaction } from "../models/banktransaction.model.js";
+import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
+import { EditBankRequest } from "../models/EditBankRequest.model.js";
+import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
 const AccountServices = {
-
   adminLogin: async (req, res) => {
     try {
       const email = req.body.email;
@@ -21,9 +24,9 @@ const AccountServices = {
         const token = await generateTokens({
           email: data.adminEmail,
           username: data.adminName,
-          role: 'admin',
+          role: "admin",
         });
-        return res.send({ status: 200, message: 'success', result: token });
+        return res.send({ status: 200, message: "success", result: token });
       } else {
         throw { code: 400, message: "Wrong Password" };
       }
@@ -37,10 +40,10 @@ const AccountServices = {
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.email}` };
     }
-  
+
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-    
+
     if (!data.firstname) {
       throw { code: 400, message: "Firstname is required" };
     }
@@ -56,20 +59,20 @@ const AccountServices = {
     if (!data.roles || !data.roles.length) {
       throw { code: 400, message: "Roles are required" };
     }
-  
+
     const newAdmin = new Admin({
       firstname: data.firstname,
       lastname: data.lastname,
       email: data.email,
       password: encryptedPassword,
-      roles: data.roles
+      roles: data.roles,
     });
-  
+
     newAdmin.save().catch((err) => {
       console.error(err);
       throw { code: 500, message: "Failed to Save New Admin" };
     });
-  
+
     return true;
   },
 
@@ -110,7 +113,7 @@ const AccountServices = {
     return {
       email: existingUser.email,
       accessToken: accessToken,
-      role: existingUser.roles
+      role: existingUser.roles,
     };
   },
 
@@ -144,14 +147,18 @@ const AccountServices = {
     return User.findOne(filter).exec();
   },
 
-  updateBank: async(id, data) => {
+  updateBank: async (id, data) => {
     const existingBank = await Bank.findById(id);
-    console.log("existingBank", existingBank)
-    if (!existingBank) { throw { code: 404, message: `Existing Bank not found with id : ${id}`, };}
+    console.log("existingBank", existingBank);
+    if (!existingBank) {
+      throw { code: 404, message: `Existing Bank not found with id : ${id}` };
+    }
 
-    existingBank.accountHolderName = data.accountHolderName || existingBank.accountHolderName;
+    existingBank.accountHolderName =
+      data.accountHolderName || existingBank.accountHolderName;
     existingBank.bankName = data.bankName || existingBank.bankName;
-    existingBank.accountNumber = data.accountNumber || existingBank.accountNumber;
+    existingBank.accountNumber =
+      data.accountNumber || existingBank.accountNumber;
     existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
     existingBank.upiId = data.upiId || existingBank.upiId;
     existingBank.upiAppName = data.upiAppName || existingBank.upiAppName;
@@ -164,16 +171,22 @@ const AccountServices = {
         message: `Failed to update Bank Name with : ${id}`,
       };
     });
-  
+
     return true;
   },
 
-  updateWebsite: async(id, data) => {
+  updateWebsite: async (id, data) => {
     const existingWebsite = await Website.findById(id);
-    console.log("existingWebsite", existingWebsite)
-    if (!existingWebsite) { throw { code: 404, message: `Existing Website not found with id : ${id}`, };}
+    console.log("existingWebsite", existingWebsite);
+    if (!existingWebsite) {
+      throw {
+        code: 404,
+        message: `Existing Website not found with id : ${id}`,
+      };
+    }
 
-    existingWebsite.websiteName = data.websiteName || existingWebsite.websiteName;
+    existingWebsite.websiteName =
+      data.websiteName || existingWebsite.websiteName;
 
     existingWebsite.save().catch((err) => {
       console.error(err);
@@ -182,20 +195,24 @@ const AccountServices = {
         message: `Failed to update Website Name with : ${id}`,
       };
     });
-  
+
     return true;
   },
 
-  updateUserProfile: async(id, data) => {
+  updateUserProfile: async (id, data) => {
     const existingUser = await User.findById(id);
-    if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
-    
+    if (!existingUser) {
+      throw { code: 404, message: `Existing User not found with id : ${id}` };
+    }
+
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
+    existingUser.contactNumber =
+      data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.webSiteDetail =
+      data.webSiteDetail || existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);
@@ -204,9 +221,61 @@ const AccountServices = {
         message: `Failed to update User Profile with id : ${id}`,
       };
     });
-  
+
     return true;
-  }
+  },
+
+  updateBankTransaction: async (id, data) => {
+    const existingTransaction = await BankTransaction.findById(id);
+    if (!existingTransaction) {
+      throw {
+        code: 404,
+        message: `Transaction not found with id: ${id}`,
+      };
+    }
+    const updatedTransactionData = {
+      id: id._id,
+      transactionType: data.transactionType,
+      remark: data.remark,
+      withdrawAmount: data.withdrawAmount,
+      subAdminId: data.subAdminId,
+      subAdminName: data.subAdminName,
+      depositAmount: data.depositAmount,
+    };
+    const backupTransaction = new EditBankRequest({
+      ...updatedTransactionData,
+      isApproved: false,
+    });
+    await backupTransaction.save();
+
+    return true;
+  },
+
+  updateWebsiteTransaction: async (id, data) => {
+    const existingTransaction = await WebsiteTransaction.findById(id);
+    if (!existingTransaction) {
+      throw {
+        code: 404,
+        message: `Transaction not found with id: ${id}`,
+      };
+    }
+    const updatedTransactionData = {
+      id: id._id,
+      transactionType: data.transactionType,
+      remark: data.remark,
+      withdrawAmount: data.withdrawAmount,
+      subAdminId: data.subAdminId,
+      subAdminName: data.subAdminName,
+      depositAmount: data.depositAmount,
+    };
+    const backupTransaction = new EditWebsiteRequest({
+      ...updatedTransactionData,
+      isApproved: false,
+    });
+    await backupTransaction.save();
+
+    return true;
+  },
 };
 
 export default AccountServices;
