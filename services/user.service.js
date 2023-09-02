@@ -17,29 +17,28 @@ export const userservice = {
     if (!data.lastname) {
       throw { code: 400, message: "Lastname is required" };
     }
-    if (!data.email) {
-      throw { code: 400, message: "Email is required" };
+    if (!data.userName) {
+      throw { code: 400, message: "User Name is required" };
     }
     if (!data.password) {
       throw { code: 400, message: "Password is required" };
     }
-    const existingUser = await User.findOne({ email: data.email });
+    const existingUser = await User.findOne({ userName: data.userName });
     if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.email}` };
+      throw { code: 409, message: `User already exists: ${data.userName}` };
     }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
     const emailVerificationCode = crypto.randomBytes(6).toString("hex");
-    const id = crypto.randomBytes(4).toString("hex");
     const newUser = new User({
       firstname: data.firstname,
       lastname: data.lastname,
-      email: data.email,
+      userName: data.userName,
       contactNumber: data.contactNumber,
       introducersUserId : data.introducersUserId,
       introducerPercentage : data.introducerPercentage,
       password: encryptedPassword,
-      userId: id,
+      userId: data.userId,
       emailVerified: false,
       tokens: {
         emailVerification: emailVerificationCode,
@@ -52,28 +51,6 @@ export const userservice = {
       console.error(err);
       throw { code: 500, message: "Failed to save user" };
     });
-
-    nodemailer
-      .createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: true,
-        auth: {
-          user: process.env.SMTP_CLIENTID,
-          pass: process.env.SMTP_CLIENTSECRET,
-        },
-      })
-      .sendMail({
-        from: `'Customer Relationship Manager' <${process.env.SMTP_SENDER}>`,
-        to: data.email,
-        subject: "Verify your email",
-        text: `Your verification code is ${emailVerificationCode}`,
-      })
-      .catch((err) => {
-        console.error(err);
-        throw { code: 500, message: "Failed to send verification email" };
-      });
-
     return true;
   },
   
@@ -161,32 +138,28 @@ export const userservice = {
     existingUser.save();
   },
 
-  generateAccessToken: async (email, password, persist) => {
-    if (!email) {
+  generateAccessToken: async (userName, password, persist) => {
+    if (!userName) {
       throw { code: 400, message: "Invalid value for: email" };
     }
     if (!password) {
       throw { code: 400, message: "Invalid value for: password" };
     }
 
-    const existingUser = await userservice.findUser({ email: email });
+    const existingUser = await userservice.findUser({ userName: userName });
     if (!existingUser) {
-      throw { code: 401, message: "Invalid email address or password" };
+      throw { code: 401, message: "Invalid User Name  or password" };
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: "Invalid email address or password" };
-    }
-
-    if (!existingUser.emailVerified) {
-      throw { code: 403, message: "Email not verified" };
+      throw { code: 401, message: "Invalid User Name or password" };
     }
 
     const accessTokenResponse = {
       id: existingUser._id,
       name: existingUser.firstname,
-      email: existingUser.email,
+      userName: existingUser.userName,
       role: existingUser.role
     };
     console.log(accessTokenResponse);
@@ -199,8 +172,9 @@ export const userservice = {
     );
 
     return {
-      email: existingUser.email,
+      userName: existingUser.userName,
       accessToken: accessToken,
+      role: existingUser.role
     };
   },
 
