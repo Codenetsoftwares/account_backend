@@ -8,8 +8,8 @@ export const UserRoutes = (app) => {
 
   app.post("/api/accounts/user/login", async (req, res) => {
     try {
-      const { email, password, persist } = req.body;
-      if (!email) {
+      const { userName, password, persist } = req.body;
+      if (!userName) {  
         throw { code: 400, message: "Email ID is required" };
       }
 
@@ -17,7 +17,7 @@ export const UserRoutes = (app) => {
         throw { code: 400, message: "Password is required" };
       }
       const accessToken = await userservice.generateAccessToken(
-        email,
+        userName,
         password,
         persist
       );
@@ -25,7 +25,7 @@ export const UserRoutes = (app) => {
       if (!accessToken) {
         throw { code: 500, message: "Failed to generate access token" };
       }
-      const user = await User.findOne({ email: email });
+      const user = await User.findOne({ userName: userName });
       if (!user) {
         throw { code: 404, message: "User not found" };
       }
@@ -51,9 +51,7 @@ export const UserRoutes = (app) => {
   app.post("/api/accounts/user/register", async (req, res) => {
     try {
       await userservice.createUser(req.body);
-      res
-        .status(200)
-        .send({ code: 200, message: "User registered successfully!" });
+      res.status(200).send({ code: 200, message: "User registered successfully!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });

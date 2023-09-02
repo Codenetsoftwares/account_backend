@@ -9,6 +9,7 @@ import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js";
+import { userservice } from "../services/user.service.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
@@ -54,15 +55,10 @@ const AccountsRoute = (app) => {
 
   // API To Create Admin User
 
-  app.post(
-    "/api/create/user-admin",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/create/user-admin", Authorize(["superAdmin"]),async (req, res) => {
       try {
         await AccountServices.createAdmin(req.body);
-        res
-          .status(200)
-          .send({ code: 200, message: "Admin registered successfully!" });
+        res.status(200).send({ code: 200, message: "Admin registered successfully!" });
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -72,20 +68,9 @@ const AccountsRoute = (app) => {
 
   // API To Add Bank Name
 
-  app.post(
-    "/api/add-bank-name",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
       try {
-        const {
-          accountHolderName,
-          bankName,
-          accountNumber,
-          ifscCode,
-          upiId,
-          upiAppName,
-          upiNumber,
-        } = req.body;
+        const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
         if (!bankName) {
           throw { code: 400, message: "Please give a bank name to add" };
         }
@@ -127,10 +112,7 @@ const AccountsRoute = (app) => {
 
   // API To Delete Bank Name
 
-  app.post(
-    "/api/delete-bank-name",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
       try {
         const { bankName } = req.body;
         console.log("req.body", bankName);
@@ -142,9 +124,7 @@ const AccountsRoute = (app) => {
 
         console.log("bankToDelete", bankToDelete);
 
-        const deleteData = await Bank.deleteOne({
-          _id: bankToDelete._id,
-        }).exec();
+        const deleteData = await Bank.deleteOne({ _id: bankToDelete._id }).exec();
         console.log("deleteData", deleteData);
 
         res.status(200).send({ message: "Bank name removed successfully!" });
@@ -169,10 +149,7 @@ const AccountsRoute = (app) => {
 
   // API To View Single Bank Name
 
-  app.get(
-    "/api/get-single-bank-name/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin"]),async (req, res) => {
       try {
         const id = req.params.id;
         const bankData = await Bank.findOne({ _id: id }).exec();
@@ -186,10 +163,7 @@ const AccountsRoute = (app) => {
 
   // API To Add Website Name
 
-  app.post(
-    "/api/add-website-name",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/add-website-name", Authorize(["superAdmin"]), async (req, res) => {
       try {
         const websiteName = req.body.websiteName;
         if (!websiteName) {
@@ -782,7 +756,17 @@ app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
-})
+});
+
+app.post("/api/admin/user/register", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    await userservice.createUser(req.body);
+    res.status(200).send({ code: 200, message: "User registered successfully!" });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
  
 };
 
