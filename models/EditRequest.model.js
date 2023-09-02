@@ -12,6 +12,7 @@ export const EditRequest = mongoose.model(
     subAdminId: { type: String, required: true },
     bankName: { type: String },
     websiteName: { type: String },
+    createdAt: { type: Date },
     isApproved: { type: Boolean, default: false, required: true },
   }),
   "EditRequest"
