@@ -8,7 +8,8 @@ import swaggerUi from "swagger-ui-express";
 import AccountsRoute from './Routes/Accounts.route.js';
 import UserRoutes from './Routes/User.route.js';
 import TransactionRoute from './Routes/Transaction.route.js';
-import IntroducerRoutes from './Routes/IntroducerUser.route.js'
+import IntroducerRoutes from './Routes/IntroducerUser.route.js';
+import EditApiRoute from './Routes/EditApi.route.js'
 import crypto from 'crypto';
 
 dotenv.config();
@@ -83,6 +84,7 @@ AccountsRoute(app);
 TransactionRoute(app);
 UserRoutes(app);
 IntroducerRoutes(app);
+EditApiRoute(app);
 
 app.listen(process.env.PORT, () => {
   console.log(`Read the docs - http://localhost:${process.env.PORT || 8000}/api/docs`);

@@ -148,54 +148,38 @@ const AccountServices = {
   },
 
   updateBank: async (id, data) => {
-    const existingBank = await Bank.findById(id);
-    console.log("existingBank", existingBank);
-    if (!existingBank) {
-      throw { code: 404, message: `Existing Bank not found with id : ${id}` };
+    const existingTransaction = await Bank.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Bank not found with id: ${id}`};
     }
-
-    existingBank.accountHolderName =
-      data.accountHolderName || existingBank.accountHolderName;
-    existingBank.bankName = data.bankName || existingBank.bankName;
-    existingBank.accountNumber =
-      data.accountNumber || existingBank.accountNumber;
-    existingBank.ifscCode = data.ifscCode || existingBank.ifscCode;
-    existingBank.upiId = data.upiId || existingBank.upiId;
-    existingBank.upiAppName = data.upiAppName || existingBank.upiAppName;
-    existingBank.upiNumber = data.upiNumber || existingBank.upiNumber;
-
-    existingBank.save().catch((err) => {
-      console.error(err);
-      throw {
-        code: 500,
-        message: `Failed to update Bank Name with : ${id}`,
-      };
-    });
-
+    
+    const updatedTransactionData = {
+      id: id._id,
+      accountHolderName: data.accountHolderName,
+      bankName: data.bankName,
+      accountNumber: data.accountNumber,
+      ifscCode: data.ifscCode,
+      upiId: data.upiId,
+      upiAppName: data.upiAppName,
+      upiNumber:data.upiNumber
+    };
+    const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false});
+    await backupTransaction.save();
     return true;
   },
 
   updateWebsite: async (id, data) => {
-    const existingWebsite = await Website.findById(id);
-    console.log("existingWebsite", existingWebsite);
-    if (!existingWebsite) {
-      throw {
-        code: 404,
-        message: `Existing Website not found with id : ${id}`,
-      };
+    const existingTransaction = await Website.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Website not found with id: ${id}`};
     }
-
-    existingWebsite.websiteName =
-      data.websiteName || existingWebsite.websiteName;
-
-    existingWebsite.save().catch((err) => {
-      console.error(err);
-      throw {
-        code: 500,
-        message: `Failed to update Website Name with : ${id}`,
-      };
-    });
-
+    
+    const updatedTransactionData = {
+      id: id._id,
+      websiteName: data.websiteName
+    };
+    const backupTransaction = new EditWebsiteRequest({...updatedTransactionData, isApproved: false});
+    await backupTransaction.save();
     return true;
   },
 
@@ -228,24 +212,22 @@ const AccountServices = {
   updateBankTransaction: async (id, data) => {
     const existingTransaction = await BankTransaction.findById(id);
     if (!existingTransaction) {
-      throw {
-        code: 404,
-        message: `Transaction not found with id: ${id}`,
-      };
+      throw {code: 404, message: `Transaction not found with id: ${id}`};
     }
+    
     const updatedTransactionData = {
       id: id._id,
       transactionType: data.transactionType,
       remark: data.remark,
       withdrawAmount: data.withdrawAmount,
+      depositAmount: data.depositAmount,
       subAdminId: data.subAdminId,
       subAdminName: data.subAdminName,
-      depositAmount: data.depositAmount,
+      beforeBalance : id.currentBalance,
+      currentBalance: Number(id.beforeBalance) + Number(data.depositAmount),
+      currentBalance : Number(id.currentBalance) - Number(data.withdrawAmount)
     };
-    const backupTransaction = new EditBankRequest({
-      ...updatedTransactionData,
-      isApproved: false,
-    });
+    const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false});
     await backupTransaction.save();
 
     return true;
@@ -264,9 +246,12 @@ const AccountServices = {
       transactionType: data.transactionType,
       remark: data.remark,
       withdrawAmount: data.withdrawAmount,
+      depositAmount: data.depositAmount,
       subAdminId: data.subAdminId,
       subAdminName: data.subAdminName,
-      depositAmount: data.depositAmount,
+      beforeBalance : id.currentBalance,
+      currentBalance: Number(id.beforeBalance) + Number(data.depositAmount),
+      currentBalance : Number(id.currentBalance) - Number(data.withdrawAmount)
     };
     const backupTransaction = new EditWebsiteRequest({
       ...updatedTransactionData,
