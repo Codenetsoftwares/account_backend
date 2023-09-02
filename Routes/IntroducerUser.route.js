@@ -1,6 +1,10 @@
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 import { AuthorizeRole } from "../middleware/auth.js";
+import { User } from "../models/user.model.js";
+import { Transaction } from "../models/transaction.js";
+import { BankTransaction } from "../models/banktransaction.model.js";
+import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 
 export const IntroducerRoutes = (app) => {
   
@@ -70,6 +74,21 @@ export const IntroducerRoutes = (app) => {
           }
         }
       );
+    
+      app.get("/api/intoducer/user-data/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+        try {
+          const id = req.params.id;
+          const intoducer = await IntroducerUser.findOne({ id }).exec();
+          const intoducerId = intoducer.introducerId;
+          const introducerUser = await User.find({introducersUserId: intoducerId}).exec();
+          res.send(introducerUser);
+        } catch (e) {
+          console.error(e);
+          res.status(e.code).send({ message: e.message });
+        }
+      }
+    );
+
     
 };
 
