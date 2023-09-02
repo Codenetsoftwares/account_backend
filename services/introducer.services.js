@@ -108,6 +108,8 @@ export const introducerUser = {
   introducerPercentageCut: async (id, startDate, endDate) => {
     try {
       const user = await User.findOne({ id }).exec();
+      const userName = user.userName;
+      const userId = user.userId;
       const introducerUserId = user.introducersUserId;
       console.log("introducerUserId", introducerUserId);
 
@@ -152,7 +154,7 @@ export const introducerUser = {
         amount = ((introducerpercent / 100) * diff)
         introducerId.wallet += amount;
       }
-      introducerId.creditTransaction.push({date,transactionType,amount});
+      introducerId.creditTransaction.push({date,transactionType,amount,userId,userName});
       introducerId.save();
 
     } catch (error) {
