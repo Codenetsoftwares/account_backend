@@ -5,34 +5,18 @@ import { Website } from "../models/website.model.js";
 import { User } from "../models/user.model.js";
 
 const TransactionService = {
-  createTransaction: async (req, res, subAdminName) => {
+    createTransaction: async (req, res, subAdminName) => {
     try {
-      const {
-        transactionID,
-        transactionType,
-        amount,
-        paymentMethod,
-        userId,
-        subAdminId,
-        accountNumber,
-        websiteName,
-        bankName,
-      } = req.body;
+      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, accountNumber, websiteName, bankName, bankCharges, bonus } = req.body;
 
-      const existingTransaction = await Transaction.findOne({
-        transactionID: transactionID,
-      }).exec();
+      const existingTransaction = await Transaction.findOne({transactionID: transactionID}).exec();
       if (existingTransaction) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Transaction already exists" });
+        return res.status(400).json({ status: false, message: "Transaction already exists" });
       }
 
       const websiteId = await Website.findOne({ name: websiteName }).exec();
       console.log("wesiteId", websiteId);
-      const bankId = await Bank.findOne({
-        accountNumber: accountNumber,
-      }).exec();
+      const bankId = await Bank.findOne({accountNumber: accountNumber}).exec();
       console.log("bankId", bankId);
 
       if (transactionType === "Deposit") {
@@ -40,7 +24,7 @@ const TransactionService = {
         if (websiteBalance < amount) {
           throw new Error("Insufficient balance");
         }
-        const newWebsiteBalance = websiteBalance - amount;
+        const newWebsiteBalance = (websiteBalance + bankCharges) - amount;
         console.log("newWebsiteBalance", newWebsiteBalance);
         websiteId.walletBalance = newWebsiteBalance;
         await websiteId.save();
@@ -57,7 +41,7 @@ const TransactionService = {
         if (bankBalance < amount) {
           throw new Error("Insufficient balance");
         }
-        const newbankBalance = bankBalance - amount;
+        const newbankBalance = (bankBalance + bonus) - amount;
         console.log("newbankBalance", newbankBalance);
         bankId.walletBalance = newbankBalance;
         await bankId.save();
@@ -81,6 +65,7 @@ const TransactionService = {
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
+          bankCharges: bankCharges,
           beforeBalanceWebsiteDeposit: websiteId.walletBalance + amount,
           beforeBalanceBankDeposit: bankId.walletBalance - amount,
           currentBalanceWebsiteDeposit: websiteId.walletBalance,
@@ -111,6 +96,7 @@ const TransactionService = {
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
+          bonus:bonus,
           beforeBalanceWebsiteWithdraw: websiteId.walletBalance - amount,
           beforeBalanceBankWithdraw: bankId.walletBalance + amount,
           currentBalanceWebsiteWithdraw: websiteId.walletBalance,
