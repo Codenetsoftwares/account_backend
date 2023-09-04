@@ -629,6 +629,19 @@ const AccountsRoute = (app) => {
     }
   );
 
+  app.get("/api/admin/introducer-live-balance/:id",  Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const data =  await introducerUser.introducerLiveBalance(id);
+      console.log("data", data)
+     res.send({ LiveBalance: data })
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
+
   app.put("/api/admin/intoducer-profile-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
       try {
         const id = await IntroducerUser.findById(req.params.id);
