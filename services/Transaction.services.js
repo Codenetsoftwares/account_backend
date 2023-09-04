@@ -7,7 +7,7 @@ import { User } from "../models/user.model.js";
 const TransactionService = {
     createTransaction: async (req, res, subAdminName) => {
     try {
-      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, accountNumber, websiteName, bankName, bankCharges, bonus } = req.body;
+      const { transactionID, transactionType, amount, paymentMethod, userId, subAdminId, accountNumber, websiteName, bankName, bankCharges, bonus, remarks } = req.body;
 
       const existingTransaction = await Transaction.findOne({transactionID: transactionID}).exec();
       if (existingTransaction) {
@@ -66,6 +66,7 @@ const TransactionService = {
           bankName: bankName,
           websiteName: websiteName,
           bankCharges: bankCharges,
+          remarks:remarks,
           beforeBalanceWebsiteDeposit: websiteId.walletBalance + amount,
           beforeBalanceBankDeposit: bankId.walletBalance - amount,
           currentBalanceWebsiteDeposit: websiteId.walletBalance,
@@ -97,6 +98,7 @@ const TransactionService = {
           bankName: bankName,
           websiteName: websiteName,
           bonus:bonus,
+          remarks:remarks,
           beforeBalanceWebsiteWithdraw: websiteId.walletBalance - amount,
           beforeBalanceBankWithdraw: bankId.walletBalance + amount,
           currentBalanceWebsiteWithdraw: websiteId.walletBalance,
