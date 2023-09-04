@@ -112,7 +112,7 @@ export const IntroducerRoutes = (app) => {
       }
     });
 
-    app.get("/api/admin/introducer-live-balance/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+    app.get("/api/introducer/introducer-live-balance/:id", AuthorizeRole(["introducer"]), async (req, res) => {
       try {
         const id = req.params.id;
         const data =  await introducerUser.introducerLiveBalance(id);
