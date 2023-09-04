@@ -704,7 +704,7 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
     }
   }
 );
-
+  
 app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin"]),async (req, res) => {
     try {
       const websiteName = req.params.websiteName;
@@ -728,35 +728,6 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
   }
 );
 
-app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async(req,res)=>{
-  try {
-      const id = req.params.id;
-      const deletedTransaction = await BankTransaction.findByIdAndDelete(id).exec();
-      if (!deletedTransaction) {
-        res.status(404).send({ message: "Bank Transaction not found" });
-      } else {
-        res.status(200).send({ message: "Bank Transaction deleted", deletedTransaction });
-      }
-    }  catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-})
-
-app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async(req,res)=>{
-  try {
-      const id = req.params.id;
-      const deletedTransaction = await WebsiteTransaction.findByIdAndDelete(id).exec();
-      if (!deletedTransaction) {
-        res.status(404).send({ message: "Website Transaction not found" });
-      } else {
-        res.status(200).send({ message: "Website Transaction deleted", deletedTransaction });
-      }
-    }  catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-});
 
 app.post("/api/admin/user/register", Authorize(["superAdmin"]), async (req, res) => {
   try {

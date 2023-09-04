@@ -261,6 +261,58 @@ const AccountServices = {
 
     return true;
   },
+
+  deleteBankTransaction: async (id) => {
+    const existingTransaction = await BankTransaction.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Transaction not found with id: ${id}`};
+    }
+    
+    const updatedTransactionData = {
+      id: id._id,
+      transactionType: id.transactionType,
+      remark: id.remark,
+      withdrawAmount: id.withdrawAmount,
+      depositAmount: id.depositAmount,
+      subAdminId: id.subAdminId,
+      subAdminName: id.subAdminName,
+      accountHolderName: id.accountHolderName,
+      bankName: id.bankName,
+      accountNumber: id.accountNumber,
+      ifscCode: id.ifscCode,
+      beforeBalance : id.currentBalance,
+      currentBalance: id.currentBalance,
+    };
+    const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false});
+    await backupTransaction.save();
+
+    return true;
+  },
+
+  deleteWebsiteTransaction: async (id) => {
+    const existingTransaction = await WebsiteTransaction.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Transaction not found with id: ${id}`};
+    }
+    
+    const updatedTransactionData = {
+      id: id._id,
+      transactionType: id.transactionType,
+      remark: id.remark,
+      withdrawAmount: id.withdrawAmount,
+      depositAmount: id.depositAmount,
+      subAdminId: id.subAdminId,
+      subAdminName: id.subAdminName,
+      beforeBalance : id.currentBalance,
+      currentBalance: id.currentBalance,
+      websiteName: id.websiteName
+    };
+    const backupTransaction = new EditWebsiteRequest({...updatedTransactionData, isApproved: false});
+    await backupTransaction.save();
+
+    return true;
+  },
+
 };
 
 export default AccountServices;
