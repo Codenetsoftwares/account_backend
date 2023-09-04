@@ -183,8 +183,50 @@ export const introducerUser = {
     });
   
     return true;
-  }
+  },
 
+  introducerLiveBalance : async (id) => {
+    try {
+      const user = await User.findOne({ id }).exec();
+      const introducerUserId = user.introducersUserId;
+      console.log("introducerUserId", introducerUserId);
 
+      const introducerId = await IntroducerUser.findOne({ id: introducerUserId }).exec();
+      console.log("introducerUser", introducerId);
+      const introducerid = introducerId.introducerId;
+      console.log("introducerid", introducerid)
+
+      const introducerpercent = introducerId.introducerPercentage;
+
+      const transDetails = user.transactionDetail;
+      console.log("transDetails", transDetails)
+      let totalDep = 0;
+      let totalWith = 0;
+
+      transDetails.map((res) => {
+        console.log("res", res)
+        if (res.transactionType === "Deposit") {
+          totalDep += Number(res.amount)
+        }
+        if (res.transactionType === "Withdraw") {
+          totalWith += Number(res.amount)
+        }
+      })
+     
+      if (totalDep <= totalWith) {
+        throw { message: "Can't send amount to Introducer" }
+      }
+      let amount= 0;
+      if (totalDep > totalWith) {
+        let diff = totalDep - totalWith;
+        amount = ((introducerpercent / 100) * diff)
+        introducerId.wallet += amount;
+      }
+      return amount;
+
+    } catch (error) {
+      console.error(error);
+    }
+  },
 
 };
