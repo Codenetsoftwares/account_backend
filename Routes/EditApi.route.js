@@ -87,7 +87,7 @@ const EditApiRoute = (app) => {
     }
   );
 
-  app.put("/api/admin/bank-website-transaction-request/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.put("/api/admin/website-edit-transaction-request/:id", Authorize(["superAdmin"]), async (req, res) => {
       try {
         const id = await WebsiteTransaction.findById(req.params.id);
         console.log("id", req.params.id);

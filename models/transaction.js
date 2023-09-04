@@ -12,7 +12,7 @@ export const Transaction = mongoose.model(
     userId: { type: String, required: true },
     bonus: { type: Number },
     bankCharges: { type: Number },
-    remarks: { type: Number },
+    remarks: { type: String },
     beforeBalanceBankDeposit: { type: Number },
     currentBalanceWebsiteDeposit: { type: Number },
     beforeBalanceWebsiteDeposit: { type: Number },
