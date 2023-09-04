@@ -88,7 +88,30 @@ export const IntroducerRoutes = (app) => {
         }
       }
     );
+    
+    app.get("/api/list-introducer-user", AuthorizeRole(["introducer"]), async (req, res)=>{
+      try{
+          const introducerId = req.user.introducerId
+          const intoducerUser = await User.find({introducersUserId:introducerId}).exec();
+          res.send(intoducerUser);
+      }catch (e) {
+          console.error(e);
+          res.status(e.code).send({ message: e.message });
+        }
+    });
 
+    app.get("/api/introducer-user-single-data/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+      try {
+        const id = req.params.id;
+        const introducerId = req.user.introducerId;
+        const introducerUser = await User.find({ _id: id ,introducersUserId: introducerId }).exec();
+        res.send(introducerUser);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    });
+    
     
 };
 
