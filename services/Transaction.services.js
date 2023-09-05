@@ -3,6 +3,8 @@ import { Transaction } from "../models/transaction.js";
 import { Bank } from "../models/bank.model.js";
 import { Website } from "../models/website.model.js";
 import { User } from "../models/user.model.js";
+import { BankTransaction } from "../models/banktransaction.model.js";
+import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 
 const TransactionService = {
     createTransaction: async (req, res, subAdminName) => {
@@ -158,46 +160,136 @@ const TransactionService = {
     }
   },
 
-  update: async (trans, data) => {
-    if (
-      !data.transactionID ||
-      !data.transactionType ||
-      !data.amount ||
-      !data.paymentMethod ||
-      !data.userId ||
-      !data.bankName ||
-      !data.websiteName
-    ) {
-      throw {
-        code: 400,
-        message:
-          "Missing required fields. Please provide values for all fields.",
-      };
-    }
+  updateTransaction: async (trans, data) => {
     const existingTransaction = await Transaction.findById(trans);
-    if (!existingTransaction) {
-      throw {
-        code: 404,
-        message: `Transaction not found with id: ${trans}`,
-      };
-    }
-    const updatedTransactionData = {
-      id: trans._id,
-      transactionID: data.transactionID,
-      transactionType: data.transactionType,
-      amount: data.amount,
-      paymentMethod: data.paymentMethod,
-      userId: data.userId,
-      subAdminId: data.subAdminId,
-      bankName: data.bankName,
-      websiteName: data.websiteName,
-    };
-    const backupTransaction = new EditRequest({
-      ...updatedTransactionData,
-      isApproved: false,
-    });
-    await backupTransaction.save();
+    console.log("existingTransaction", existingTransaction)
 
+    let updatedTransactionData = {};
+
+    if (existingTransaction.transactionType === 'Deposit') {
+      updatedTransactionData = {
+        id: trans._id,
+        transactionID: existingTransaction.transactionID || data.transactionID,
+        transactionType: existingTransaction.transactionType || data.transactionType,
+        amount: existingTransaction.amount || data.amount,
+        paymentMethod: existingTransaction.paymentMethod || data.paymentMethod,
+        userId: existingTransaction.userId || data.userId,
+        subAdminId: existingTransaction.subAdminId || data.subAdminId,
+        bankName: existingTransaction.bankName || data.bankName,
+        websiteName: existingTransaction.websiteName || data.websiteName,
+        remark: existingTransaction.remarks || data.remark,
+      };
+      const editMessage = 'Deposit transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+    } else if (existingTransaction.transactionType === 'Withdraw') {
+      updatedTransactionData = {
+        id: trans._id,
+        transactionID: existingTransaction.transactionID || data.transactionID,
+        transactionType: existingTransaction.transactionType || data.transactionType,
+        amount: existingTransaction.amount || data.amount,
+        paymentMethod: existingTransaction.paymentMethod || data.paymentMethod,
+        userId: existingTransaction.userId || data.userId,
+        subAdminId: existingTransaction.subAdminId || data.subAdminId,
+        bankName: existingTransaction.bankName || data.bankName,
+        websiteName: existingTransaction.websiteName || data.websiteName,
+        remark: existingTransaction.remarks || data.remark,
+      };
+      const editMessage = 'Withdraw transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+    } 
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
+    return true;
+  },
+
+  updateBankTransaction: async (bankTransaction, data) => {
+    const existingBankTransaction = await BankTransaction.findById(bankTransaction);
+    console.log("existingBankTransaction", existingBankTransaction)
+
+    let updatedTransactionData = {};
+
+    if (existingBankTransaction.transactionType === 'Manual-Bank-Deposit') {
+      updatedTransactionData = {
+        id: bankTransaction._id,
+        transactionType: existingBankTransaction.transactionType || data.transactionType,
+        remark: existingBankTransaction.remark || data.remark,
+        withdrawAmount: existingBankTransaction.withdrawAmount || data.withdrawAmount,
+        depositAmount: existingBankTransaction.depositAmount || data.depositAmount,
+        subAdminId: existingBankTransaction.subAdminId || data.subAdminId,
+        subAdminName: existingBankTransaction.subAdminName || data.subAdminName,
+        beforeBalance : bankTransaction.currentBalance,
+        currentBalance: existingBankTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
+        currentBalance : existingBankTransaction.currentBalance || Number(id.currentBalance) - Number(data.withdrawAmount)
+      };
+      const editMessage = 'Manual-Bank-Deposit transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+     
+    } else if (existingBankTransaction.transactionType === 'Manual-Bank-Withdraw') {
+      updatedTransactionData = {
+        id: bankTransaction._id,
+        transactionType: existingBankTransaction.transactionType || data.transactionType,
+        remark: existingBankTransaction.remark || data.remark,
+        withdrawAmount: existingBankTransaction.withdrawAmount || data.withdrawAmount,
+        depositAmount: existingBankTransaction.depositAmount || data.depositAmount,
+        subAdminId: existingBankTransaction.subAdminId || data.subAdminId,
+        subAdminName: existingBankTransaction.subAdminName || data.subAdminName,
+        beforeBalance : bankTransaction.currentBalance,
+        currentBalance: existingBankTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
+        currentBalance : existingBankTransaction.currentBalance || Number(id.currentBalance) - Number(data.withdrawAmount)
+      };
+      const editMessage = 'Manual-Bank-Withdraw transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+    }
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
+    return true;
+  },
+
+  updateWebsiteTransaction: async (websiteTransaction, data) => {
+    const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
+    console.log("existingWebsiteTransaction", existingWebsiteTransaction)
+
+    let updatedTransactionData = {};
+
+    if (existingWebsiteTransaction.transactionType === 'Manual-Webiste-Deposit') {
+      updatedTransactionData = {
+        id: websiteTransaction._id,
+        transactionType: existingWebsiteTransaction.transactionType || data.transactionType,
+        remark: existingWebsiteTransaction.remark || data.remark,
+        withdrawAmount: existingWebsiteTransaction.withdrawAmount || data.withdrawAmount,
+        depositAmount: existingWebsiteTransaction.depositAmount || data.depositAmount,
+        subAdminId: existingWebsiteTransaction.subAdminId || data.subAdminId,
+        subAdminName: existingWebsiteTransaction.subAdminName || data.subAdminName,
+        beforeBalance : websiteTransaction.currentBalance,
+        currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
+        currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.currentBalance) - Number(data.withdrawAmount))
+      };
+      const editMessage = 'Manual-Website-Deposit transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+    } else if (existingWebsiteTransaction.transactionType === 'Manual-Website-Withdraw') {
+      updatedTransactionData = {
+        id: websiteTransaction._id,
+        transactionType: existingWebsiteTransaction.transactionType || data.transactionType,
+        remark: existingWebsiteTransaction.remark || data.remark,
+        withdrawAmount: existingWebsiteTransaction.withdrawAmount || data.withdrawAmount,
+        depositAmount: existingWebsiteTransaction.depositAmount || data.depositAmount,
+        subAdminId: existingWebsiteTransaction.subAdminId || data.subAdminId,
+        subAdminName: existingWebsiteTransaction.subAdminName || data.subAdminName,
+        beforeBalance : websiteTransaction.currentBalance,
+        currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
+        currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.currentBalance) - Number(data.withdrawAmount))
+      };
+      const editMessage = 'Manual-Website-Withdraw transaction is being edited.';
+      await createEditRequest(updatedTransactionData, editMessage);
+    }
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
     return true;
   },
 };

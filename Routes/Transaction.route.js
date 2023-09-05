@@ -2,6 +2,8 @@ import { Authorize } from '../middleware/Authorize.js';
 import TransactionServices from '../services/Transaction.services.js';
 import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
+import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
+import { BankTransaction } from "../models/banktransaction.model.js";
 
 const TransactionRoutes = (app) => {
 
@@ -60,8 +62,10 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         const trans = await Transaction.findById(req.params.id);
-        console.log("id", req.params.id)
-        const updateResult = await TransactionServices.update(trans, req.body);
+        // const websiteTransaction = await WebsiteTransaction.findById(req.params.id);
+        // const bankTransaction = await BankTransaction.findById(req.params.id);
+        // console.log("id", req.params.id)
+        const updateResult = await TransactionServices.updateTransaction(trans, req.body);
         console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Transaction update request send to Super Admin");
@@ -73,6 +77,44 @@ const TransactionRoutes = (app) => {
     }
   );
 
+  app.put(
+    "/api/admin/edit-bank-transaction-request/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const bankTransaction = await BankTransaction.findById(req.params.id);
+        console.log("id", req.params.id)
+        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body);
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Bank Transaction update request send to Super Admin");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+  
+  app.put(
+    "/api/admin/edit-website-transaction-request/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const websiteTransaction = await WebsiteTransaction.findById(req.params.id);
+        console.log("id", req.params.id)
+        const updateResult = await TransactionServices.updateWebsiteTransaction(websiteTransaction, req.body);
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Website Transaction update request send to Super Admin");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+  
   // API To View Edit Transaction Details
 
   app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
