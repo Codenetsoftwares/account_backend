@@ -212,17 +212,24 @@ export const introducerUser = {
           totalWith += Number(res.amount)
         }
       })
-     
-      if (totalDep <= totalWith) {
-        throw { message: "Can't send amount to Introducer" }
-      }
+    
+      console.log("totalDep", totalDep)
+      console.log("totalWith", totalWith)
       let amount= 0;
       if (totalDep > totalWith) {
         let diff = totalDep - totalWith;
         amount = ((introducerpercent / 100) * diff)
         introducerId.wallet += amount;
+        return amount;
+      } else {
+        let diff = totalDep - totalWith;
+        console.log("diff", diff)
+        amount = ((introducerpercent / 100) * diff)
+        console.log("amount", amount)
+        introducerId.wallet += amount;
+        return amount;
       }
-      return amount;
+      
 
     } catch (error) {
       console.error(error);
