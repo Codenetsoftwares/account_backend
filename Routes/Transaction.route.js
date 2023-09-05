@@ -62,9 +62,6 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         const trans = await Transaction.findById(req.params.id);
-        // const websiteTransaction = await WebsiteTransaction.findById(req.params.id);
-        // const bankTransaction = await BankTransaction.findById(req.params.id);
-        // console.log("id", req.params.id)
         const updateResult = await TransactionServices.updateTransaction(trans, req.body);
         console.log(updateResult);
         if (updateResult) {
