@@ -9,6 +9,7 @@ import { BankTransaction } from "../models/banktransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
+import { EditRequest } from "../models/EditRequest.model.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -283,9 +284,12 @@ const AccountServices = {
       beforeBalance : id.currentBalance,
       currentBalance: id.currentBalance,
     };
-    const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false});
-    await backupTransaction.save();
-
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    await createEditRequest(updatedTransactionData, editMessage);
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
     return true;
   },
 
@@ -307,8 +311,12 @@ const AccountServices = {
       currentBalance: id.currentBalance,
       websiteName: id.websiteName
     };
-    const backupTransaction = new EditWebsiteRequest({...updatedTransactionData, isApproved: false});
-    await backupTransaction.save();
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    await createEditRequest(updatedTransactionData, editMessage);
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
 
     return true;
   },
