@@ -105,6 +105,50 @@ app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async
     res.status(e.code).send({ message: e.message });
   }
 });
+
+app.post("/api/admin/save-transaction-request", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    console.log(requestId);
+    const transaction = await Transaction.findById(requestId);
+    if (!transaction) {
+      return res.status(404).send("Bank Transaction not found");
+    }
+    console.log("Transaction found", transaction);
+    const updateResult = await AccountServices.deleteBankTransaction(transaction, req.body);
+    console.log(updateResult);
+    if (updateResult) {
+      res.status(201).send("Transaction delete request sent to Super Admin");
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const editRequest = await EditRequest.findById(id).exec();
+
+    if (!editRequest) {
+      return res.status(404).send({ message: "Edit Website Request not found" });
+    }
+
+    const isApproved = true;
+
+    if (isApproved) {
+      await Transaction.deleteOne({ _id: editRequest.id }).exec();
+      await EditRequest.deleteOne({ _id: req.params.id }).exec();
+      res.status(200).send({ message: "Bank Transaction deleted" });
+    } else {
+      res.status(400).send({ message: "Approval request rejected by super admin" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
 };
 
 export default EditApiRoute;

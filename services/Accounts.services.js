@@ -10,6 +10,7 @@ import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 import { EditRequest } from "../models/EditRequest.model.js";
+import { Transaction } from "../models/transaction.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -320,7 +321,33 @@ const AccountServices = {
 
     return true;
   },
-
+  
+  deleteBankTransaction: async (id) => {
+    const existingTransaction = await Transaction.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Transaction not found with id: ${id}`};
+    }
+    
+    const updatedTransactionData = {
+      id: id._id,
+      transactionID: id.transactionID,
+      transactionType: id.transactionType,
+      remark: id.remark,
+      amount: id.amount,
+      subAdminId: id.subAdminId,
+      userId: id.userId,
+      paymentMethod: id.paymentMethod,
+      websiteName : id.websiteName,
+      bankName: id.bankName,
+    };
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    await createEditRequest(updatedTransactionData, editMessage);
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      await backupTransaction.save();
+    }
+    return true;
+  },
 };
 
 export default AccountServices;
