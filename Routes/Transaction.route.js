@@ -63,7 +63,6 @@ const TransactionRoutes = (app) => {
       try {
         const trans = await Transaction.findById(req.params.id);
         const updateResult = await TransactionServices.updateTransaction(trans, req.body);
-        console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Transaction update request send to Super Admin");
         }
