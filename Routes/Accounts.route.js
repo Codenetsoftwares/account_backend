@@ -18,24 +18,24 @@ const AccountsRoute = (app) => {
 
   app.post("/admin/login", async (req, res) => {
     try {
-      const { email, password, persist } = req.body;
+      const { userName, password, persist } = req.body;
 
-      if (!email) {
-        throw { code: 400, message: "Email ID is required" };
+      if (!userName) {
+        throw { code: 400, message: "User Name is required" };
       }
 
       if (!password) {
         throw { code: 400, message: "Password is required" };
       }
 
-      const user = await Admin.findOne({ email: email });
+      const user = await Admin.findOne({ userName: userName });
       console.log("user", user);
       if (!user) {
         throw { code: 404, message: "User not found" };
       }
 
       const accessToken = await AccountServices.generateAdminAccessToken(
-        email,
+        userName,
         password,
         persist
       );
@@ -692,6 +692,17 @@ const AccountsRoute = (app) => {
       res.status(500).send("Internal Server error");
     }
   }
+);
+
+app.get("/api/superadmin/Introducer-id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const resultArray = await IntroducerUser.find({}, "introducerId").exec();
+    res.status(200).send(resultArray);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server error");
+  }
+}
 );
 
 app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]),

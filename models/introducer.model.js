@@ -5,12 +5,11 @@ export const IntroducerUser = mongoose.model(
   new mongoose.Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
-    email: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true, default: "introducer" },
     wallet: { type: Number },
     introducerId : {  type: String },
-    introducerPercentage : { type: Number },
+    userName: { type: String, required: true },
     bankDetail: {
         accountHolderName: { type: String },
         bankName: { type: String },

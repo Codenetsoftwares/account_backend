@@ -52,8 +52,8 @@ const AccountServices = {
     if (!data.lastname) {
       throw { code: 400, message: "Lastname is required" };
     }
-    if (!data.email) {
-      throw { code: 400, message: "Email is required" };
+    if (!data.userName) {
+      throw { code: 400, message: "User Name is required" };
     }
     if (!data.password) {
       throw { code: 400, message: "Password is required" };
@@ -65,7 +65,7 @@ const AccountServices = {
     const newAdmin = new Admin({
       firstname: data.firstname,
       lastname: data.lastname,
-      email: data.email,
+      userName: data.userName,
       password: encryptedPassword,
       roles: data.roles,
     });
@@ -78,29 +78,29 @@ const AccountServices = {
     return true;
   },
 
-  generateAdminAccessToken: async (email, password, persist) => {
-    if (!email) {
-      throw { code: 400, message: "Invalid value for: email" };
+  generateAdminAccessToken: async (userName, password, persist) => {
+    if (!userName) {
+      throw { code: 400, message: "Invalid value for: User Name" };
     }
     if (!password) {
       throw { code: 400, message: "Invalid value for: password" };
     }
 
-    const existingUser = await AccountServices.findAdmin({ email: email });
+    const existingUser = await AccountServices.findAdmin({ userName: userName });
     if (!existingUser) {
-      throw { code: 401, message: "Invalid email address or password" };
+      throw { code: 401, message: "Invalid User Name or password" };
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: "Invalid email address or password" };
+      throw { code: 401, message: "Invalid User Name or password" };
     }
 
     const accessTokenResponse = {
       id: existingUser._id,
       firstname: existingUser.firstname,
       lastname: existingUser.lastname,
-      email: existingUser.email,
+      userName: existingUser.userName,
       role: existingUser.roles,
     };
 
@@ -113,7 +113,7 @@ const AccountServices = {
     );
 
     return {
-      email: existingUser.email,
+      userName: existingUser.userName,
       accessToken: accessToken,
       role: existingUser.roles,
     };
@@ -193,12 +193,13 @@ const AccountServices = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber =
-      data.contactNumber || existingUser.contactNumber;
+    existingUser.userName = data.userName || existingUser.userName;
+    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.webSiteDetail =
-      data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
+    existingUser.introducersUserId = data.introducersUserId || existingUser.introducersUserId;
+    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);

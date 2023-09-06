@@ -10,16 +10,16 @@ export const IntroducerRoutes = (app) => {
   
     app.post("/api/introducer/user/login", async (req, res) => {
         try {
-          const { email, password, persist } = req.body;
-          if (!email) {
-            throw { code: 400, message: "Email ID is required" };
+          const { userName, password, persist } = req.body;
+          if (!userName) {
+            throw { code: 400, message: "User Name is required" };
           }
     
           if (!password) {
             throw { code: 400, message: "Password is required" };
           }
           const accessToken = await introducerUser.generateIntroducerAccessToken(
-            email,
+            userName,
             password,
             persist
           );  
@@ -27,7 +27,7 @@ export const IntroducerRoutes = (app) => {
           if (!accessToken) {
             throw { code: 500, message: "Failed to generate access token" };
           }
-          const user = await IntroducerUser.findOne({ email: email });
+          const user = await IntroducerUser.findOne({ userName: userName });
           if (!user) {
             throw { code: 404, message: "User not found" };
           }
