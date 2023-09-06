@@ -3,7 +3,7 @@ import { Transaction } from "../models/transaction.js";
 import { Bank } from "../models/bank.model.js";
 import { Website } from "../models/website.model.js";
 import { User } from "../models/user.model.js";
-import { BankTransaction } from "../models/banktransaction.model.js";
+import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 
 const TransactionService = {

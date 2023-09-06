@@ -3,7 +3,7 @@ import TransactionServices from '../services/Transaction.services.js';
 import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
-import { BankTransaction } from "../models/banktransaction.model.js";
+import { BankTransaction } from "../models/BankTransaction.model.js";
 
 const TransactionRoutes = (app) => {
 

@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Bank } from "../models/bank.model.js";
 import { Website } from "../models/website.model.js";
-import { BankTransaction } from "../models/banktransaction.model.js";
+import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
