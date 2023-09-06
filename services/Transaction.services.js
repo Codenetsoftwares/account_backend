@@ -165,6 +165,7 @@ const TransactionService = {
     console.log("existingTransaction", existingTransaction)
 
     let updatedTransactionData = {};
+    let changedFields = {};
 
     if (existingTransaction.transactionType === 'Deposit') {
       updatedTransactionData = {
@@ -179,8 +180,13 @@ const TransactionService = {
         websiteName: existingTransaction.websiteName || data.websiteName,
         remark: existingTransaction.remarks || data.remark,
       };
-      const editMessage = 'Deposit transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
+
+      for (const key in data) {
+        if (existingTransaction[key] !== data[key]) { changedFields[key] = data[key];}
+      }
+
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields,isApproved: false, message: 'Deposit transaction is being edited.'});
+      await editRequest.save();
     } else if (existingTransaction.transactionType === 'Withdraw') {
       updatedTransactionData = {
         id: trans._id,
@@ -194,14 +200,17 @@ const TransactionService = {
         websiteName: existingTransaction.websiteName || data.websiteName,
         remark: existingTransaction.remarks || data.remark,
       };
-      const editMessage = 'Withdraw transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
+
+      for (const key in data) {
+        if (existingTransaction[key] !== data[key]) {
+          changedFields[key] = data[key];
+        }
+      }
+
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields, isApproved: false, message: 'Withdraw transaction is being edited.'});
+      await editRequest.save();
     } 
-    async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
-      await backupTransaction.save();
-    }
-    return true;
+    return changedFields;
   },
 
   updateBankTransaction: async (bankTransaction, data) => {
@@ -209,6 +218,7 @@ const TransactionService = {
     console.log("existingBankTransaction", existingBankTransaction)
 
     let updatedTransactionData = {};
+    let changedFields = {};
 
     if (existingBankTransaction.transactionType === 'Manual-Bank-Deposit') {
       updatedTransactionData = {
@@ -223,9 +233,12 @@ const TransactionService = {
         currentBalance: existingBankTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
         currentBalance : existingBankTransaction.currentBalance || Number(id.currentBalance) - Number(data.withdrawAmount)
       };
-      const editMessage = 'Manual-Bank-Deposit transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
-     
+      for (const key in data) {
+        if (existingBankTransaction[key] !== data[key]) { changedFields[key] = data[key];}
+      }
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields,isApproved: false, message: 'Manual-Bank-Deposit transaction is being edited.'});
+      await editRequest.save();
+
     } else if (existingBankTransaction.transactionType === 'Manual-Bank-Withdraw') {
       updatedTransactionData = {
         id: bankTransaction._id,
@@ -239,14 +252,13 @@ const TransactionService = {
         currentBalance: existingBankTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
         currentBalance : existingBankTransaction.currentBalance || Number(id.currentBalance) - Number(data.withdrawAmount)
       };
-      const editMessage = 'Manual-Bank-Withdraw transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
+      for (const key in data) {
+        if (existingBankTransaction[key] !== data[key]) { changedFields[key] = data[key];}
+      }
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields,isApproved: false, message: 'Manual-Bank-Withdraw transaction is being edited.'});
+      await editRequest.save();
     }
-    async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
-      await backupTransaction.save();
-    }
-    return true;
+    return changedFields;
   },
 
   updateWebsiteTransaction: async (websiteTransaction, data) => {
@@ -254,7 +266,7 @@ const TransactionService = {
     console.log("existingWebsiteTransaction", existingWebsiteTransaction)
 
     let updatedTransactionData = {};
-
+    let changedFields = {};
     if (existingWebsiteTransaction.transactionType === 'Manual-Webiste-Deposit') {
       updatedTransactionData = {
         id: websiteTransaction._id,
@@ -268,8 +280,11 @@ const TransactionService = {
         currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
         currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.currentBalance) - Number(data.withdrawAmount))
       };
-      const editMessage = 'Manual-Website-Deposit transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
+      for (const key in data) {
+        if (existingWebsiteTransaction[key] !== data[key]) { changedFields[key] = data[key];}
+      }
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields,isApproved: false, message: 'Manual-Website-Deposit transaction is being edited.'});
+      await editRequest.save();
     } else if (existingWebsiteTransaction.transactionType === 'Manual-Website-Withdraw') {
       updatedTransactionData = {
         id: websiteTransaction._id,
@@ -283,14 +298,13 @@ const TransactionService = {
         currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.beforeBalance) + Number(data.depositAmount)),
         currentBalance: existingWebsiteTransaction.currentBalance || (Number(id.currentBalance) - Number(data.withdrawAmount))
       };
-      const editMessage = 'Manual-Website-Withdraw transaction is being edited.';
-      await createEditRequest(updatedTransactionData, editMessage);
+      for (const key in data) {
+        if (existingWebsiteTransaction[key] !== data[key]) { changedFields[key] = data[key];}
+      }
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields,isApproved: false, message: 'Manual-Website-Withdraw transaction is being edited.'});
+      await editRequest.save();
     }
-    async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
-      await backupTransaction.save();
-    }
-    return true;
+    return changedFields;
   },
 };
 
