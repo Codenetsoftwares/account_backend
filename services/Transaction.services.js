@@ -45,7 +45,7 @@ const TransactionService = {
         if (websiteBalance < amount) {
           throw new Error("Insufficient balance");
         }
-        const newWebsiteBalance = websiteBalance + bankCharges - amount;
+        const newWebsiteBalance = websiteBalance + bonus - amount;
         console.log("newWebsiteBalance", newWebsiteBalance);
         websiteId.walletBalance = newWebsiteBalance;
         await websiteId.save();
@@ -62,7 +62,7 @@ const TransactionService = {
         if (bankBalance < amount) {
           throw new Error("Insufficient balance");
         }
-        const newbankBalance = Number(bankBalance + bonus) - Number(amount);
+        const newbankBalance = Number(bankBalance + bankCharges) - Number(amount);
         console.log("newbankBalance", newbankBalance);
         bankId.walletBalance = newbankBalance;
         await bankId.save();
@@ -86,7 +86,7 @@ const TransactionService = {
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
-          bankCharges: bankCharges,
+          bonus: bonus,
           remarks: remarks,
           beforeBalanceWebsiteDeposit: websiteId.walletBalance + amount,
           beforeBalanceBankDeposit: bankId.walletBalance - amount,
@@ -118,7 +118,7 @@ const TransactionService = {
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
-          bonus: bonus,
+          bankCharges: bankCharges,
           remarks: remarks,
           beforeBalanceWebsiteWithdraw: websiteId.walletBalance - amount,
           beforeBalanceBankWithdraw: bankId.walletBalance + amount,

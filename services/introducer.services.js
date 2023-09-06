@@ -115,8 +115,9 @@ export const introducerUser = {
       console.log("introducerUser", introducerId);
       const introducerid = introducerId.introducerId;
       console.log("introducerid", introducerid)
-
-      const introducerpercent = introducerId.introducerPercentage;
+     
+      // This is Introducer's User's Percentage
+      const introducerpercent = user.introducerPercentage;
 
       const transDetails = user.transactionDetail;
 
@@ -194,8 +195,9 @@ export const introducerUser = {
       console.log("introducerUser", introducerId);
       const introducerid = introducerId.introducerId;
       console.log("introducerid", introducerid)
-
-      const introducerpercent = introducerId.introducerPercentage;
+     
+      // This is Itrpducer's User Percentage
+      const introducerpercent = user.introducerPercentage;
 
       const transDetails = user.transactionDetail;
       console.log("transDetails", transDetails)
