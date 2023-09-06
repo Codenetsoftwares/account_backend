@@ -112,10 +112,10 @@ app.post("/api/admin/save-transaction-request", Authorize(["superAdmin"]), async
     console.log(requestId);
     const transaction = await Transaction.findById(requestId);
     if (!transaction) {
-      return res.status(404).send("Bank Transaction not found");
+      return res.status(404).send("Transaction not found");
     }
     console.log("Transaction found", transaction);
-    const updateResult = await AccountServices.deleteBankTransaction(transaction, req.body);
+    const updateResult = await AccountServices.deleteTransaction(transaction, req.body);
     console.log(updateResult);
     if (updateResult) {
       res.status(201).send("Transaction delete request sent to Super Admin");
