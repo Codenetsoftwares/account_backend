@@ -322,7 +322,7 @@ const AccountServices = {
     return true;
   },
   
-  deleteBankTransaction: async (id) => {
+  deleteTransaction: async (id) => {
     const existingTransaction = await Transaction.findById(id);
     if (!existingTransaction) {
       throw {code: 404, message: `Transaction not found with id: ${id}`};
