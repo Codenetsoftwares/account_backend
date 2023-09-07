@@ -115,7 +115,7 @@ const AccountServices = {
     return {
       userName: existingUser.userName,
       accessToken: accessToken,
-      role: existingUser.roles,
+      roles: existingUser.roles,
     };
   },
 
