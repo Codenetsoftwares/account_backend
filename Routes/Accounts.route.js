@@ -10,7 +10,6 @@ import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { userservice } from "../services/user.service.js";
-import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
 const AccountsRoute = (app) => {
@@ -766,7 +765,74 @@ app.post("/api/admin/user/register", Authorize(["superAdmin"]), async (req, res)
     res.status(e.code).send({ message: e.message });
   }
 });
- 
+
+app.get(
+  "/api/admin/view-sub-admins",
+  Authorize(["superAdmin"]),
+  async (req, res) => {
+    try {
+      const allAdmins = await Admin.find().exec();
+      console.log(allAdmins);
+      let arr = [];
+      for (let i = 0; i < allAdmins.length; i++) {
+        if (!allAdmins[i].roles.includes("superAdmin")) {
+          let obj = {};
+          obj = allAdmins[i];
+          arr.push(obj);
+        }
+      }
+      arr.length === 0
+        ? res.status(200).send("No sub-admins")
+        : res.status(200).send(arr);
+    } catch (error) {
+      console.log(error);
+      res.status(e.code).send(e.message);
+    }
+  }
+);
+
+app.post(
+  "/api/admin/single-sub-admin/:id",
+  Authorize(["superAdmin"]),
+  async (req, res) => {
+    try {
+      if (!req.params.id) {
+        throw { code: 400, message: "Sub Admin's Id not present" };
+      }
+      const subadminId = req.params.id;
+      const subAdmin = await Admin.findById(subadminId);
+      if (!subAdmin) {
+        throw { code: 500, message: "Sub Admin not found with the given Id" };
+      }
+      res.status(200).send(subAdmin);
+    } catch (error) {
+      console.log(error);
+      res.status(error.code).send(error.message);
+    }
+  }
+);
+
+app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
+  async (req, res) => {
+    try {
+      const subadminId = req.params.id;
+      const { roles } = req.body;
+      if (!subadminId) {
+        throw { code: 400, message: "Id not found" };
+      }
+      const subAdmin = await Admin.findById(subadminId);
+      if (!subAdmin) {
+        throw { code: 400, message: "Sub Admin not found" };
+      }
+      subAdmin.roles = roles;
+      await subAdmin.save();
+      res.status(200).send(`${subAdmin.firstname} ${subAdmin.lastname} roles Edited with ${roles}`);
+    } catch (error) {
+      console.log(error);
+      res.status(error.code).send(error.message);
+    }
+  }
+);
 };
 
 export default AccountsRoute;
