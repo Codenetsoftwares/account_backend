@@ -101,7 +101,7 @@ const AccountServices = {
       firstname: existingUser.firstname,
       lastname: existingUser.lastname,
       userName: existingUser.userName,
-      roles: existingUser.roles,
+      role: existingUser.roles,
     };
 
     const accessToken = jwt.sign(
@@ -115,7 +115,7 @@ const AccountServices = {
     return {
       userName: existingUser.userName,
       accessToken: accessToken,
-      roles: existingUser.roles,
+      role: existingUser.roles,
     };
   },
 
