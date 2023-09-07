@@ -169,7 +169,7 @@ export const introducerUser = {
     existingUser.userName = data.userName || existingUser.userName;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.introducerId = data.introducerId || existingUser.introducerId;
+    existingUser.userName = data.userName || existingUser.userName;
     existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
