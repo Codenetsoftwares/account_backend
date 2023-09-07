@@ -149,6 +149,22 @@ app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, r
     res.status(e.code).send({ message: e.message });
   }
 });
+
+app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await EditRequest.deleteOne({ _id: id });
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: e.message });
+  }
+});
+
 };
 
 export default EditApiRoute;

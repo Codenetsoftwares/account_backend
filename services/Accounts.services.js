@@ -289,7 +289,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
       await backupTransaction.save();
     }
     return true;
@@ -316,7 +316,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
       await backupTransaction.save();
     }
 
@@ -344,7 +344,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage});
+      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
       await backupTransaction.save();
     }
     return true;

@@ -321,6 +321,7 @@ const AccountsRoute = (app) => {
           subAdminName: userId.firstname,
           remark: remark,
           createdAt: new Date(),
+          isSubmit: false
         });
         console.log("banktrans", bankTransaction);
 
@@ -372,6 +373,7 @@ const AccountsRoute = (app) => {
           subAdminName: userId.firstname,
           remark: remark,
           createdAt: new Date(),
+          isSubmit: false
         });
         console.log("websiteTransaction", websiteTransaction);
 
@@ -428,6 +430,7 @@ const AccountsRoute = (app) => {
           subAdminName: userId.firstname,
           remark: remark,
           createdAt: new Date(),
+          isSubmit: false
         });
         console.log("banktrans", bankTransaction);
 
@@ -478,6 +481,7 @@ const AccountsRoute = (app) => {
           subAdminName: userId.firstname,
           remark: remark,
           createdAt: new Date(),
+          isSubmit: false
         });
         console.log("websiteTransaction", websiteTransaction);
 

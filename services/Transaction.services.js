@@ -93,6 +93,7 @@ const TransactionService = {
           currentBalanceWebsiteDeposit: websiteId.walletBalance,
           currentBalanceBankDeposit: bankId.walletBalance,
           createdAt: new Date(),
+          isSubmit: false
         });
         await newTransaction.save();
         const user = await User.findOne({ userId: userId });
@@ -125,6 +126,7 @@ const TransactionService = {
           currentBalanceWebsiteWithdraw: websiteId.walletBalance,
           currentBalanceBankWithdraw: bankId.walletBalance,
           createdAt: new Date(),
+          isSubmit: false
         });
         await newTransaction.save();
         const user = await User.findOne({ userId: userId });
@@ -190,15 +192,14 @@ const TransactionService = {
       updatedTransactionData = {
         id: trans._id,
         transactionID: existingTransaction.transactionID || data.transactionID,
-        transactionType:
-          existingTransaction.transactionType || data.transactionType,
+        transactionType: existingTransaction.transactionType || data.transactionType,
         amount: existingTransaction.amount || data.amount,
         paymentMethod: existingTransaction.paymentMethod || data.paymentMethod,
         userId: existingTransaction.userId || data.userId,
         subAdminId: existingTransaction.subAdminId || data.subAdminId,
         bankName: existingTransaction.bankName || data.bankName,
         websiteName: existingTransaction.websiteName || data.websiteName,
-        remark: existingTransaction.remarks || data.remark,
+        remark: existingTransaction.remarks || data.remark, 
       };
 
       for (const key in data) {
@@ -211,6 +212,8 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
+        isSubmit: false,
+        type: "Edit",
         message: "Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -239,6 +242,8 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
+        isSubmit: false,
+        type: "Edit",
         message: "Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -281,6 +286,8 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
+        isSubmit: false,
+        type: "Edit",
         message: "Manual-Bank-Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -314,6 +321,8 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
+        isSubmit: false,
+        type: "Edit",
         message: "Manual-Bank-Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -350,6 +359,8 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
+        isSubmit: false,
+        type: "Edit",
         message: "Manual-Website-Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -369,7 +380,7 @@ const TransactionService = {
         beforeBalance: websiteTransaction.currentBalance,
         currentBalance: Number(websiteTransaction.currentBalance) - Number(data.withdrawAmount) || existingWebsiteTransaction.currentBalance ,
       };
-      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields, isApproved: false,
+      const editRequest = new EditRequest({ ...updatedTransactionData, changedFields, isApproved: false, isSubmit: false,type: "Edit",
         message: "Manual-Website-Withdraw transaction is being edited.",
       });
       await editRequest.save();

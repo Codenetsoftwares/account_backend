@@ -27,7 +27,9 @@ export const EditRequest = mongoose.model(
     upiNumber: { type: String },
     createdAt: { type: Date },
     message: { type: String },
+    type: { type: String },
     changedFields: {},
+    isSubmit: { type: Boolean, default: false },
     isApproved: { type: Boolean, default: false, required: true },
   }),
   "EditRequest"

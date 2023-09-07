@@ -20,6 +20,7 @@ export const BankTransaction = mongoose.model(
     subAdminId: { type: String },
     subAdminName: { type: String },
     createdAt: { type: Date },
+    isSubmit: { type: Boolean, default: false }
   }),
   "BankTransaction"
 );

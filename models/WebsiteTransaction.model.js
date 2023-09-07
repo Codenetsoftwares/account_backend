@@ -12,6 +12,7 @@ export const WebsiteTransaction = mongoose.model(
     depositAmount: { type: Number },
     subAdminId: { type: String },
     subAdminName: { type: String },
+    isSubmit: { type: Boolean, default: false },
     createdAt: { type: Date },
   }),
   "WebsiteTransaction"

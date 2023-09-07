@@ -25,6 +25,7 @@ export const Transaction = mongoose.model(
     bankName: { type: String },
     websiteName: { type: String },
     createdAt: { type: Date },
+    isSubmit: { type: Boolean, default: false }
   }),
   "Transaction"
 );
