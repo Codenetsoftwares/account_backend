@@ -1,7 +1,5 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "node:crypto";
-import nodemailer from "nodemailer";
 import { User } from "../models/user.model.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 

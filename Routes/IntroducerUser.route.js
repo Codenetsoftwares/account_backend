@@ -2,9 +2,6 @@ import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
-import { Transaction } from "../models/transaction.js";
-import { BankTransaction } from "../models/BankTransaction.model.js";
-import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 
 export const IntroducerRoutes = (app) => {
   

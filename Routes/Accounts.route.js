@@ -10,7 +10,7 @@ import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { userservice } from "../services/user.service.js";
-import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
+
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -684,7 +684,18 @@ const AccountsRoute = (app) => {
       }
     }
   );
-
+  
+  app.get("/api/get-single-Introducer/:id", Authorize(["superAdmin"]),async (req, res) => {
+    try {
+      const id = req.params.id;
+      const bankData = await IntroducerUser.findOne({ _id: id }).exec();
+      res.status(200).send(bankData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
 
   app.get("/api/superadmin/user-id", Authorize(["superAdmin"]), async (req, res) => {
     try {
