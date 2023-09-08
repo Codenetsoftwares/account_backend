@@ -136,7 +136,7 @@ const AccountsRoute = (app) => {
 
   // API To View Bank Name
 
-  app.get("/api/get-bank-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/get-bank-name", Authorize(["superAdmin", "Bank-View"]), async (req, res) => {
     try {
       const bankData = await Bank.find({}).exec();
       res.status(200).send(bankData);
@@ -235,7 +235,7 @@ const AccountsRoute = (app) => {
 
   app.get(
     "/api/get-website-name",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]),
     async (req, res) => {
       try {
         const websiteData = await Website.find({}).exec();
@@ -249,7 +249,7 @@ const AccountsRoute = (app) => {
 
   // API To View User Profiles
 
-  app.get("/api/user-profile", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/user-profile", Authorize(["superAdmin", "Profile-View", "User-Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const user = await User.find({}).exec();
       res.send(user);
@@ -263,7 +263,7 @@ const AccountsRoute = (app) => {
 
   app.put(
     "/api/admin/user-profile-edit/:id",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", ""]),
     async (req, res) => {
       try {
         const id = await User.findById(req.params.id);
@@ -495,7 +495,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/sub-admin-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/sub-admin-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]), async (req, res) => {
       try {
         const superAdmin = await Admin.find({ roles: "superAdmin" },"firstname").exec();
         res.status(200).send(superAdmin);
@@ -506,7 +506,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/bank-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/bank-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]), async (req, res) => {
       try {
         const bankName = await Bank.find({}, "bankName").exec();
         res.status(200).send(bankName);
@@ -552,7 +552,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/account-summary", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/account-summary", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]), async (req, res) => {
       try {
         const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
         const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
@@ -660,7 +660,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/intoducer-profile", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/intoducer-profile", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
       try {
         const introducerUser = await IntroducerUser.find({}).exec();
         res.send(introducerUser);
@@ -865,6 +865,23 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
     }
   }
 );
+
+// app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin"]), async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
+//     console.log("introducerUser", introducerUser)
+//     if (!introducerUser) {
+//       return res.status(404).send({ message: 'IntroducerUser not found' });
+//     }
+//     const users = await User.find({ _id: id, introducersUserId: introducerUser.introducerId }).exec();
+//     console.log("users", users)
+//     res.send(users);
+//   } catch (e) {
+//     console.error(e);
+//     res.status(500).send({ message: 'Internal Server Error' });
+//   }
+// });
 };
 
 export default AccountsRoute;
