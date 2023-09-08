@@ -619,7 +619,8 @@ const AccountsRoute = (app) => {
 
   app.get("/api/admin/introducer-live-balance/:id",  Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
-      const id = req.params.id;
+      const id = await IntroducerUser.findById(req.params.id);
+      console.log("id", id)
       const data =  await introducerUser.introducerLiveBalance(id);
       console.log("data", data)
      res.send({ LiveBalance: data })
@@ -682,7 +683,7 @@ const AccountsRoute = (app) => {
   }
 );
 
-  app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Website-Transaction"]), async (req, res) => {
+  app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Website-Transaction", "Create-Transaction"]), async (req, res) => {
     try {
       const resultArray = await User.find({}, "userId").exec();
       res.status(200).send(resultArray);

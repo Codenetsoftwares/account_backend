@@ -1,15 +1,16 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
-import { IntroducerUser } from "../models/introducer.model.js"
+import { IntroducerUser } from "../models/introducer.model.js";
 
 import dotenv from "dotenv";
 dotenv.config();
 
 export const introducerUser = {
-
   createintroducerUser: async (data) => {
-    const existingUser = await IntroducerUser.findOne({ userName: data.userName }).exec();
+    const existingUser = await IntroducerUser.findOne({
+      userName: data.userName,
+    }).exec();
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
@@ -35,7 +36,7 @@ export const introducerUser = {
       userName: data.userName,
       password: encryptedPassword,
       role: data.role,
-      introducerId: data.introducerId
+      introducerId: data.introducerId,
     });
 
     newIntroducerUser.save().catch((err) => {
@@ -45,7 +46,6 @@ export const introducerUser = {
 
     return true;
   },
-
 
   findIntroducerUserById: async (id) => {
     if (!id) {
@@ -70,7 +70,9 @@ export const introducerUser = {
       throw { code: 400, message: "Invalid value for: password" };
     }
 
-    const existingUser = await introducerUser.findIntroducerUser({ userName: userName });
+    const existingUser = await introducerUser.findIntroducerUser({
+      userName: userName,
+    });
     if (!existingUser) {
       throw { code: 401, message: "Invalid User Name or password" };
     }
@@ -84,7 +86,7 @@ export const introducerUser = {
       id: existingUser._id,
       name: existingUser.firstname,
       userName: existingUser.userName,
-      role: existingUser.role
+      role: existingUser.role,
     };
     console.log(accessTokenResponse);
     const accessToken = jwt.sign(
@@ -109,11 +111,13 @@ export const introducerUser = {
       const introducerUserId = user.introducersUserId;
       console.log("introducerUserId", introducerUserId);
 
-      const introducerId = await IntroducerUser.findOne({ id: introducerUserId }).exec();
+      const introducerId = await IntroducerUser.findOne({
+        id: introducerUserId,
+      }).exec();
       console.log("introducerUser", introducerId);
       const introducerid = introducerId.introducerId;
-      console.log("introducerid", introducerid)
-     
+      console.log("introducerid", introducerid);
+
       // This is Introducer's User's Percentage
       const introducerpercent = user.introducerPercentage;
 
@@ -122,55 +126,64 @@ export const introducerUser = {
       const selectedStartDate = new Date(startDate);
       const selectedEndDate = new Date(endDate);
 
-      const transactionsWithin7Days = transDetails.filter(transaction => {
+      const transactionsWithin7Days = transDetails.filter((transaction) => {
         const transDate = new Date(transaction.createdAt);
         return transDate >= selectedStartDate && transDate <= selectedEndDate;
       });
-
 
       let totalDep = 0;
       let totalWith = 0;
 
       transactionsWithin7Days.map((res) => {
         if (res.transactionType === "Deposit") {
-          totalDep += Number(res.amount)
+          totalDep += Number(res.amount);
         }
         if (res.transactionType === "Withdraw") {
-          totalWith += Number(res.amount)
+          totalWith += Number(res.amount);
         }
-      })
+      });
 
       if (totalDep <= totalWith) {
-        throw { message: "Can't send amount to Introducer" }
+        throw { message: "Can't send amount to Introducer" };
       }
       const date = new Date();
-      let amount= 0;
-      const transactionType = "Credit"
+      let amount = 0;
+      const transactionType = "Credit";
       if (totalDep > totalWith) {
         let diff = totalDep - totalWith;
-        amount = ((introducerpercent / 100) * diff)
+        amount = (introducerpercent / 100) * diff;
         introducerId.wallet += amount;
       }
-      introducerId.creditTransaction.push({date,transactionType,amount,userId,userName});
+      introducerId.creditTransaction.push({
+        date,
+        transactionType,
+        amount,
+        userId,
+        userName,
+      });
       introducerId.save();
-
     } catch (error) {
       console.error(error);
     }
   },
 
-  
-  updateIntroducerProfile: async(id, data) => {
+  updateIntroducerProfile: async (id, data) => {
     const existingUser = await IntroducerUser.findById(id);
-    if (!existingUser) { throw { code: 404, message: `Existing Introducer User not found with id : ${id}`, };}
-        
+    if (!existingUser) {
+      throw {
+        code: 404,
+        message: `Existing Introducer User not found with id : ${id}`,
+      };
+    }
+
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
     existingUser.userName = data.userName || existingUser.userName;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
     existingUser.userName = data.userName || existingUser.userName;
-    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.webSiteDetail =
+      data.webSiteDetail || existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);
@@ -179,60 +192,68 @@ export const introducerUser = {
         message: `Failed to update Introducer User Profile with id : ${id}`,
       };
     });
-  
+
     return true;
   },
 
-  introducerLiveBalance : async (id) => {
+  introducerLiveBalance: async (id) => {
     try {
-      const user = await User.findOne({ id }).exec();
-      const introducerUserId = user.introducersUserId;
-      console.log("introducerUserId", introducerUserId);
-
-      const introducerId = await IntroducerUser.findOne({ id: introducerUserId }).exec();
-      console.log("introducerUser", introducerId);
-      const introducerid = introducerId.introducerId;
-      console.log("introducerid", introducerid)
-     
-      // This is Itrpducer's User Percentage
-      const introducerpercent = user.introducerPercentage;
-
-      const transDetails = user.transactionDetail;
-      console.log("transDetails", transDetails)
-      let totalDep = 0;
-      let totalWith = 0;
-
-      transDetails.map((res) => {
-        console.log("res", res)
-        if (res.transactionType === "Deposit") {
-          totalDep += Number(res.amount)
-        }
-        if (res.transactionType === "Withdraw") {
-          totalWith += Number(res.amount)
-        }
-      })
-    
-      console.log("totalDep", totalDep)
-      console.log("totalWith", totalWith)
-      let amount= 0;
-      if (totalDep > totalWith) {
-        let diff = totalDep - totalWith;
-        amount = ((introducerpercent / 100) * diff)
-        introducerId.wallet += amount;
-        return amount;
-      } else {
-        let diff = totalDep - totalWith;
-        console.log("diff", diff)
-        amount = ((introducerpercent / 100) * diff)
-        console.log("amount", amount)
-        introducerId.wallet += amount;
-        return amount;
+      const introId = await IntroducerUser.findById(id).exec();
+      if (!introId) {
+        throw {
+          code: 404,
+          message: `Introducer with ID ${id} not found`,
+        };
       }
       
-
+      const IntroducerId = introId.introducerId;
+      const userIntroId = await User.find({
+        introducersUserId: IntroducerId,
+      }).exec();
+  
+      if (userIntroId.length === 0) {
+        throw {
+          code: 404,
+          message: `There is no user introduced by Introducer with ID ${IntroducerId}`,
+        };
+      }
+  
+      console.log("userIntroId", userIntroId);
+      const userInroducerId = userIntroId[0].introducersUserId;
+  
+      if (IntroducerId === userInroducerId) {
+        const introducerpercent = userIntroId[0].introducerPercentage;
+        console.log("introducerpercent", introducerpercent);
+  
+        const transDetails = userIntroId[0].transactionDetail;
+        console.log("transDetails", transDetails);
+        let totalDep = 0;
+        let totalWith = 0;
+  
+        transDetails?.forEach((res) => {
+          console.log("res", res);
+          if (res.transactionType === "Deposit") {
+            totalDep += Number(res.amount);
+          }
+          if (res.transactionType === "Withdraw") {
+            totalWith += Number(res.amount);
+          }
+        });
+  
+        let amount = 0;
+        if (totalDep > totalWith) {
+          let diff = totalDep - totalWith;
+          amount = (introducerpercent / 100) * diff;
+          return amount;
+        } else {
+          let diff = totalDep - totalWith;
+          amount = (introducerpercent / 100) * diff;
+          return amount;
+        }
+      }
     } catch (error) {
       console.error(error);
+      throw error;
     }
-  },
-
+  },  
 };
