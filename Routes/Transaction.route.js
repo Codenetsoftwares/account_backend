@@ -11,7 +11,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/api/admin/create/transaction',
-    Authorize(['superAdmin']),
+    Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
     async (req, res) => {
       try {
         const subAdminName = req.user;
@@ -58,7 +58,7 @@ const TransactionRoutes = (app) => {
 
   app.put(
     "/api/admin/edit-transaction-request/:id",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
         const trans = await Transaction.findById(req.params.id);
@@ -75,7 +75,7 @@ const TransactionRoutes = (app) => {
 
   app.put(
     "/api/admin/edit-bank-transaction-request/:id",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
         const bankTransaction = await BankTransaction.findById(req.params.id);
@@ -94,7 +94,7 @@ const TransactionRoutes = (app) => {
   
   app.put(
     "/api/admin/edit-website-transaction-request/:id",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
         const websiteTransaction = await WebsiteTransaction.findById(req.params.id);

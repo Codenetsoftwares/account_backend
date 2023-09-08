@@ -7,7 +7,7 @@ import { EditRequest } from "../models/EditRequest.model.js";
 
 const EditApiRoute = (app) => {
 
-  app.post("/api/admin/save-bank-transaction-request", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/admin/save-bank-transaction-request", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
       console.log(requestId);
@@ -54,7 +54,7 @@ app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async (r
 });
 
 
-app.post("/api/admin/save-website-transaction-request", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/save-website-transaction-request", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
   try {
     const { requestId } = req.body;
     console.log(requestId);
@@ -98,7 +98,7 @@ app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async
   }
 });
 
-app.post("/api/admin/save-transaction-request", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/save-transaction-request", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
   try {
     const { requestId } = req.body;
     console.log(requestId);

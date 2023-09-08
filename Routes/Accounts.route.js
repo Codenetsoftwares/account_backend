@@ -67,7 +67,7 @@ const AccountsRoute = (app) => {
 
   // API To Add Bank Name
 
-  app.post("/api/add-bank-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/add-bank-name", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
       try {
         const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
         if (!bankName) {
@@ -94,7 +94,7 @@ const AccountsRoute = (app) => {
 
   // API To Edit Bank Details
 
-  app.put("/api/bank-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.put("/api/bank-edit/:id", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
     try {
       const id = await Bank.findById(req.params.id);
       console.log("id", id);
@@ -111,7 +111,7 @@ const AccountsRoute = (app) => {
 
   // API To Delete Bank Name
 
-  app.post("/api/delete-bank-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/delete-bank-name", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
       try {
         const { bankName } = req.body;
         console.log("req.body", bankName);
@@ -136,7 +136,7 @@ const AccountsRoute = (app) => {
 
   // API To View Bank Name
 
-  app.get("/api/get-bank-name", Authorize(["superAdmin", "Bank-View"]), async (req, res) => {
+  app.get("/api/get-bank-name", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
     try {
       const bankData = await Bank.find({}).exec();
       res.status(200).send(bankData);
@@ -148,7 +148,7 @@ const AccountsRoute = (app) => {
 
   // API To View Single Bank Name
 
-  app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin"]),async (req, res) => {
+  app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]),async (req, res) => {
       try {
         const id = req.params.id;
         const bankData = await Bank.findOne({ _id: id }).exec();
@@ -162,7 +162,7 @@ const AccountsRoute = (app) => {
 
   // API To Add Website Name
 
-  app.post("/api/add-website-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/add-website-name", Authorize(["superAdmin", "Transaction-View", "Website-View"]), async (req, res) => {
       try {
         const websiteName = req.body.websiteName;
         if (!websiteName) {
@@ -183,7 +183,7 @@ const AccountsRoute = (app) => {
 
   // API To Edit Website Name
 
-  app.put("/api/website-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.put("/api/website-edit/:id", Authorize(["superAdmin", "Transaction-View", "Website-View"]), async (req, res) => {
       try {
         const id = await Website.findById(req.params.id);
         console.log("id", id);
@@ -203,7 +203,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/delete-wesite-name",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Transaction-View", "Website-View"]),
     async (req, res) => {
       try {
         const { websiteName } = req.body;
@@ -249,7 +249,7 @@ const AccountsRoute = (app) => {
 
   // API To View User Profiles
 
-  app.get("/api/user-profile", Authorize(["superAdmin", "Profile-View", "User-Profile-View", "Introducer-Profile-View"]), async (req, res) => {
+  app.get("/api/user-profile", Authorize(["superAdmin", "Profile-View", "User-Profile-View"]), async (req, res) => {
     try {
       const user = await User.find({}).exec();
       res.send(user);
@@ -261,10 +261,7 @@ const AccountsRoute = (app) => {
 
   // API To Edit User Profiles
 
-  app.put(
-    "/api/admin/user-profile-edit/:id",
-    Authorize(["superAdmin", ""]),
-    async (req, res) => {
+  app.put("/api/admin/user-profile-edit/:id", Authorize(["superAdmin", "User-Profile-View", "Profile-View"]), async (req, res) => {
       try {
         const id = await User.findById(req.params.id);
         const updateResult = await AccountServices.updateUserProfile(
@@ -282,10 +279,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/add-bank-balance/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/admin/add-bank-balance/:id", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
         const userId = req.user;
@@ -336,10 +330,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/add-website-balance/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/admin/add-website-balance/:id", Authorize(["superAdmin", "Website-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
         const userId = req.user;
@@ -387,10 +378,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/withdraw-bank-balance/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/admin/withdraw-bank-balance/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
       try {
         const id = req.params.id;
         const userId = req.user;
@@ -444,10 +432,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/withdraw-website-balance/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
+  app.post("/api/admin/withdraw-website-balance/:id", Authorize(["superAdmin", "Website-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
         const userId = req.user;
@@ -517,7 +502,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/website-name", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]), async (req, res) => {
       try {
         const websiteName = await Website.find({}, "websiteName").exec();
         res.status(200).send(websiteName);
@@ -632,7 +617,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/admin/introducer-live-balance/:id",  Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/introducer-live-balance/:id",  Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const id = req.params.id;
       const data =  await introducerUser.introducerLiveBalance(id);
@@ -645,7 +630,7 @@ const AccountsRoute = (app) => {
   }
 );
 
-  app.put("/api/admin/intoducer-profile-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.put("/api/admin/intoducer-profile-edit/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
       try {
         const id = await IntroducerUser.findById(req.params.id);
         const updateResult = await introducerUser.updateIntroducerProfile(id,req.body);
@@ -671,7 +656,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/intoducer/client-data/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/intoducer/client-data/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
       try {
         const id = req.params.id;
         const intoducer = await IntroducerUser.findOne({ id }).exec();
@@ -685,7 +670,7 @@ const AccountsRoute = (app) => {
     }
   );
   
-  app.get("/api/get-single-Introducer/:id", Authorize(["superAdmin"]),async (req, res) => {
+  app.get("/api/get-single-Introducer/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]),async (req, res) => {
     try {
       const id = req.params.id;
       const bankData = await IntroducerUser.findOne({ _id: id }).exec();
@@ -697,7 +682,7 @@ const AccountsRoute = (app) => {
   }
 );
 
-  app.get("/api/superadmin/user-id", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Website-Transaction"]), async (req, res) => {
     try {
       const resultArray = await User.find({}, "userId").exec();
       res.status(200).send(resultArray);
@@ -719,7 +704,7 @@ app.get("/api/superadmin/Introducer-id", Authorize(["superAdmin"]), async (req, 
 }
 );
 
-app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]),
+app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
   async (req, res) => {
     try {
       const accountNumber = req.params.accountNumber;
@@ -754,7 +739,7 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
 );
 
   
-app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin"]),
+app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
   async (req, res) => {
     try {
       const websiteName = req.params.websiteName;
@@ -868,7 +853,7 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
   }
 );
 
-app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
   try {
     const id = req.params.id;
     const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
