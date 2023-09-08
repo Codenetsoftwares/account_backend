@@ -111,7 +111,8 @@ export const IntroducerRoutes = (app) => {
 
     app.get("/api/introducer/introducer-live-balance/:id", AuthorizeRole(["introducer"]), async (req, res) => {
       try {
-        const id = req.params.id;
+        const id = await IntroducerUser.findById(req.params.id);
+        console.log("id", id)
         const data =  await introducerUser.introducerLiveBalance(id);
         console.log("data", data)
        res.send({ LiveBalance: data })
