@@ -9,9 +9,9 @@ dotenv.config();
 export const introducerUser = {
 
   createintroducerUser: async (data) => {
-    const existingUser = await IntroducerUser.findOne({ email: data.email }).exec();
+    const existingUser = await IntroducerUser.findOne({ userName: data.userName }).exec();
     if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.email}` };
+      throw { code: 409, message: `User already exists: ${data.userName}` };
     }
 
     const passwordSalt = await bcrypt.genSalt();
