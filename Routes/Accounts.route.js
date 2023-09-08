@@ -739,8 +739,9 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
         }
         const accountSummary = await Transaction.find({accountNumber,userId,}).sort({ createdAt: -1 }).exec();
         const bankSummary = await BankTransaction.find({accountNumber}).sort({ createdAt: -1 }).exec();
+        const allTransactions = [...accountSummary, ...bankSummary]
         if (accountSummary.length > 0 && bankSummary.length > 0) {
-          res.status(200).send({ transaction: accountSummary, bankTransaction: bankSummary });
+          res.status(200).send(allTransactions);
         } else {
           return res.status(404).send({ message: "Account not found" });
         }
@@ -773,8 +774,9 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
         }
         const accountSummary = await Transaction.find({websiteName, userId,}).exec();
         const websiteSummary = await WebsiteTransaction.find({websiteName}).sort({ createdAt: -1 }).exec();
+        const allTransactions = [...accountSummary, ...websiteSummary]
         if (accountSummary.length > 0 && websiteSummary.length > 0) {
-          res.status(200).send({ transaction: accountSummary, websiteTransaction: websiteSummary });
+          res.status(200).send(allTransactions);
         } else {
           return res.status(404).send({ message: "Website Name not found" });
         }
