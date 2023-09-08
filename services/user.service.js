@@ -27,6 +27,9 @@ export const userservice = {
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
+    if (existingUser) {
+      throw { code: 409, message: `User Id already exists: ${data.userId}` };
+    }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
     const emailVerificationCode = crypto.randomBytes(6).toString("hex");
