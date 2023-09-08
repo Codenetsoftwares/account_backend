@@ -126,25 +126,25 @@ export const UserRoutes = (app) => {
 
 // API To Add Website Name
 
-  app.post(
-    "/api/user/add-website-name",
-    AuthorizeRole(["user"]),
-    async (req, res) => {
-      try {
-        const userData = req.body;
-        console.log(userData)
-        const userId = req.user.id;
-        const user = await User.findById(userId);
-        user.webSiteDetail.push(userData);
-        console.log(user.webSiteDetail)
-        await user.save();
-        res.status(200).send({ message: "Website details updated successfully." });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
+app.post(
+  "/api/user/add-website-name",
+  AuthorizeRole(["user"]),
+  async (req, res) => {
+    try {
+      const userData = req.body;
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+      user.webSiteDetail = user.webSiteDetail.concat(userData);
+      await user.save();
+      res.status(200).send({ message: "Website details updated successfully." });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
-  );
+  }
+);
+
+
 
   // API To Add UPI Details
 
