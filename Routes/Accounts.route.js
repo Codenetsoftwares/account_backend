@@ -866,22 +866,21 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
   }
 );
 
-// app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin"]), async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
-//     console.log("introducerUser", introducerUser)
-//     if (!introducerUser) {
-//       return res.status(404).send({ message: 'IntroducerUser not found' });
-//     }
-//     const users = await User.find({ _id: id, introducersUserId: introducerUser.introducerId }).exec();
-//     console.log("users", users)
-//     res.send(users);
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).send({ message: 'Internal Server Error' });
-//   }
-// });
+app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
+    if (!introducerUser) {
+      return res.status(404).send({ message: 'IntroducerUser not found' });
+    }
+    const users = await User.find({ introducersUserId: introducerUser.introducerId }).exec();
+    res.send(users);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Internal Server Error' });
+  }
+});
+
 };
 
 export default AccountsRoute;
