@@ -683,7 +683,7 @@ const AccountsRoute = (app) => {
   }
 );
 
-  app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Website-Transaction", "Create-Transaction"]), async (req, res) => {
+  app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]), async (req, res) => {
     try {
       const resultArray = await User.find({}, "userId").exec();
       res.status(200).send(resultArray);
