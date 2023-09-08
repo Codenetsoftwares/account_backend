@@ -46,6 +46,7 @@ export const User = mongoose.model(
         bonus: { type: Number },
         bankCharges: { type: Number },
         remarks: { type: String },
+        introducerId : { type: String },
         beforeBalanceBankDeposit: { type: Number },
         currentBalanceWebsiteDeposit: { type: Number },
         beforeBalanceWebsiteDeposit: { type: Number },

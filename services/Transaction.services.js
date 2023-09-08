@@ -22,6 +22,7 @@ const TransactionService = {
         bankCharges,
         bonus,
         remarks,
+        introducerId
       } = req.body;
 
       const existingTransaction = await Transaction.findOne({
@@ -88,6 +89,7 @@ const TransactionService = {
           websiteName: websiteName,
           bonus: bonus,
           remarks: remarks,
+          introducerId: introducerId,
           beforeBalanceWebsiteDeposit: websiteId.walletBalance + amount,
           beforeBalanceBankDeposit: bankId.walletBalance - amount,
           currentBalanceWebsiteDeposit: websiteId.walletBalance,
@@ -116,6 +118,7 @@ const TransactionService = {
           subAdminId: subAdminId,
           subAdminName: subAdminName.firstname,
           userId: userId,
+          introducerId: introducerId,
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,

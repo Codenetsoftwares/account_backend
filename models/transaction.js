@@ -10,6 +10,7 @@ export const Transaction = mongoose.model(
     amount: { type: String, required: true },
     paymentMethod: { type: String, required: true },
     userId: { type: String, required: true },
+    introducerId : { type: String, required: true },
     bonus: { type: Number },
     bankCharges: { type: Number },
     remarks: { type: String },
