@@ -42,7 +42,7 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("Dashboard")) {
+      if (roles.includes("Dashboard-View")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -52,7 +52,7 @@ export const Authorize = (roles) => {
         }
       }
       
-      if (roles.includes("BankView")) {
+      if (roles.includes("Transaction-View")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -62,7 +62,27 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("CreateSubAdmin")) {
+      if (roles.includes("Bank-View")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (3)",
+          });
+        }
+      }
+
+      if (roles.includes("Website-View")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (3)",
+          });
+        }
+      }
+      
+      if (roles.includes("Profile-View")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -72,7 +92,7 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("WebsiteView")) {
+      if (roles.includes("User-Profile-View")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -82,7 +102,7 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("Profile")) {
+      if (roles.includes("Introducer-Profile-View")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -92,7 +112,17 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("EditRequest")) {
+      if (roles.includes("Transaction-Edit-Request")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+      
+      if (roles.includes("Transaction-Delete-Request")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
