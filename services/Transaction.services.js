@@ -191,15 +191,15 @@ const TransactionService = {
     if (existingTransaction.transactionType === "Deposit") {
       updatedTransactionData = {
         id: trans._id,
-        transactionID: existingTransaction.transactionID || data.transactionID,
-        transactionType: existingTransaction.transactionType || data.transactionType,
-        amount: existingTransaction.amount || data.amount,
-        paymentMethod: existingTransaction.paymentMethod || data.paymentMethod,
-        userId: existingTransaction.userId || data.userId,
-        subAdminId: existingTransaction.subAdminId || data.subAdminId,
-        bankName: existingTransaction.bankName || data.bankName,
-        websiteName: existingTransaction.websiteName || data.websiteName,
-        remark: existingTransaction.remarks || data.remark, 
+        transactionID: data.transactionID || existingTransaction.transactionID,
+        transactionType: data.transactionType  || existingTransaction.transactionType,
+        amount: data.amount || existingTransaction.amount,
+        paymentMethod: data.paymentMethod  || existingTransaction.paymentMethod,
+        userId: data.userId  || existingTransaction.userId,
+        subAdminId: data.subAdminId || existingTransaction.subAdminId,
+        bankName: data.bankName || existingTransaction.bankName,
+        websiteName: data.websiteName || existingTransaction.websiteName,
+        remark: data.remark || existingTransaction.remarks, 
       };
 
       for (const key in data) {
@@ -220,16 +220,15 @@ const TransactionService = {
     } else if (existingTransaction.transactionType === "Withdraw") {
       updatedTransactionData = {
         id: trans._id,
-        transactionID: existingTransaction.transactionID || data.transactionID,
-        transactionType:
-          existingTransaction.transactionType || data.transactionType,
-        amount: existingTransaction.amount || data.amount,
-        paymentMethod: existingTransaction.paymentMethod || data.paymentMethod,
-        userId: existingTransaction.userId || data.userId,
-        subAdminId: existingTransaction.subAdminId || data.subAdminId,
-        bankName: existingTransaction.bankName || data.bankName,
-        websiteName: existingTransaction.websiteName || data.websiteName,
-        remark: existingTransaction.remarks || data.remark,
+        transactionID: data.transactionID || existingTransaction.transactionID,
+        transactionType: data.transactionType  || existingTransaction.transactionType,
+        amount: data.amount || existingTransaction.amount,
+        paymentMethod: data.paymentMethod  || existingTransaction.paymentMethod,
+        userId: data.userId  || existingTransaction.userId,
+        subAdminId: data.subAdminId || existingTransaction.subAdminId,
+        bankName: data.bankName || existingTransaction.bankName,
+        websiteName: data.websiteName || existingTransaction.websiteName,
+        remark: data.remark || existingTransaction.remarks, 
       };
 
       for (const key in data) {
