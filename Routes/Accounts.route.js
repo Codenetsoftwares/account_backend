@@ -726,45 +726,66 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
       const transaction = await Transaction.findOne({ accountNumber }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        return res.status(404).send({ message: "Account not found" });
+        const bankSummary = await BankTransaction.find({ accountNumber }).sort({ createdAt: -1 }).exec();
+        if (bankSummary.length > 0) {
+          res.status(200).send(bankSummary);
+        } else {
+          return res.status(404).send({ message: "Account not found" });
+        }
+      } else {
+        const userId = transaction.userId;
+        if (!userId) {
+          return res.status(404).send({ message: "User Id not found" });
+        }
+        const accountSummary = await Transaction.find({accountNumber,userId,}).sort({ createdAt: -1 }).exec();
+        const bankSummary = await BankTransaction.find({accountNumber}).sort({ createdAt: -1 }).exec();
+        if (accountSummary.length > 0 && bankSummary.length > 0) {
+          res.status(200).send({ transaction: accountSummary, bankTransaction: bankSummary });
+        } else {
+          return res.status(404).send({ message: "Account not found" });
+        }
       }
-      const userId = transaction.userId;
-      if (!userId) {
-        return res.status(404).send({ message: "User Id not found" });
-      }
-      const accountSummary = await Transaction.find({accountNumber,userId,}).sort({ createdAt: -1 }).exec();
-      const bankSummary = await BankTransaction.find({accountNumber,}).sort({ createdAt: -1 }).exec();
-      const allTransactions = [...accountSummary, ...bankSummary];
-      res.status(200).send(allTransactions);
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
     }
   }
 );
+
   
-app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin"]),async (req, res) => {
+app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin"]),
+  async (req, res) => {
     try {
       const websiteName = req.params.websiteName;
       const transaction = await Transaction.findOne({ websiteName }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        return res.status(404).send({ message: "Website Name not found" });
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        if (websiteSummary.length > 0) {
+          res.status(200).send(websiteSummary);
+        } else {
+          return res.status(404).send({ message: "Website Name not found" });
+        }
+      } else {
+        const userId = transaction.userId;
+        if (!userId) {
+          return res.status(404).send({ message: "User Id not found" });
+        }
+        const accountSummary = await Transaction.find({websiteName, userId,}).exec();
+        const websiteSummary = await WebsiteTransaction.find({websiteName}).sort({ createdAt: -1 }).exec();
+        if (accountSummary.length > 0 && websiteSummary.length > 0) {
+          res.status(200).send({ transaction: accountSummary, websiteTransaction: websiteSummary });
+        } else {
+          return res.status(404).send({ message: "Website Name not found" });
+        }
       }
-      const userId = transaction.userId;
-      if (!userId) {
-        return res.status(404).send({ message: "User Id not found" });
-      }
-      const accountSummary = await Transaction.find({websiteName, userId,}).exec();
-      const wesiteSummary = await WebsiteTransaction.find({websiteName}).sort({ createdAt: -1 }).exec();
-      const allTransactions = [...accountSummary, ...wesiteSummary];
-      res.status(200).send(allTransactions);
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
     }
   }
 );
+
 
 
 app.post("/api/admin/user/register", Authorize(["superAdmin"]), async (req, res) => {
