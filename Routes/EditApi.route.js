@@ -4,6 +4,8 @@ import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { EditRequest } from "../models/EditRequest.model.js";
+import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js"
+import { EditBankRequest } from "../models/EditBankRequest.model.js"
 
 const EditApiRoute = (app) => {
 
@@ -156,6 +158,94 @@ app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
     res.status(500).send({ message: e.message });
   }
 });
+
+//   API For Bank Detail Edit approval
+
+app.post("/api/admin/approve-bank-detail-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const editRequest = await EditBankRequest.findById(req.params.requestId);
+    if (!editRequest) {
+      return res.status(404).send({ message: "Edit request not found" });
+    }
+    const { isApproved } = req.body;
+    if (typeof isApproved !== "boolean") {
+      return res.status(400).send({ message: "isApproved field must be a boolean value" });
+    }
+    if (!editRequest.isApproved) {
+      const updatedTransaction = await Bank.updateOne({ _id: editRequest.id },
+        {
+          accountHolderName: editRequest.accountHolderName,
+          bankName: editRequest.bankName,
+          accountNumber: editRequest.accountNumber,
+          ifscCode: editRequest.ifscCode,
+          upiId: editRequest.upiId,
+          upiAppName: editRequest.upiAppName,
+          upiNumber: editRequest.upiNumber,
+        }
+      );
+      console.log("updatedTransaction", updatedTransaction);
+      if (updatedTransaction.matchedCount === 0) {
+        return res.status(404).send({ message: "Bank Details not found" });
+      }
+      editRequest.isApproved = true;
+      if (editRequest.isApproved === true) {
+        const deletedEditRequest = await EditBankRequest.deleteOne({_id: req.params.requestId,});
+        console.log(deletedEditRequest);
+        if (!deletedEditRequest) {
+          return res.status(500).send({ message: "Error deleting edit request" });
+        }
+      }
+      return res.status(200).send({message: "Edit request approved and data updated", updatedTransaction: updatedTransaction,});
+    } else {
+      return res.status(200).send({ message: "Edit request rejected" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  }
+}
+);
+
+// API for Website name Edit API
+
+app.post("/api/admin/approve-website-detail-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const editRequest = await EditWebsiteRequest.findById(req.params.requestId);
+    if (!editRequest) {
+      return res.status(404).send({ message: "Edit request not found" });
+    }
+    const { isApproved } = req.body;
+    if (typeof isApproved !== "boolean") {
+      return res.status(400).send({ message: "isApproved field must be a boolean value" });
+    }
+    if (!editRequest.isApproved) {
+      const updatedTransaction = await Website.updateOne({ _id: editRequest.id },
+        {
+          websiteName: editRequest.websiteName,
+        }
+      );
+      console.log("updatedTransaction", updatedTransaction);
+      if (updatedTransaction.matchedCount === 0) {
+        return res.status(404).send({ message: "Website Name not found" });
+      }
+      editRequest.isApproved = true;
+      if (editRequest.isApproved === true) {
+        const deletedEditRequest = await EditWebsiteRequest.deleteOne({_id: req.params.requestId,});
+        console.log(deletedEditRequest);
+        if (!deletedEditRequest) {
+          return res.status(500).send({ message: "Error deleting edit request" });
+        }
+      }
+      return res.status(200).send({message: "Edit request approved and data updated", updatedTransaction: updatedTransaction,});
+    } else {
+      return res.status(200).send({ message: "Edit request rejected" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  }
+}
+);
 
 };
 
