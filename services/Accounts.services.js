@@ -38,9 +38,9 @@ const AccountServices = {
   },
 
   createAdmin: async (data) => {
-    const existingUser = await Admin.findOne({ email: data.email }).exec();
+    const existingUser = await Admin.findOne({ userName: data.userName }).exec();
     if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.email}` };
+      throw { code: 409, message: `User already exists: ${data.userName}` };
     }
 
     const passwordSalt = await bcrypt.genSalt();
