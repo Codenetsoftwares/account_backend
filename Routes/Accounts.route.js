@@ -853,7 +853,7 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
   }
 );
 
-app.get("/api/admin/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
+app.get("/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
   try {
     const id = req.params.id;
     const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
