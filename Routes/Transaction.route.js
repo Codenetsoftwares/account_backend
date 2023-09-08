@@ -11,7 +11,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/api/admin/create/transaction',
-    Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
+    Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]),
     async (req, res) => {
       try {
         const subAdminName = req.user;

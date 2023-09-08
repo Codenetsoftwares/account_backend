@@ -152,6 +152,16 @@ export const Authorize = (roles) => {
         }
       }
 
+      if (roles.includes("Create-Transaction")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+
       if (roles.includes("user")) {
         existingUser = await User.findById(user.id).exec();
         if (!existingUser) {
