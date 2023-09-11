@@ -15,7 +15,7 @@ const TransactionRoutes = (app) => {
     async (req, res) => {
       try {
         const subAdminName = req.user;
-        console.log("subAdminName", subAdminName)
+        // console.log("subAdminName", subAdminName)
         await TransactionServices.createTransaction(req, res, subAdminName);
       } catch (e) {
         console.error(e);

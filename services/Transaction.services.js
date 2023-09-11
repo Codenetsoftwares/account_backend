@@ -10,19 +10,8 @@ const TransactionService = {
   createTransaction: async (req, res, subAdminName) => {
     try {
       const {
-        transactionID,
-        transactionType,
-        amount,
-        paymentMethod,
-        userId,
-        subAdminId,
-        accountNumber,
-        websiteName,
-        bankName,
-        bankCharges,
-        bonus,
-        remarks,
-        introducerId
+        transactionID,transactionType,amount,paymentMethod,userName,subAdminUserName,accountNumber,websiteName,bankName,bankCharges,bonus,remarks,
+        introducerUserName
       } = req.body;
 
       const existingTransaction = await Transaction.findOne({
@@ -41,6 +30,7 @@ const TransactionService = {
       }).exec();
       console.log("bankId", bankId);
 
+// Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
       if (transactionType === "Deposit") {
         const websiteBalance = websiteId.walletBalance;
         if (websiteBalance < amount) {
@@ -57,7 +47,7 @@ const TransactionService = {
         bankId.walletBalance = newBankBalance;
         await bankId.save();
       }
-
+ // Calculation of Withdraw---- Amount will transfer from Bank to Website (Babk Charge)
       if (transactionType === "Withdraw") {
         const bankBalance = bankId.walletBalance;
         if (bankBalance < amount) {
@@ -81,24 +71,22 @@ const TransactionService = {
           transactionType: transactionType,
           amount: amount,
           paymentMethod: paymentMethod,
-          subAdminId: subAdminId,
+          subAdminUserName: subAdminUserName,
           subAdminName: subAdminName.firstname,
-          userId: userId,
+          userName: userName,
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
           bonus: bonus,
           remarks: remarks,
-          introducerId: introducerId,
-          beforeBalanceWebsiteDeposit: websiteId.walletBalance + amount,
-          beforeBalanceBankDeposit: bankId.walletBalance - amount,
-          currentBalanceWebsiteDeposit: websiteId.walletBalance,
-          currentBalanceBankDeposit: bankId.walletBalance,
+          introducerUserName: introducerUserName,
+          currentWebsiteBalance: websiteId.walletBalance,
+          currentBankBalance :bankId.walletBalance,
           createdAt: new Date(),
           isSubmit: false
         });
         await newTransaction.save();
-        const user = await User.findOne({ userId: userId });
+        const user = await User.findOne({ userName: userName });
 
         if (!user) {
           return res
@@ -115,24 +103,22 @@ const TransactionService = {
           transactionType: transactionType,
           amount: amount,
           paymentMethod: paymentMethod,
-          subAdminId: subAdminId,
+          subAdminUserName: subAdminUserName,
           subAdminName: subAdminName.firstname,
-          userId: userId,
-          introducerId: introducerId,
+          userName: userName,
           accountNumber: accountNumber,
           bankName: bankName,
           websiteName: websiteName,
           bankCharges: bankCharges,
           remarks: remarks,
-          beforeBalanceWebsiteWithdraw: websiteId.walletBalance - amount,
-          beforeBalanceBankWithdraw: bankId.walletBalance + amount,
-          currentBalanceWebsiteWithdraw: websiteId.walletBalance,
-          currentBalanceBankWithdraw: bankId.walletBalance,
+          introducerUserName: introducerUserName,
+          currentWebsiteBalance: websiteId.walletBalance,
+          currentBankBalance :bankId.walletBalance,
           createdAt: new Date(),
           isSubmit: false
         });
         await newTransaction.save();
-        const user = await User.findOne({ userId: userId });
+        const user = await User.findOne({ userName: userName });
 
         if (!user) {
           return res
