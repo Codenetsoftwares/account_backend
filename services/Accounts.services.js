@@ -78,6 +78,30 @@ const AccountServices = {
     return true;
   },
 
+  SubAdminPasswordResetCode: async (userName, password) => {
+    const existingUser = await AccountServices.findAdmin({ userName: userName });
+  
+    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+
+    if (passwordIsDuplicate) {
+      throw {
+        code: 409,
+        message: "New Password cannot be the same as existing password",
+      };
+    }
+
+    const passwordSalt = await bcrypt.genSalt();
+    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+
+    existingUser.password = encryptedPassword;
+    existingUser.save().catch((err) => {
+      console.error(err);
+      throw { code: 500, message: "Failed to save new password" };
+    });
+
+    return true;
+  },
+
   generateAdminAccessToken: async (userName, password, persist) => {
     if (!userName) {
       throw { code: 400, message: "Invalid value for: User Name" };

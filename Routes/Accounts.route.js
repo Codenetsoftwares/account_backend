@@ -869,6 +869,40 @@ app.get("/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer
   }
 });
 
+
+app.post("/api/admin/reset-password", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { userName, password } = req.body;
+    await AccountServices.SubAdminPasswordResetCode(userName, password);
+    res.status(200).send({ code: 200, message: "Password reset successful!" });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/admin/user/reset-password", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { userName, password } = req.body;
+    await userservice.UserPasswordResetCode(userName, password);
+    res.status(200).send({ code: 200, message: "Password reset successful!" });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/admin/intorducer/reset-password", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { userName, password } = req.body;
+    await introducerUser.intorducerPasswordResetCode(userName, password);
+    res.status(200).send({ code: 200, message: "Password reset successful!" });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
 };
 
 export default AccountsRoute;

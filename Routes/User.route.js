@@ -10,7 +10,7 @@ export const UserRoutes = (app) => {
     try {
       const { userName, password, persist } = req.body;
       if (!userName) {  
-        throw { code: 400, message: "Email ID is required" };
+        throw { code: 400, message: "User Name is required" };
       }
 
       if (!password) {
@@ -80,21 +80,6 @@ export const UserRoutes = (app) => {
       const { email } = req.body;
       await userservice.sendResetPasswordEmail(email);
       res.status(200).send({ code: 200, message: "Password Reset Code Sent" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
-
-  // API To Reset User Password
-
-  app.post("/api/accounts/reset-password", async (req, res) => {
-    try {
-      const { code, email, password } = req.body;
-      await userservice.verifyPasswordResetCode(code, email, password);
-      res
-        .status(200)
-        .send({ code: 200, message: "Password reset successful!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
