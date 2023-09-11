@@ -853,11 +853,11 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
 app.get("/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
   try {
     const id = req.params.id;
-    const introducerUser = await IntroducerUser.findOne({ _id: id }, "introducerId").exec();
+    const introducerUser = await IntroducerUser.findOne({ _id: id }, "userName").exec();
     if (!introducerUser) {
       return res.status(404).send({ message: 'IntroducerUser not found' });
     }
-    const users = await User.find({ introducersUserId: introducerUser.introducerId }).exec();
+    const users = await User.find({ introducersUserName: introducerUser.userName }).exec();
     res.send(users);
   } catch (e) {
     console.error(e);
