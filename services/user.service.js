@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 
 import dotenv from "dotenv";
+import AccountServices from "./Accounts.services.js";
 dotenv.config();
 
 export const userservice = {
@@ -27,33 +28,30 @@ export const userservice = {
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-    if (existingUser) {
-      throw { code: 409, message: `User Id already exists: ${data.userId}` };
-    }
+    // if (existingUser) {
+    //   throw { code: 409, message: `User Id already exists: ${data.userId}` };
+    // }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-    const emailVerificationCode = crypto.randomBytes(6).toString("hex");
+    // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
     const newUser = new User({
       firstname: data.firstname,
       lastname: data.lastname,
       userName: data.userName,
       contactNumber: data.contactNumber,
-      introducersUserId : data.introducersUserId,
       introducerPercentage : data.introducerPercentage,
       password: encryptedPassword,
-      userId: data.userId,
-      emailVerified: false,
-      tokens: {
-        emailVerification: emailVerificationCode,
-        passwordReset: null,
-      },
       wallet: 0,
+      // introducersUserId : data.introducersUserId,
+      // userId: data.userId,
+      // emailVerified: false,
+      // tokens: {
+      //   emailVerification: emailVerificationCode,
+      //   passwordReset: null,
+      // },
     });
 
-    newUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: "Failed to save user" };
-    });
+    newUser.save().catch((err) => {console.error(err); throw { code: 500, message: "Failed to save user" };});
     return true;
   },
   
@@ -143,20 +141,20 @@ export const userservice = {
 
   generateAccessToken: async (userName, password, persist) => {
     if (!userName) {
-      throw { code: 400, message: "Invalid value for: email" };
+      throw { code: 400, message: "Invalid value for: User Name" };
     }
     if (!password) {
-      throw { code: 400, message: "Invalid value for: password" };
+      throw { code: 400, message: "Invalid value for: Password" };
     }
 
     const existingUser = await userservice.findUser({ userName: userName });
     if (!existingUser) {
-      throw { code: 401, message: "Invalid User Name  or password" };
+      throw { code: 401, message: "Invalid User Name  or Password" };
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: "Invalid User Name or password" };
+      throw { code: 401, message: "Invalid User Name or Password" };
     }
 
     const accessTokenResponse = {
@@ -219,16 +217,10 @@ export const userservice = {
     return existingUser;
   },
 
-  verifyPasswordResetCode: async (code, email, password) => {
-    const existingUser = await userservice.findUser({ email: email });
-    if (existingUser.tokens.passwordReset !== code) {
-      throw { code: 401, message: "Entered wrong Code" };
-    }
-
-    const passwordIsDuplicate = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
+  UserPasswordResetCode: async (userName, password) => {
+    const existingUser = await userservice.findUser({ userName: userName });
+  
+    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
     if (passwordIsDuplicate) {
       throw {

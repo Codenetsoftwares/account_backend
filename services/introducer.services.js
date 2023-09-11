@@ -35,13 +35,38 @@ export const introducerUser = {
       lastname: data.lastname,
       userName: data.userName,
       password: encryptedPassword,
-      role: data.role,
-      introducerId: data.introducerId,
+      role: data.role
+      // introducerId: data.introducerId,
     });
 
     newIntroducerUser.save().catch((err) => {
       console.error(err);
       throw { code: 500, message: "Failed to Save New Introducer User" };
+    });
+
+    return true;
+  },
+  
+
+  intorducerPasswordResetCode: async (userName, password) => {
+    const existingUser = await introducerUser.findIntroducerUser({ userName: userName });
+  
+    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+
+    if (passwordIsDuplicate) {
+      throw {
+        code: 409,
+        message: "New Password cannot be the same as existing password",
+      };
+    }
+
+    const passwordSalt = await bcrypt.genSalt();
+    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+
+    existingUser.password = encryptedPassword;
+    existingUser.save().catch((err) => {
+      console.error(err);
+      throw { code: 500, message: "Failed to save new password" };
     });
 
     return true;
