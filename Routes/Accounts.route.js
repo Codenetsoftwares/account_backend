@@ -920,6 +920,21 @@ app.get('/api/superadmin/view-website-edit-requests', Authorize(["superAdmin"]),
     res.status(500).send("Internal Server error");
   }
 });
+
+app.put("/api/admin/subAdmin-profile-edit/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
+  try {
+    const id = await Admin.findById(req.params.id);
+    const updateResult = await AccountServices.updateSubAdminProfile(id,req.body);
+    console.log(updateResult);
+    if (updateResult) {
+      res.status(201).send("Profile updated");
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+}
+);
 };
 
 export default AccountsRoute;
