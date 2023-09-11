@@ -231,9 +231,9 @@ export const introducerUser = {
         };
       }
       
-      const IntroducerId = introId.introducerId;
+      const IntroducerId = introId.userName;
       const userIntroId = await User.find({
-        introducersUserId: IntroducerId,
+        introducersUserName: IntroducerId,
       }).exec();
   
       if (userIntroId.length === 0) {
@@ -244,7 +244,7 @@ export const introducerUser = {
       }
   
       console.log("userIntroId", userIntroId);
-      const userInroducerId = userIntroId[0].introducersUserId;
+      const userInroducerId = userIntroId[0].introducersUserName;
   
       if (IntroducerId === userInroducerId) {
         const introducerpercent = userIntroId[0].introducerPercentage;
