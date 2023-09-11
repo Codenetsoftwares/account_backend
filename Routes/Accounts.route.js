@@ -657,8 +657,8 @@ const AccountsRoute = (app) => {
       try {
         const id = req.params.id;
         const intoducer = await IntroducerUser.findOne({ id }).exec();
-        const intoducerId = intoducer.introducerId;
-        const introducerUser = await User.find({introducersUserId: intoducerId}).exec();
+        const intoducerId = intoducer.userName;
+        const introducerUser = await User.find({introducersUserName: intoducerId}).exec();
         res.send(introducerUser);
       } catch (e) {
         console.error(e);
