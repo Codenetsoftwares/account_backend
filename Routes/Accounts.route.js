@@ -10,6 +10,8 @@ import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { userservice } from "../services/user.service.js";
+import { EditBankRequest } from "../models/EditBankRequest.model.js";
+import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
 
 const AccountsRoute = (app) => {
@@ -899,6 +901,25 @@ app.post("/api/admin/intorducer/reset-password", Authorize(["superAdmin"]), asyn
   }
 });
 
+app.get('/api/superadmin/view-bank-edit-requests', Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const resultArray = await EditBankRequest.find().exec();
+    res.status(200).send(resultArray);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server error");
+  }
+});
+
+app.get('/api/superadmin/view-website-edit-requests', Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const resultArray = await EditWebsiteRequest.find().exec();
+    res.status(200).send(resultArray);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server error");
+  }
+});
 };
 
 export default AccountsRoute;
