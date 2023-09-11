@@ -685,7 +685,7 @@ const AccountsRoute = (app) => {
 
   app.get("/api/superadmin/user-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]), async (req, res) => {
     try {
-      const resultArray = await User.find({}, "userId").exec();
+      const resultArray = await User.find({}, "userName").exec();
       res.status(200).send(resultArray);
     } catch (error) {
       console.log(error);
@@ -696,7 +696,7 @@ const AccountsRoute = (app) => {
 
 app.get("/api/superadmin/Introducer-id", Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]), async (req, res) => {
   try {
-    const resultArray = await IntroducerUser.find({}, "introducerId").exec();
+    const resultArray = await IntroducerUser.find({}, "userName").exec();
     res.status(200).send(resultArray);
   } catch (error) {
     console.log(error);
