@@ -6,6 +6,8 @@ import { Transaction } from "../models/transaction.js";
 import { EditRequest } from "../models/EditRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js"
 import { EditBankRequest } from "../models/EditBankRequest.model.js"
+import { Bank } from "../models/bank.model.js"
+import { Website } from "../models/website.model.js"
 
 const EditApiRoute = (app) => {
 

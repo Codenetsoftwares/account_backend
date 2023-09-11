@@ -15,6 +15,9 @@ export const EditWebsiteRequest = mongoose.model(
     depositAmount: { type: Number },
     websiteName: { type: String },
     createdAt: { type: Date },
+    message: { type: String },
+    type: { type: String },
+    changedFields: {},
     isApproved: { type: Boolean, default: false, required: true },
   }),
   "EditWebsiteRequest"

@@ -197,15 +197,12 @@ const TransactionService = {
         }
       }
 
-      const editRequest = new EditRequest({
-        ...updatedTransactionData,
-        changedFields,
-        isApproved: false,
-        isSubmit: false,
+      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false,isSubmit: false,
         type: "Edit",
         message: "Deposit transaction is being edited.",
       });
       await editRequest.save();
+
     } else if (existingTransaction.transactionType === "Withdraw") {
       updatedTransactionData = {
         id: trans._id,
@@ -258,15 +255,13 @@ const TransactionService = {
         id: bankTransaction._id,
         transactionType:
           data.transactionType || existingBankTransaction.transactionType,
-        remark: data.remark || existingBankTransaction.remark,
+          remarks: data.remarks || existingBankTransaction.remarks,
         depositAmount:
           data.depositAmount || existingBankTransaction.depositAmount,
         subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         beforeBalance: bankTransaction.currentBalance,
-        currentBalance:
-          Number(bankTransaction.currentBalance) + Number(data.depositAmount) ||
-          existingBankTransaction.currentBalance,
+        currentBalance: Number(bankTransaction.currentBalance) + Number(data.depositAmount) || existingBankTransaction.currentBalance,
       };
       console.log("updated", bankTransaction.currentBalance);
       console.log("updated2", data.depositAmount);
@@ -292,7 +287,7 @@ const TransactionService = {
       updatedTransactionData = {
         id: bankTransaction._id,
         transactionType: data.transactionType || existingBankTransaction.transactionType,
-        remark: data.remark || existingBankTransaction.remark,
+        remarks: data.remarks || existingBankTransaction.remarks,
         withdrawAmount: data.withdrawAmount || existingBankTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
@@ -336,7 +331,7 @@ const TransactionService = {
       updatedTransactionData = {
         id: websiteTransaction._id,
         transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
-        remark: data.remark || existingWebsiteTransaction.remark,
+        remarks: data.remarks || existingWebsiteTransaction.remarks,
         depositAmount: data.depositAmount || existingWebsiteTransaction.depositAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
@@ -361,7 +356,7 @@ const TransactionService = {
       }
       updatedTransactionData = { id: websiteTransaction._id,
         transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
-        remark: data.remark || existingWebsiteTransaction.remark,
+        remarks: data.remarks || existingWebsiteTransaction.remarks,
         withdrawAmount: data.withdrawAmount || existingWebsiteTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
