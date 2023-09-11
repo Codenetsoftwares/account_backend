@@ -282,8 +282,8 @@ const AccountsRoute = (app) => {
   app.post("/api/admin/add-bank-balance/:id", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
-        const userId = req.user;
-        const { amount, transactionType, remark } = req.body;
+        const userName = req.user;
+        const { amount, transactionType, remarks } = req.body;
         if (transactionType !== "Manual-Bank-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -293,8 +293,8 @@ const AccountsRoute = (app) => {
           return res.status(404).send({ message: "Bank account not found" });
         }
         bank.walletBalance += amount;
-        bank.subAdminId = userId.email;
-        bank.subAdminName = userId.firstname;
+        bank.subAdminId = userName.userName;
+        bank.subAdminName = userName.firstname;
         bank.transactionType = transactionType.transactionType;
         await bank.save();
 
@@ -307,12 +307,11 @@ const AccountsRoute = (app) => {
           upiId: bank.upiId,
           upiAppName: bank.upiAppName,
           upiNumber: bank.upiNumber,
-          beforeBalance: bank.walletBalance - amount,
-          currentBalance: bank.walletBalance,
+          currentBankBalance: bank.walletBalance,
           depositAmount: amount,
-          subAdminId: userId.email,
-          subAdminName: userId.firstname,
-          remark: remark,
+          subAdminId: userName.userName,
+          subAdminName: userName.firstname,
+          remarks: remarks,
           createdAt: new Date(),
           isSubmit: false
         });
@@ -333,8 +332,8 @@ const AccountsRoute = (app) => {
   app.post("/api/admin/add-website-balance/:id", Authorize(["superAdmin", "Website-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
-        const userId = req.user;
-        const { amount, transactionType, remark } = req.body;
+        const userName = req.user;
+        const { amount, transactionType, remarks } = req.body;
         if (transactionType !== "Manual-Webiste-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -344,24 +343,23 @@ const AccountsRoute = (app) => {
           return res.status(404).send({ message: "Website  not found" });
         }
         website.walletBalance += amount;
-        website.subAdminId = userId.email;
-        website.subAdminName = userId.firstname;
+        website.subAdminId = userName.userName;
+        website.subAdminName = userName.firstname;
         website.transactionType = transactionType.transactionType;
         await website.save();
 
-        let beforBal = website.walletBalance - amount;
+        // let beforBal = website.walletBalance - amount;
         let currentBal = website.walletBalance;
         console.log("currentBal", currentBal);
 
         const websiteTransaction = new WebsiteTransaction({
           websiteName: website.websiteName,
           transactionType: transactionType,
-          beforeBalance: beforBal,
-          currentBalance: currentBal,
+          currentWebsiteBalance: currentBal,
           depositAmount: amount,
-          subAdminId: userId.email,
-          subAdminName: userId.firstname,
-          remark: remark,
+          subAdminId: userName.userName,
+          subAdminName: userName.firstname,
+          remarks: remarks,
           createdAt: new Date(),
           isSubmit: false
         });
@@ -381,8 +379,8 @@ const AccountsRoute = (app) => {
   app.post("/api/admin/withdraw-bank-balance/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
       try {
         const id = req.params.id;
-        const userId = req.user;
-        const { amount, transactionType, remark } = req.body;
+        const userName = req.user;
+        const { amount, transactionType, remarks } = req.body;
         if (transactionType !== "Manual-Bank-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -395,8 +393,8 @@ const AccountsRoute = (app) => {
         bank.walletBalance -= amount;
         console.log("bankwallet", bank.walletBalance);
         bank.transactionType = transactionType;
-        bank.subAdminId = userId.email;
-        bank.subAdminName = userId.firstname;
+        bank.subAdminId = userName.userName;
+        bank.subAdminName = userName.firstname;
         await bank.save();
 
         let currentBal = bank.walletBalance;
@@ -410,12 +408,11 @@ const AccountsRoute = (app) => {
           upiId: bank.upiId,
           upiAppName: bank.upiAppName,
           upiNumber: bank.upiNumber,
-          beforeBalance: bank.walletBalance + amount,
-          currentBalance: currentBal,
+          currentBankBalance: currentBal,
           withdrawAmount: amount,
-          subAdminId: userId.email,
-          subAdminName: userId.firstname,
-          remark: remark,
+          subAdminId: userName.userName,
+          subAdminName: userName.firstname,
+          remarks: remarks,
           createdAt: new Date(),
           isSubmit: false
         });
@@ -435,8 +432,8 @@ const AccountsRoute = (app) => {
   app.post("/api/admin/withdraw-website-balance/:id", Authorize(["superAdmin", "Website-View", "Transaction-View"]), async (req, res) => {
       try {
         const id = req.params.id;
-        const userId = req.user;
-        const { amount, transactionType, remark } = req.body;
+        const userName = req.user;
+        const { amount, transactionType, remarks } = req.body;
         if (transactionType !== "Manual-Website-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -449,8 +446,8 @@ const AccountsRoute = (app) => {
         website.walletBalance -= amount;
         console.log("Websitewallet", website.walletBalance);
         website.transactionType = transactionType;
-        website.subAdminId = userId.email;
-        website.subAdminName = userId.firstname;
+        website.subAdminId = userName.userName;
+        website.subAdminName = userName.firstname;
         await website.save();
 
         let currentBal = website.walletBalance;
@@ -458,12 +455,11 @@ const AccountsRoute = (app) => {
         const websiteTransaction = new WebsiteTransaction({
           websiteName: website.websiteName,
           transactionType: transactionType,
-          beforeBalance: website.walletBalance + amount,
-          currentBalance: currentBal,
+          currentWebsiteBalance: currentBal,
           withdrawAmount: amount,
-          subAdminId: userId.email,
-          subAdminName: userId.firstname,
-          remark: remark,
+          subAdminId: userName.userName,
+          subAdminName: userName.firstname,
+          remarks: remarks,
           createdAt: new Date(),
           isSubmit: false
         });

@@ -4,7 +4,7 @@ export const WebsiteTransaction = mongoose.model(
   "WebsiteTransaction",
   new mongoose.Schema({
     websiteName: { type: String, required: true },
-    remark: { type: String, required: true },
+    remarks: { type: String, required: true },
     transactionType: { type: String },
     beforeBalance: { type: Number },
     currentBalance: { type: Number },
@@ -12,6 +12,7 @@ export const WebsiteTransaction = mongoose.model(
     depositAmount: { type: Number },
     subAdminId: { type: String },
     subAdminName: { type: String },
+    currentWebsiteBalance : { type: Number },
     isSubmit: { type: Boolean, default: false },
     createdAt: { type: Date },
   }),
