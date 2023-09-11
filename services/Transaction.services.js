@@ -173,6 +173,15 @@ const TransactionService = {
   updateTransaction: async (trans, data) => {
     const existingTransaction = await Transaction.findById(trans);
     console.log("existingTransaction", existingTransaction);
+    
+    const cbb = await Bank.findOne({accountNumber:existingTransaction.accountNumber}).exec();
+    // console.log("cbb", cbb);
+    const currBankBal = cbb.walletBalance
+    // console.log(currBankBal)
+    const cwb = await Website.findOne({websiteName:existingTransaction.websiteName}).exec();
+    // console.log("cwb", cwb);
+    const currWebsiteBal = cwb.walletBalance
+    // console.log(currWebsiteBal)
 
     let updatedTransactionData = {};
     let changedFields = {};
@@ -188,9 +197,11 @@ const TransactionService = {
         subAdminId: data.subAdminId || existingTransaction.subAdminId,
         bankName: data.bankName || existingTransaction.bankName,
         websiteName: data.websiteName || existingTransaction.websiteName,
-        remark: data.remark || existingTransaction.remarks, 
+        remarks: data.remarks || existingTransaction.remarks, 
+        currentBankBalance: Number(currBankBal) + Math.abs(Number(existingTransaction.amount-data.amount))  || existingTransaction.currentBankBalance,
+        currentWebsiteBalance:  Number(currWebsiteBal) - Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentBankBalance,
       };
-
+      
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
           changedFields[key] = data[key];
