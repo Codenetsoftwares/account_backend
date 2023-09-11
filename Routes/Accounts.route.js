@@ -715,7 +715,7 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
           return res.status(404).send({ message: "Account not found" });
         }
       } else {
-        const userId = transaction.userId;
+        const userId = transaction.userName;
         if (!userId) {
           return res.status(404).send({ message: "User Id not found" });
         }
@@ -750,7 +750,7 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
           return res.status(404).send({ message: "Website Name not found" });
         }
       } else {
-        const userId = transaction.userId;
+        const userId = transaction.userName;
         if (!userId) {
           return res.status(404).send({ message: "User Id not found" });
         }
