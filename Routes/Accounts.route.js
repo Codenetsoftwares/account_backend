@@ -336,7 +336,7 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userName = req.user;
         const { amount, transactionType, remarks } = req.body;
-        if (transactionType !== "Manual-Webiste-Deposit") {
+        if (transactionType !== "Manual-Website-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
         const website = await Website.findOne({ _id: id }).exec();
