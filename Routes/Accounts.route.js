@@ -211,7 +211,7 @@ const AccountsRoute = (app) => {
         const { websiteName } = req.body;
         console.log("req.body", websiteName);
 
-        const WebsiteToDelete = await Website.findOne({
+        const WebsiteToDelete = await Website.findOne({ 
           websiteName: websiteName,
         }).exec();
         if (!WebsiteToDelete) {

@@ -145,7 +145,9 @@ const TransactionRoutes = (app) => {
     subAdminId: editRequest.subAdminId,
     bankName: editRequest.bankName,
     websiteName: editRequest.websiteName,
-    remark: editRequest.remark
+    currentBankBalance : editRequest.currentBankBalance,
+    currentWebsiteBalance : editRequest.currentWebsiteBalance,
+    remarks: editRequest.remarks
     });
     console.log("updatedTransaction", updatedTransaction)
     if (updatedTransaction.matchedCount === 0) {
@@ -183,11 +185,10 @@ const TransactionRoutes = (app) => {
           const updatedTransaction = await BankTransaction.updateOne({ _id: editRequest.id },
             {
               transactionType: editRequest.transactionType,
-              remark: editRequest.remark,
+              remarks: editRequest.remarks,
               withdrawAmount: editRequest.withdrawAmount,
               depositAmount: editRequest.depositAmount,
-              beforeBalance: editRequest.beforeBalance,
-              currentBalance: editRequest.currentBalance,
+              currentBankBalance : editRequest.currentBankBalance,
               subAdminId: editRequest.subAdminId,
               subAdminName: editRequest.subAdminName,
             }
@@ -231,11 +232,10 @@ const TransactionRoutes = (app) => {
         const updatedTransaction = await WebsiteTransaction.updateOne({ _id: editRequest.id },
           {
               transactionType: editRequest.transactionType,
-              remark: editRequest.remark,
+              remarks: editRequest.remarks,
               withdrawAmount: editRequest.withdrawAmount,
               depositAmount: editRequest.depositAmount,
-              beforeBalance: editRequest.beforeBalance,
-              currentBalance: editRequest.currentBalance,
+              currentWebsiteBalance: editRequest.currentWebsiteBalance,
               subAdminId: editRequest.subAdminId,
               subAdminName: editRequest.subAdminName,
           }
