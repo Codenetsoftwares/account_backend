@@ -338,6 +338,36 @@ app.post("/api/delete-website/:id", Authorize(["superAdmin"]), async (req, res) 
   }
 });
 
+app.delete("/api/reject/bank-detail/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await EditBankRequest.deleteOne({ _id: id });
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: e.message });
+  }
+});
+
+app.delete("/api/reject/website-detail/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await EditWebsiteRequest.deleteOne({ _id: id });
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: e.message });
+  }
+});
+
 };
 
 export default EditApiRoute;
