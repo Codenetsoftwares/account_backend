@@ -187,6 +187,8 @@ const TransactionService = {
     let changedFields = {};
 
     if (existingTransaction.transactionType === "Deposit") {
+      // const newAmount = data.amount || existingTransaction.amount;
+      // const amountDifference = Math.abs(Number(existingTransaction.amount - newAmount));
       updatedTransactionData = {
         id: trans._id,
         transactionID: data.transactionID || existingTransaction.transactionID,
@@ -199,9 +201,19 @@ const TransactionService = {
         websiteName: data.websiteName || existingTransaction.websiteName,
         remarks: data.remarks || existingTransaction.remarks, 
         currentBankBalance: Number(currBankBal) + Math.abs(Number(existingTransaction.amount-data.amount))  || existingTransaction.currentBankBalance,
-        currentWebsiteBalance:  Number(currWebsiteBal) - Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentBankBalance,
+        currentWebsiteBalance:  Number(currWebsiteBal) - Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentWebsiteBalance,
       };
       
+    //   await Bank.updateOne(
+    //     { _id: cbb._id },
+    //     { $set: { walletBalance: updatedTransactionData.currentBankBalance } }
+    // ).exec();
+
+    // await Website.updateOne(
+    //     { _id: cwb._id },
+    //     { $set: { walletBalance: updatedTransactionData.currentWebsiteBalance } }
+    // ).exec();
+
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
           changedFields[key] = data[key];
