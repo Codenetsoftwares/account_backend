@@ -88,25 +88,34 @@ export const UserRoutes = (app) => {
 
  // API To Add Bank Name
 
-  app.post(
-    "/api/user/add-bank-name",
-    AuthorizeRole(["user"]),
-    async (req, res) => {
-      try {
-        const userData = req.body;
-        const userId = req.user.id;
-        const user = await User.findById(userId);
-        user.bankDetail.accountHolderName = userData.accountHolderName;
-        user.bankDetail.bankName = userData.bankName;
-        user.bankDetail.ifscCode = userData.ifscCode;
-        user.bankDetail.accountNumber = userData.accountNumber;
-        await user.save();
-        res.status(200).send({ message: "Bank details updated successfully." });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
+ app.post(
+  "/api/user/add-bank-name",
+  AuthorizeRole(["user"]),
+  async (req, res) => {
+    try {
+      const userData = req.body;
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+      const isBankNameExists = user.bankDetail.some(
+        (bank) => bank.bankName === userData.bankName
+      );
+      if (isBankNameExists) {
+        throw new Error("Bank with this name already exists.");
       }
+      const newBankDetail = {
+        accountHolderName: userData.accountHolderName,
+        bankName: userData.bankName,
+        ifscCode: userData.ifscCode,
+        accountNumber: userData.accountNumber,
+      };
+      user.bankDetail.push(newBankDetail);
+      await user.save();
+      res.status(200).send({ message: "Bank details added successfully." });
+    } catch (e) {
+      console.error(e);
+      res.status(400).send({ message: e.message });
     }
+  }
 );
 
 // API To Add Website Name
@@ -116,10 +125,10 @@ app.post(
   AuthorizeRole(["user"]),
   async (req, res) => {
     try {
-      const userData = req.body;
+      const websiteName = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-      user.webSiteDetail = user.webSiteDetail.concat(userData);
+      user.webSiteDetail = user.webSiteDetail.concat(websiteName);
       await user.save();
       res.status(200).send({ message: "Website details updated successfully." });
     } catch (e) {
@@ -128,8 +137,6 @@ app.post(
     }
   }
 );
-
-
 
   // API To Add UPI Details
 
