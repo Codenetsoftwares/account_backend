@@ -119,7 +119,10 @@ app.post(
       const websiteName = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-      user.webSiteDetail = user.webSiteDetail.concat(websiteName);
+      const newWebsiteDetail = {
+        websiteName: websiteName.websiteName
+      }
+      user.webSiteDetail.push(newWebsiteDetail);
       await user.save();
       res.status(200).send({ message: "Website details updated successfully." });
     } catch (e) {
