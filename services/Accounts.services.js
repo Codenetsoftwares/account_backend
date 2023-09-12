@@ -433,6 +433,50 @@ const AccountServices = {
 
     return true;
   },
+
+  deleteBank: async (id) => {
+    const existingTransaction = await Bank.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Bank not found with id: ${id}`};
+    }
+    
+    const updatedTransactionData = {
+      id: id._id,
+      accountHolderName: id.accountHolderName,
+      bankName: id.bankName,
+      accountNumber: id.accountNumber,
+      ifscCode: id.ifscCode,
+      upiId: id.upiId,
+      upiAppName: id.upiAppName,
+      upiNumber: id.upiNumber
+    };
+    const editMessage = `${updatedTransactionData.bankName} is sent to Super Admin for deleting approval`;
+    await createEditRequest(updatedTransactionData, editMessage);
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Bank Detail's"});
+      await backupTransaction.save();
+    }
+    return true;
+  },
+
+  deleteWebsite: async (id) => {
+    const existingTransaction = await Website.findById(id);
+    if (!existingTransaction) {
+      throw {code: 404, message: `Bank not found with id: ${id}`};
+    }
+    
+    const updatedTransactionData = {
+      id: id._id,
+      websiteName: id.websiteName,
+    };
+    const editMessage = `${updatedTransactionData.websiteName} is sent to Super Admin for deleting approval`;
+    await createEditRequest(updatedTransactionData, editMessage);
+    async function createEditRequest(updatedTransactionData, editMessage) {
+      const backupTransaction = new EditWebsiteRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Website Detail's"});
+      await backupTransaction.save();
+    }
+    return true;
+  },
 };
 
 export default AccountServices;
