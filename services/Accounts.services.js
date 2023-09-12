@@ -462,7 +462,7 @@ const AccountServices = {
   deleteWebsite: async (id) => {
     const existingTransaction = await Website.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Bank not found with id: ${id}`};
+      throw {code: 404, message: `Website not found with id: ${id}`};
     }
     
     const updatedTransactionData = {

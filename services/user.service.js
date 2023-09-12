@@ -249,9 +249,9 @@ export const userservice = {
     existingUser.firstname = data.firstname ? data. firstname : existingUser.firstname;
     existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
     existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
-    existingUser.bankDetail = data.bankDetail ? data.bankDetail : existingUser.bankDetail;
-    existingUser.upiDetail = data.upiDetail ? data.upiDetail : existingUser.upiDetail;
-    existingUser.webSiteDetail = data.webSiteDetail ? data.webSiteDetail : existingUser.webSiteDetail;
+    // existingUser.bankDetail = data.bankDetail ? data.bankDetail : existingUser.bankDetail;
+    // existingUser.upiDetail = data.upiDetail ? data.upiDetail : existingUser.upiDetail;
+    // existingUser.webSiteDetail = data.webSiteDetail ? data.webSiteDetail : existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);
@@ -263,5 +263,6 @@ export const userservice = {
   
     return true;
   },
+  
  
 };
