@@ -131,7 +131,7 @@ app.post(
 
   // API To Add UPI Details
 
-  app.post(
+   app.post(
     "/api/user/add-upi-name",
     AuthorizeRole(["user"]),
     async (req, res) => {
