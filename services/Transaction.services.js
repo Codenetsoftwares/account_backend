@@ -23,7 +23,7 @@ const TransactionService = {
           .json({ status: false, message: "Transaction already exists" });
       }
 
-      const websiteId = await Website.findOne({ name: websiteName }).exec();
+      const websiteId = await Website.findOne({ websiteName: websiteName }).exec();
       console.log("wesiteId", websiteId);
       const bankId = await Bank.findOne({
         accountNumber: accountNumber,
@@ -34,7 +34,7 @@ const TransactionService = {
       if (transactionType === "Deposit") {
         const websiteBalance = websiteId.walletBalance;
         if (websiteBalance < amount) {
-          throw new Error("Insufficient balance");
+          throw new Error("Insufficient Website balance");
         }
         const newWebsiteBalance = (Number(websiteBalance) + Number(bonus)) - Number(amount);
         console.log("newWebsiteBalance", newWebsiteBalance);
@@ -42,6 +42,9 @@ const TransactionService = {
         await websiteId.save();
 
         const bankBalance = bankId.walletBalance;
+        if (bankBalance < amount) {
+          throw new Error("Insufficient Bank balance");
+        }
         const newBankBalance = parseInt(bankBalance) + parseInt(amount);
         console.log("newBankBalance", newBankBalance);
         bankId.walletBalance = newBankBalance;
@@ -51,7 +54,7 @@ const TransactionService = {
       if (transactionType === "Withdraw") {
         const bankBalance = bankId.walletBalance;
         if (bankBalance < amount) {
-          throw new Error("Insufficient balance");
+          throw new Error("Insufficient Bank balance");
         }
         const newbankBalance = (Number(bankBalance) + Number(bankCharges)) - Number(amount);
         console.log("newbankBalance", newbankBalance);
@@ -59,6 +62,10 @@ const TransactionService = {
         await bankId.save();
 
         const websiteBalance = websiteId.walletBalance;
+        console.log("first", websiteBalance)
+        if (websiteBalance < amount) {
+          throw new Error("Insufficient Website balance");
+        }
         const newWebsiteBalance = Number(websiteBalance) + Number(amount);
         console.log("newWebsiteBalance", newWebsiteBalance);
         websiteId.walletBalance = newWebsiteBalance;
@@ -175,20 +182,14 @@ const TransactionService = {
     console.log("existingTransaction", existingTransaction);
     
     const cbb = await Bank.findOne({accountNumber:existingTransaction.accountNumber}).exec();
-    // console.log("cbb", cbb);
     const currBankBal = cbb.walletBalance
-    // console.log(currBankBal)
     const cwb = await Website.findOne({websiteName:existingTransaction.websiteName}).exec();
-    // console.log("cwb", cwb);
     const currWebsiteBal = cwb.walletBalance
-    // console.log(currWebsiteBal)
 
     let updatedTransactionData = {};
     let changedFields = {};
 
     if (existingTransaction.transactionType === "Deposit") {
-      // const newAmount = data.amount || existingTransaction.amount;
-      // const amountDifference = Math.abs(Number(existingTransaction.amount - newAmount));
       updatedTransactionData = {
         id: trans._id,
         transactionID: data.transactionID || existingTransaction.transactionID,
@@ -238,7 +239,19 @@ const TransactionService = {
         bankName: data.bankName || existingTransaction.bankName,
         websiteName: data.websiteName || existingTransaction.websiteName,
         remark: data.remark || existingTransaction.remarks, 
+        currentBankBalance: Number(currBankBal) - Math.abs(Number(existingTransaction.amount-data.amount))  || existingTransaction.currentBankBalance,
+        currentWebsiteBalance:  Number(currWebsiteBal) + Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentWebsiteBalance,
       };
+
+    //   await Bank.updateOne(
+    //     { _id: cbb._id },
+    //     { $set: { walletBalance: updatedTransactionData.currentBankBalance } }
+    // ).exec();
+
+    // await Website.updateOne(
+    //     { _id: cwb._id },
+    //     { $set: { walletBalance: updatedTransactionData.currentWebsiteBalance } }
+    // ).exec();
 
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
@@ -276,11 +289,9 @@ const TransactionService = {
       }
       updatedTransactionData = {
         id: bankTransaction._id,
-        transactionType:
-          data.transactionType || existingBankTransaction.transactionType,
-          remarks: data.remarks || existingBankTransaction.remarks,
-        depositAmount:
-          data.depositAmount || existingBankTransaction.depositAmount,
+        transactionType: data.transactionType || existingBankTransaction.transactionType,
+        remarks: data.remarks || existingBankTransaction.remarks,
+        depositAmount: data.depositAmount || existingBankTransaction.depositAmount,
         subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         beforeBalance: bankTransaction.currentBalance,
