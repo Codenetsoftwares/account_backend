@@ -10,8 +10,7 @@ const TransactionService = {
   createTransaction: async (req, res, subAdminName) => {
     try {
       const {
-        transactionID,transactionType,amount,paymentMethod,userName,subAdminUserName,accountNumber,websiteName,bankName,bankCharges,bonus,remarks,
-        introducerUserName
+        transactionID,transactionType,amount,paymentMethod,userName,subAdminUserName,accountNumber,websiteName,bankName,bankCharges,bonus,remarks
       } = req.body;
 
       const existingTransaction = await Transaction.findOne({
@@ -23,7 +22,7 @@ const TransactionService = {
           .json({ status: false, message: "Transaction already exists" });
       }
 
-      const websiteId = await Website.findOne({ name: websiteName }).exec();
+      const websiteId = await Website.findOne({ websiteName: websiteName }).exec();
       console.log("wesiteId", websiteId);
       const bankId = await Bank.findOne({
         accountNumber: accountNumber,
