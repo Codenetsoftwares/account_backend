@@ -148,9 +148,12 @@ app.post(
         const userData = req.body;
         const userId = req.user.id;
         const user = await User.findById(userId);
-        user.upiDetail.upiId = userData.upiId;
-        user.upiDetail.upiApp = userData.upiApp;
-        user.upiDetail.upiNumber = userData.upiNumber;
+        const newUpiDetail = {
+          upiId: userData.upiId,
+          upiApp: userData.upiApp,
+          upiNumber: userData.upiNumber,
+        };
+        user.upiDetail.push(newUpiDetail);
         await user.save();
         res.status(200).send({ message: "UPI details updated successfully." });
       } catch (e) {

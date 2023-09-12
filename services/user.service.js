@@ -246,12 +246,12 @@ export const userservice = {
     const existingUser = await User.findById(id);
     if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
         
-    existingUser.firstname = data.firstname || existingUser.firstname;
-    existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
-    existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
-    existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.firstname = data.firstname ? data. firstname : existingUser.firstname;
+    existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
+    existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
+    existingUser.bankDetail = data.bankDetail ? data.bankDetail : existingUser.bankDetail;
+    existingUser.upiDetail = data.upiDetail ? data.upiDetail : existingUser.upiDetail;
+    existingUser.webSiteDetail = data.webSiteDetail ? data.webSiteDetail : existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);

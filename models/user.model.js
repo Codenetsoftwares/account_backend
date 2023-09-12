@@ -25,7 +25,7 @@ export const User = mongoose.model(
     upiDetail: [{
       upiId: { type: String },
       upiApp: { type: String },
-      upiNumber: { type: Number },
+      upiNumber: { type: String },
     }],
     webSiteDetail: [],
     tokens: {
