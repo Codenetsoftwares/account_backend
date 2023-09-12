@@ -96,24 +96,15 @@ export const UserRoutes = (app) => {
       const userData = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-      const isBankNameExists = user.bankDetail.some(
-        (bank) => bank.bankName === userData.bankName
-      );
-      if (isBankNameExists) {
-        throw new Error("Bank with this name already exists.");
-      }
-      const newBankDetail = {
-        accountHolderName: userData.accountHolderName,
-        bankName: userData.bankName,
-        ifscCode: userData.ifscCode,
-        accountNumber: userData.accountNumber,
-      };
-      user.bankDetail.push(newBankDetail);
+      user.bankDetail.accountHolderName = userData.accountHolderName;
+      user.bankDetail.bankName = userData.bankName;
+      user.bankDetail.ifscCode = userData.ifscCode;
+      user.bankDetail.accountNumber = userData.accountNumber;
       await user.save();
-      res.status(200).send({ message: "Bank details added successfully." });
+      res.status(200).send({ message: "Bank details updated successfully." });
     } catch (e) {
       console.error(e);
-      res.status(400).send({ message: e.message });
+      res.status(e.code).send({ message: e.message });
     }
   }
 );
@@ -148,12 +139,9 @@ app.post(
         const userData = req.body;
         const userId = req.user.id;
         const user = await User.findById(userId);
-        const newUpiDetail = {
-          upiId: userData.upiId,
-          upiApp: userData.upiApp,
-          upiNumber: userData.upiNumber,
-        };
-        user.upiDetail.push(newUpiDetail);
+        user.upiDetail.upiId = userData.upiId;
+        user.upiDetail.upiApp = userData.upiApp;
+        user.upiDetail.upiNumber = userData.upiNumber;
         await user.save();
         res.status(200).send({ message: "UPI details updated successfully." });
       } catch (e) {

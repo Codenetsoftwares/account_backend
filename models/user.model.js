@@ -16,17 +16,17 @@ export const User = mongoose.model(
     wallet: { type: Number },
     profilePicture: { type: String },
     role: { type: String, default: "user" },
-    bankDetail: [{
+    bankDetail: {
       accountHolderName: { type: String },
       bankName: { type: String },
       accountNumber: { type: Number },
       ifscCode: { type: String },
-    }],
-    upiDetail: [{
+    },
+    upiDetail: {
       upiId: { type: String },
       upiApp: { type: String },
       upiNumber: { type: String },
-    }],
+    },
     webSiteDetail: [],
     tokens: {
       emailVerification: { type: String },
