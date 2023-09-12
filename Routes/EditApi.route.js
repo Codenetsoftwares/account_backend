@@ -249,6 +249,95 @@ app.post("/api/admin/approve-website-detail-edit-request/:requestId", Authorize(
 }
 );
 
+
+app.post("/api/admin/save-bank-request", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    console.log(requestId);
+    const transaction = await Bank.findById(requestId);
+    if (!transaction) {
+      return res.status(404).send("Bank not found");
+    }
+    console.log("Transaction found", transaction);
+    const updateResult = await AccountServices.deleteBank(transaction, req.body);
+    console.log(updateResult);
+    if (updateResult) {
+      res.status(201).send("Bank delete request sent to Super Admin");
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/delete-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const editRequest = await EditBankRequest.findById(id).exec();
+
+    if (!editRequest) {
+      return res.status(404).send({ message: "Bank Request not found" });
+    }
+
+    const isApproved = true;
+
+    if (isApproved) {
+      await Bank.deleteOne({ _id: editRequest.id }).exec();
+      await EditBankRequest.deleteOne({ _id: req.params.id }).exec();
+      res.status(200).send({ message: "Bank deleted" });
+    } else {
+      res.status(400).send({ message: "Approval request rejected by super admin" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/admin/save-website-request", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const { requestId } = req.body;
+    console.log(requestId);
+    const transaction = await Website.findById(requestId);
+    if (!transaction) {
+      return res.status(404).send("Bank not found");
+    }
+    console.log("Transaction found", transaction);
+    const updateResult = await AccountServices.deleteWebsite(transaction, req.body);
+    console.log(updateResult);
+    if (updateResult) {
+      res.status(201).send("Website request sent to Super Admin");
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post("/api/delete-website/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const editRequest = await EditWebsiteRequest.findById(id).exec();
+
+    if (!editRequest) {
+      return res.status(404).send({ message: "Website Request not found" });
+    }
+
+    const isApproved = true;
+
+    if (isApproved) {
+      await Website.deleteOne({ _id: editRequest.id }).exec();
+      await EditWebsiteRequest.deleteOne({ _id: req.params.id }).exec();
+      res.status(200).send({ message: "Website deleted" });
+    } else {
+      res.status(400).send({ message: "Approval request rejected by super admin" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
 };
 
 export default EditApiRoute;
