@@ -935,6 +935,23 @@ app.put("/api/admin/subAdmin-profile-edit/:id", Authorize(["superAdmin", "Profil
   }
 }
 );
+
+app.get("/api/admin/user/introducersUserName/:userId", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId).exec();
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+    const introducersUserName = user.introducersUserName;
+    res.status(200).send(introducersUserName);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server error");
+  }
+});
+
 };
 
 export default AccountsRoute;

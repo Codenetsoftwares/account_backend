@@ -30,6 +30,14 @@ const TransactionService = {
       }).exec();
       console.log("bankId", bankId);
 
+      // Auto select user's introducersUserName
+      const user = await User.findOne({userName:userName}).exec();
+      console.log("user", user)
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+      const introducersUserName = user.introducersUserName;
+
 // Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
       if (transactionType === "Deposit") {
         const websiteBalance = websiteId.walletBalance;
@@ -79,9 +87,9 @@ const TransactionService = {
           websiteName: websiteName,
           bonus: bonus,
           remarks: remarks,
-          introducerUserName: introducerUserName,
+          introducerUserName: introducersUserName,
           currentWebsiteBalance: websiteId.walletBalance,
-          currentBankBalance :bankId.walletBalance,
+          currentBankBalance: bankId.walletBalance,
           createdAt: new Date(),
           isSubmit: false
         });
@@ -111,7 +119,7 @@ const TransactionService = {
           websiteName: websiteName,
           bankCharges: bankCharges,
           remarks: remarks,
-          introducerUserName: introducerUserName,
+          introducerUserName: introducersUserName,
           currentWebsiteBalance: websiteId.walletBalance,
           currentBankBalance :bankId.walletBalance,
           createdAt: new Date(),
