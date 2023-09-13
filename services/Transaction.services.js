@@ -365,7 +365,7 @@ const TransactionService = {
 
     let updatedTransactionData = {};
     let changedFields = {};
-    if (existingWebsiteTransaction.transactionType === "Manual-Webiste-Deposit") {
+    if (existingWebsiteTransaction.transactionType === "Manual-Website-Deposit") {
       for (const key in data) {
         if (existingWebsiteTransaction[key] !== data[key]) {
           changedFields[key] = data[key];
