@@ -4,6 +4,8 @@ import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import { BankTransaction } from "../models/BankTransaction.model.js";
+import { Bank } from "../models/bank.model.js"
+import { Website } from "../models/website.model.js"
 
 const TransactionRoutes = (app) => {
 
@@ -127,49 +129,70 @@ const TransactionRoutes = (app) => {
   
   app.post("/api/admin/approve-transaction-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
-    const editRequest = await EditRequest.findById(req.params.requestId);
-    if (!editRequest) {
-    return res.status(404).send({ message: "Edit request not found" });
-    }
-    const { isApproved } = req.body;
-    if (typeof isApproved !== "boolean") {
-    return res.status(400).send({ message: "isApproved field must be a boolean value" });
-    }
-    if (!editRequest.isApproved) {
-    const updatedTransaction = await Transaction.updateOne({ _id: editRequest.id }, {
-    transactionID: editRequest.transactionID,
-    transactionType: editRequest.transactionType,
-    amount: editRequest.amount,
-    paymentMethod: editRequest.paymentMethod,
-    userId: editRequest.userId,
-    subAdminId: editRequest.subAdminId,
-    bankName: editRequest.bankName,
-    websiteName: editRequest.websiteName,
-    currentBankBalance : editRequest.currentBankBalance,
-    currentWebsiteBalance : editRequest.currentWebsiteBalance,
-    remarks: editRequest.remarks
-    });
-    console.log("updatedTransaction", updatedTransaction)
-    if (updatedTransaction.matchedCount === 0) {
-    return res.status(404).send({ message: "Transaction not found" });
-    }
-    editRequest.isApproved = true;
-    if (editRequest.isApproved === true) {
-    const deletedEditRequest = await EditRequest.deleteOne({_id : req.params.requestId});
-    console.log(deletedEditRequest)
-    if (!deletedEditRequest) {
-    return res.status(500).send({ message: "Error deleting edit request" });
-    }
-    }
-    return res.status(200).send({ message: "Edit request approved and data updated", updatedTransaction: updatedTransaction });
-    } else {
-    return res.status(200).send({ message: "Edit request rejected" });
-    }
+      const editRequest = await EditRequest.findById(req.params.requestId);
+      if (!editRequest) {
+        return res.status(404).send({ message: "Edit request not found" });
+      }
+      const { isApproved } = req.body;
+      if (typeof isApproved !== "boolean") {
+        return res.status(400).send({ message: "isApproved field must be a boolean value" });
+      }
+      if (!editRequest.isApproved) {
+        const updatedTransaction = await Transaction.updateOne({ _id: editRequest.id }, {
+          transactionID: editRequest.transactionID,
+          transactionType: editRequest.transactionType,
+          amount: editRequest.amount,
+          paymentMethod: editRequest.paymentMethod,
+          userId: editRequest.userId,
+          subAdminId: editRequest.subAdminId,
+          bankName: editRequest.bankName,
+          websiteName: editRequest.websiteName,
+          currentBankBalance: editRequest.currentBankBalance,
+          currentWebsiteBalance: editRequest.currentWebsiteBalance,
+          remarks: editRequest.remarks
+        });
+        console.log("updatedTransaction", updatedTransaction)
+        if (updatedTransaction.matchedCount === 0) {
+          return res.status(404).send({ message: "Transaction not found" });
+        }
+        editRequest.isApproved = true;
+        if (editRequest.isApproved === true) {
+          const deletedEditRequest = await EditRequest.deleteOne({ _id: req.params.requestId });
+          console.log(deletedEditRequest)
+          if (!deletedEditRequest) {
+            return res.status(500).send({ message: "Error deleting edit request" });
+          }
+  
+          // Update Bank and Website models
+          try {
+            const bank = await Bank.findOneAndUpdate({ bankName: editRequest.bankName }, { currentBankBalance: editRequest.currentBankBalance }, { returnDocument: "full" });
+            const website = await Website.findOneAndUpdate({ websiteName: editRequest.websiteName }, { currentWebsiteBalance: editRequest.currentWebsiteBalance }, { returnDocument: "full" });
+  
+            if (!bank || !website) {
+              return res.status(404).send({ message: "Bank or Website not found" });
+            }
+  
+            return res.status(200).send({
+              message: "Edit request approved and data updated",
+              updatedTransaction,
+              bank,
+              website
+            });
+          } catch (error) {
+            return res.status(500).send({ message: "Error updating Bank or Website" });
+          }
+        } else {
+          return res.status(200).send({ message: "Edit request rejected" });
+        }
+      } else {
+        return res.status(200).send({ message: "Edit request rejected" });
+      }
     } catch (e) {
-    console.error(e);
-    res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
-    });
+  });
+  
   
     app.post("/api/admin/approve-bank-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
       try {
