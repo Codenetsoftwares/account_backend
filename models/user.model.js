@@ -27,7 +27,7 @@ export const User = mongoose.model(
       upiApp: { type: String },
       upiNumber: { type: String },
     },
-    webSiteDetail: [{ websiteName:  { type: String } }],
+    webSiteDetail: [{}],
     tokens: {
       emailVerification: { type: String },
       passwordReset: { type: String },
