@@ -7,7 +7,7 @@ import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 
 const TransactionService = {
-  createTransaction: async (req, res, subAdminName) => {
+    createTransaction: async (req, res, subAdminName) => {
     try {
       const {
         transactionID,transactionType,amount,paymentMethod,userName,subAdminUserName,accountNumber,websiteName,bankName,bankCharges,bonus,remarks
@@ -359,7 +359,7 @@ const TransactionService = {
     const existingWebsiteTransaction = await WebsiteTransaction.findById(
       websiteTransaction
     );
-    const cwb = await Website.findOne({websiteName:existingTransaction.websiteName}).exec();
+    const cwb = await Website.findOne({websiteName:existingWebsiteTransaction.websiteName}).exec();
     const currWebsiteBal = cwb.walletBalance;
     console.log("existingWebsiteTransaction", existingWebsiteTransaction);
 
