@@ -43,7 +43,7 @@ const TransactionService = {
         if (websiteBalance < amount) {
           throw new Error("Insufficient Website balance");
         }
-        const newWebsiteBalance = (Number(websiteBalance) + Number(bonus)) - Number(amount);
+        const newWebsiteBalance = (Number(websiteBalance) - Number(bonus)) - Number(amount);
         console.log("newWebsiteBalance", newWebsiteBalance);
         websiteId.walletBalance = newWebsiteBalance;
         await websiteId.save();
@@ -57,13 +57,13 @@ const TransactionService = {
         bankId.walletBalance = newBankBalance;
         await bankId.save();
       }
- // Calculation of Withdraw---- Amount will transfer from Bank to Website (Babk Charge)
+ // Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
       if (transactionType === "Withdraw") {
         const bankBalance = bankId.walletBalance;
         if (bankBalance < amount) {
           throw new Error("Insufficient Bank balance");
         }
-        const newbankBalance = (Number(bankBalance) + Number(bankCharges)) - Number(amount);
+        const newbankBalance = (Number(bankBalance) - Number(bankCharges)) - Number(amount);
         console.log("newbankBalance", newbankBalance);
         bankId.walletBalance = newbankBalance;
         await bankId.save();
