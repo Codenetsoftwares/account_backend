@@ -211,16 +211,6 @@ const TransactionService = {
         currentBankBalance: Number(currBankBal) + Math.abs(Number(existingTransaction.amount-data.amount))  || existingTransaction.currentBankBalance,
         currentWebsiteBalance:  Number(currWebsiteBal) - Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentWebsiteBalance,
       };
-      
-    //   await Bank.updateOne(
-    //     { _id: cbb._id },
-    //     { $set: { walletBalance: updatedTransactionData.currentBankBalance } }
-    // ).exec();
-
-    // await Website.updateOne(
-    //     { _id: cwb._id },
-    //     { $set: { walletBalance: updatedTransactionData.currentWebsiteBalance } }
-    // ).exec();
 
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
@@ -249,16 +239,6 @@ const TransactionService = {
         currentBankBalance: Number(currBankBal) - Math.abs(Number(existingTransaction.amount-data.amount))  || existingTransaction.currentBankBalance,
         currentWebsiteBalance:  Number(currWebsiteBal) + Math.abs(Number(existingTransaction.amount-data.amount)) || existingTransaction.currentWebsiteBalance,
       };
-
-    //   await Bank.updateOne(
-    //     { _id: cbb._id },
-    //     { $set: { walletBalance: updatedTransactionData.currentBankBalance } }
-    // ).exec();
-
-    // await Website.updateOne(
-    //     { _id: cwb._id },
-    //     { $set: { walletBalance: updatedTransactionData.currentWebsiteBalance } }
-    // ).exec();
 
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
@@ -304,6 +284,7 @@ const TransactionService = {
         depositAmount: data.depositAmount || existingBankTransaction.depositAmount,
         subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
+        accountNumber: existingBankTransaction.accountNumber,
         currentBankBalance:  Number(currBankBal) + Math.abs(Number(existingBankTransaction.depositAmount-data.depositAmount)) || existingBankTransaction.currentBankBalance,
       };
       console.log("updated", bankTransaction.currentBalance);
@@ -334,6 +315,7 @@ const TransactionService = {
         withdrawAmount: data.withdrawAmount || existingBankTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
+        accountNumber: existingBankTransaction.accountNumber,
         currentBankBalance:  Number(currBankBal) - Math.abs(Number(existingBankTransaction.withdrawAmount-data.withdrawAmount)) ||  existingBankTransaction.currentBankBalance,
       };
       
@@ -379,6 +361,7 @@ const TransactionService = {
         depositAmount: data.depositAmount || existingWebsiteTransaction.depositAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
+        websiteName: existingWebsiteTransaction.websiteName,
         currentWebsiteBalance: Number(currWebsiteBal) + Math.abs(Number(existingWebsiteTransaction.depositAmount-data.depositAmount)) || existingWebsiteTransaction.currentWebsiteBalance,
       };
       const editRequest = new EditRequest({
@@ -403,8 +386,8 @@ const TransactionService = {
         withdrawAmount: data.withdrawAmount || existingWebsiteTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
-        beforeBalance: websiteTransaction.currentBalance,
-        currentWebsiteBalance: Number(currBankBal) - Math.abs(Number(existingWebsiteTransaction.withdrawAmount-data.withdrawAmount)) || existingWebsiteTransaction.currentWebsiteBalance,
+        websiteName: existingWebsiteTransaction.websiteName,
+        currentWebsiteBalance: Number(currWebsiteBal) - Math.abs(Number(existingWebsiteTransaction.withdrawAmount-data.withdrawAmount)) || existingWebsiteTransaction.currentWebsiteBalance,
       };
       const editRequest = new EditRequest({ ...updatedTransactionData, changedFields, isApproved: false, isSubmit: false,type: "Edit",
         message: "Manual-Website-Withdraw transaction is being edited.",
