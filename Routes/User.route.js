@@ -116,21 +116,29 @@ app.post(
   AuthorizeRole(["user"]),
   async (req, res) => {
     try {
-      const websiteName = req.body;
+      console.log(req.body)
+      console.log(req.body)
+      const { websiteName } = req.body;
+      console.log("websiteName", websiteName);
       const userId = req.user.id;
+      console.log("id", userId);
       const user = await User.findById(userId);
-      const newWebsiteDetail = {
-        websiteName: websiteName.websiteName
+      if (!user) {
+        return res.status(404).send({ message: "User not found." });
       }
+      const newWebsiteDetail = {
+        websiteName: websiteName,
+      };
       user.webSiteDetail.push(newWebsiteDetail);
       await user.save();
       res.status(200).send({ message: "Website details updated successfully." });
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message });
+      res.status(500).send({ message: "Internal Server Error" });
     }
   }
 );
+
 
   // API To Add UPI Details
 
