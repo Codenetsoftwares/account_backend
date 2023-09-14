@@ -2,19 +2,24 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { IntroducerUser } from "../models/introducer.model.js";
-
+import { Admin } from "../models/admin_user.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 export const introducerUser = {
   createintroducerUser: async (data) => {
-    const existingUser = await IntroducerUser.findOne({
-      userName: data.userName,
-    }).exec();
+    const existingUser = await IntroducerUser.findOne({ userName: data.userName}).exec();
+    const existingOtherUser = await User.findOne({ userName: data.userName });
+    const existingAdminUser = await Admin.findOne({ userName: data.userName });
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-
+    if (existingOtherUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
+    if (existingAdminUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
 
@@ -203,12 +208,6 @@ export const introducerUser = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.userName = data.userName || existingUser.userName;
-    existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
-    existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.userName = data.userName || existingUser.userName;
-    existingUser.webSiteDetail =
-      data.webSiteDetail || existingUser.webSiteDetail;
 
     existingUser.save().catch((err) => {
       console.error(err);
