@@ -334,7 +334,7 @@ const AccountServices = {
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
-      remark: id.remark,
+      remarks: id.remarks,
       withdrawAmount: id.withdrawAmount,
       depositAmount: id.depositAmount,
       subAdminId: id.subAdminId,
@@ -343,8 +343,7 @@ const AccountServices = {
       bankName: id.bankName,
       accountNumber: id.accountNumber,
       ifscCode: id.ifscCode,
-      beforeBalance : id.currentBalance,
-      currentBalance: id.currentBalance,
+      currentBankBalance: id.currentBankBalance
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
@@ -364,13 +363,12 @@ const AccountServices = {
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
-      remark: id.remark,
+      remarks: id.remarks,
       withdrawAmount: id.withdrawAmount,
       depositAmount: id.depositAmount,
       subAdminId: id.subAdminId,
       subAdminName: id.subAdminName,
-      beforeBalance : id.currentBalance,
-      currentBalance: id.currentBalance,
+      currentWebsiteBalance: id.currentWebsiteBalance,
       websiteName: id.websiteName
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
@@ -393,13 +391,15 @@ const AccountServices = {
       id: id._id,
       transactionID: id.transactionID,
       transactionType: id.transactionType,
-      remark: id.remark,
+      remarks: id.remarks,
       amount: id.amount,
       subAdminId: id.subAdminId,
       userId: id.userId,
       paymentMethod: id.paymentMethod,
       websiteName : id.websiteName,
       bankName: id.bankName,
+      currentWebsiteBalance : { type: Number },
+      currentBankBalance : { type: Number },
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);

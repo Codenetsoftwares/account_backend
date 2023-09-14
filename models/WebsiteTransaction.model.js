@@ -6,8 +6,6 @@ export const WebsiteTransaction = mongoose.model(
     websiteName: { type: String, required: true },
     remarks: { type: String, required: true },
     transactionType: { type: String },
-    beforeBalance: { type: Number },
-    currentBalance: { type: Number },
     withdrawAmount: { type: Number },
     depositAmount: { type: Number },
     subAdminId: { type: String },
