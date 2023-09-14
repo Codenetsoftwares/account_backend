@@ -11,6 +11,7 @@ import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
+import { IntroducerUser } from "../models/introducer.model.js"
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -39,28 +40,19 @@ const AccountServices = {
 
   createAdmin: async (data) => {
     const existingUser = await Admin.findOne({ userName: data.userName }).exec();
+    const existingOtherUser = await User.findOne({ userName: data.userName });
+    const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-
+    if (existingOtherUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
+    if (existingIntroUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-
-    if (!data.firstname) {
-      throw { code: 400, message: "Firstname is required" };
-    }
-    if (!data.lastname) {
-      throw { code: 400, message: "Lastname is required" };
-    }
-    if (!data.userName) {
-      throw { code: 400, message: "User Name is required" };
-    }
-    if (!data.password) {
-      throw { code: 400, message: "Password is required" };
-    }
-    if (!data.roles || !data.roles.length) {
-      throw { code: 400, message: "Roles are required" };
-    }
 
     const newAdmin = new Admin({
       firstname: data.firstname,
@@ -254,7 +246,6 @@ const AccountServices = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.userName = data.userName || existingUser.userName;
     existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
@@ -398,8 +389,8 @@ const AccountServices = {
       paymentMethod: id.paymentMethod,
       websiteName : id.websiteName,
       bankName: id.bankName,
-      currentWebsiteBalance : { type: Number },
-      currentBankBalance : { type: Number },
+      currentWebsiteBalance : id.currentWebsiteBalance,
+      currentBankBalance : id.currentBankBalance,
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
@@ -421,7 +412,6 @@ const AccountServices = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.userName = data.userName || existingUser.userName;
 
     existingUser.save().catch((err) => {
       console.error(err);

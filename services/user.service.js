@@ -7,6 +7,7 @@ import { IntroducerUser } from "../models/introducer.model.js"
 
 import dotenv from "dotenv";
 import AccountServices from "./Accounts.services.js";
+import { Admin } from "../models/admin_user.js";
 dotenv.config();
 
 export const userservice = {
@@ -25,12 +26,17 @@ export const userservice = {
       throw { code: 400, message: "Password is required" };
     }
     const existingUser = await User.findOne({ userName: data.userName });
+    const existingAdminUser = await Admin.findOne({ userName: data.userName });
+    const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-    // if (existingUser) {
-    //   throw { code: 409, message: `User Id already exists: ${data.userId}` };
-    // }
+    if (existingAdminUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
+    if (existingIntroUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
     // const emailVerificationCode = crypto.randomBytes(6).toString("hex");

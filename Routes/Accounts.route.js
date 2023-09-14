@@ -560,16 +560,28 @@ const AccountsRoute = (app) => {
   );
 
   app.get("/api/admin/account-summary", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]), async (req, res) => {
-      try {
-        const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
-        const websiteTransactions = await WebsiteTransaction.find({}).sort({ date: -1 }).exec();
-        const bankTransactions = await BankTransaction.find({}).sort({ date: -1 }).exec();
-        const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
-        res.status(200).send(allTransactions);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
-      }
+    try {
+      const transactions = await Transaction.find({}).sort({ createdAt: 1 }).exec();
+      const websiteTransactions = await WebsiteTransaction.find({}).sort({ createdAt: 1 }).exec();
+      const bankTransactions = await BankTransaction.find({}).sort({ createdAt: 1 }).exec();
+      const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
+      allTransactions.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        if (dateA < dateB) {
+          return 1;
+        } else if (dateA > dateB) {
+          return -1;
+        } else {
+          // If the dates are equal, sort by time in descending order
+          return b.createdAt - a.createdAt;
+        }
+      });
+      res.status(200).send(allTransactions);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
+    }
     }
   );
 
@@ -734,7 +746,7 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
       const transaction = await Transaction.findOne({ accountNumber }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        const bankSummary = await BankTransaction.find({ accountNumber }).sort({ createdAt: -1 }).exec();
+        const bankSummary = await BankTransaction.find({ accountNumber }).exec();
         if (bankSummary.length > 0) {
           res.status(200).send(bankSummary);
         } else {
@@ -748,6 +760,19 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
         const accountSummary = await Transaction.find({accountNumber,userId,}).sort({ createdAt: -1 }).exec();
         const bankSummary = await BankTransaction.find({accountNumber}).sort({ createdAt: -1 }).exec();
         const allTransactions = [...accountSummary, ...bankSummary]
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+  
+          if (dateA < dateB) {
+            return 1;
+          } else if (dateA > dateB) {
+            return -1;
+          } else {
+            // If the dates are equal, sort by time in descending order
+            return b.createdAt - a.createdAt;
+          }
+        });
         if (accountSummary.length > 0 && bankSummary.length > 0) {
           res.status(200).send(allTransactions);
         } else {
@@ -769,7 +794,7 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
       const transaction = await Transaction.findOne({ websiteName }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).exec();
         if (websiteSummary.length > 0) {
           res.status(200).send(websiteSummary);
         } else {
@@ -780,9 +805,22 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
         if (!userId) {
           return res.status(404).send({ message: "User Id not found" });
         }
-        const accountSummary = await Transaction.find({websiteName, userId,}).exec();
+        const accountSummary = await Transaction.find({websiteName, userId,}).sort({ createdAt: -1 }).exec();
         const websiteSummary = await WebsiteTransaction.find({websiteName}).sort({ createdAt: -1 }).exec();
         const allTransactions = [...accountSummary, ...websiteSummary]
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+  
+          if (dateA < dateB) {
+            return 1;
+          } else if (dateA > dateB) {
+            return -1;
+          } else {
+            // If the dates are equal, sort by time in descending order
+            return b.createdAt - a.createdAt;
+          }
+        });
         if (accountSummary.length > 0 && websiteSummary.length > 0) {
           res.status(200).send(allTransactions);
         } else {
