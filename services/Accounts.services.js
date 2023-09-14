@@ -389,6 +389,9 @@ const AccountServices = {
       paymentMethod: id.paymentMethod,
       websiteName : id.websiteName,
       bankName: id.bankName,
+      amount:id.amount,
+      bonus: id.bonus,
+      bankCharges: id.bankCharges,
       currentWebsiteBalance : id.currentWebsiteBalance,
       currentBankBalance : id.currentBankBalance,
     };
