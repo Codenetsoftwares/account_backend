@@ -42,18 +42,23 @@ app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async (r
     }
     const isApproved = true;
     if (isApproved) {
-      const bank = await Bank.findOne({ bankName: editRequest.bankName }).exec();
-      console.log("wesite", bank);
-      if (!bank) {
-        return res.status(404).send({ message: "Bank not found" });
+      if (editRequest.transactionType === "Manual-Bank-Deposit") {
+        const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
+        const currentWalletBalance = bankId.walletBalance;
+        const updatedWalletBalance = currentWalletBalance - Number(editRequest.depositAmount);
+        bankId.walletBalance = updatedWalletBalance;
+        await bankId.save();
       }
-      const newWalletBalance = Number(bank.walletBalance) - Number(editRequest.currentBankBalance);
-      console.log("newWalletBalance", newWalletBalance)
-      bank.walletBalance = newWalletBalance;
-      await bank.save();
+      if (editRequest.transactionType === "Manual-Bank-Withdraw") {
+        const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
+        const currentWalletBalance = bankId.walletBalance;
+        const updatedWalletBalance = currentWalletBalance + Number(editRequest.withdrawAmount);
+        bankId.walletBalance = updatedWalletBalance;
+        await bankId.save();
+      }
       await BankTransaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
-      res.status(200).send({ message: "Bank Transaction deleted", bank });
+      res.status(200).send({ message: "Bank Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
@@ -93,18 +98,23 @@ app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async
     }
     const isApproved = true;
     if (isApproved) {
-      const website = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
-      console.log("wesite", website);
-      if (!website) {
-        return res.status(404).send({ message: "Website not found" });
+      if (editRequest.transactionType === "Manual-Website-Deposit") {
+        const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
+        const currentWalletBalance = websiteId.walletBalance;
+        const updatedWalletBalance = currentWalletBalance - Number(editRequest.depositAmount);
+        websiteId.walletBalance = updatedWalletBalance;
+        await websiteId.save();
       }
-      const newWalletBalance = Number(website.walletBalance) - Number(editRequest.currentWebsiteBalance);
-      console.log("newWalletBalance", newWalletBalance)
-      website.walletBalance = newWalletBalance;
-      await website.save();
+      if (editRequest.transactionType === "Manual-Website-Withdraw") {
+        const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
+        const currentWalletBalance = websiteId.walletBalance;
+        const updatedWalletBalance = currentWalletBalance + Number(editRequest.withdrawAmount);
+        websiteId.walletBalance = updatedWalletBalance;
+        await websiteId.save();
+      }
       await WebsiteTransaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
-      res.status(200).send({ message: "Bank Transaction deleted", website });
+      res.status(200).send({ message: "Bank Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
@@ -142,29 +152,27 @@ app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, r
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Website Request not found" });
     }
+    const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
+    const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
     const isApproved = true;
     if (isApproved) {
-      // const website = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
-      // console.log("wesite", website);
-      // if (!website) {
-      //   return res.status(404).send({ message: "Website not found" });
-      // }
-      // const newWebsiteWalletBalance = Number(website.walletBalance) - Number(editRequest.currentWebsiteBalance);
-      // console.log("newWebsiteWalletBalance", newWebsiteWalletBalance)
-      // website.walletBalance = newWebsiteWalletBalance;
-      // const bank = await Bank.findOne({ bankName: editRequest.bankName }).exec();
-      // console.log("wesite", bank);
-      // if (!bank) {
-      //   return res.status(404).send({ message: "Bank not found" });
-      // }
-      // const newWalletBalance = Number(bank.walletBalance) - Number(editRequest.currentBankBalance);
-      // console.log("newWalletBalance", newWalletBalance)
-      // bank.walletBalance = newWalletBalance;
-      // await bank.save();
-      // await website.save();
+      if (editRequest.transactionType === "Deposit") {
+        const amountToBeTransferred = Number(editRequest.amount) + Number(editRequest.bonus);
+        websiteId.walletBalance += amountToBeTransferred;
+        bankId.walletBalance -= Number(editRequest.amount);
+        await websiteId.save();
+        await bankId.save();
+      }
+      if (editRequest.transactionType === "Withdraw") {
+        const amountToBeTransferred = Number(editRequest.amount) + Number(editRequest.bankCharges);
+        websiteId.walletBalance -= amountToBeTransferred;
+        bankId.walletBalance += Number(editRequest.amount);
+        await websiteId.save();
+        await bankId.save();
+      }
       await Transaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
-      res.status(200).send({ message: "Bank Transaction deleted" });
+      res.status(200).send({ message: "Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }

@@ -7,7 +7,7 @@ export const Transaction = mongoose.model(
     subAdminName: { type: String, required: true },
     transactionID: { type: String, required: true },
     transactionType: { type: String, required: true },
-    amount: { type: String, required: true },
+    amount: { type: Number, required: true },
     paymentMethod: { type: String, required: true },
     userName: { type: String },
     introducerUserName : { type: String },
