@@ -37,17 +37,23 @@ app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async (r
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
-
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Bank Request not found" });
     }
-
     const isApproved = true;
-
     if (isApproved) {
+      const bank = await Bank.findOne({ bankName: editRequest.bankName }).exec();
+      console.log("wesite", bank);
+      if (!bank) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+      const newWalletBalance = Number(bank.walletBalance) - Number(editRequest.currentBankBalance);
+      console.log("newWalletBalance", newWalletBalance)
+      bank.walletBalance = newWalletBalance;
+      await bank.save();
       await BankTransaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
-      res.status(200).send({ message: "Bank Transaction deleted" });
+      res.status(200).send({ message: "Bank Transaction deleted", bank });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
@@ -82,25 +88,32 @@ app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
-
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Website Request not found" });
     }
-
     const isApproved = true;
-
     if (isApproved) {
+      const website = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
+      console.log("wesite", website);
+      if (!website) {
+        return res.status(404).send({ message: "Website not found" });
+      }
+      const newWalletBalance = Number(website.walletBalance) - Number(editRequest.currentWebsiteBalance);
+      console.log("newWalletBalance", newWalletBalance)
+      website.walletBalance = newWalletBalance;
+      await website.save();
       await WebsiteTransaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
-      res.status(200).send({ message: "Bank Transaction deleted" });
+      res.status(200).send({ message: "Bank Transaction deleted", website });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
   } catch (e) {
     console.error(e);
-    res.status(e.code).send({ message: e.message });
+    res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
   }
 });
+
 
 app.post("/api/admin/save-transaction-request", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
   try {
@@ -126,14 +139,29 @@ app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, r
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
-
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Website Request not found" });
     }
-
     const isApproved = true;
-
     if (isApproved) {
+      // const website = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
+      // console.log("wesite", website);
+      // if (!website) {
+      //   return res.status(404).send({ message: "Website not found" });
+      // }
+      // const newWebsiteWalletBalance = Number(website.walletBalance) - Number(editRequest.currentWebsiteBalance);
+      // console.log("newWebsiteWalletBalance", newWebsiteWalletBalance)
+      // website.walletBalance = newWebsiteWalletBalance;
+      // const bank = await Bank.findOne({ bankName: editRequest.bankName }).exec();
+      // console.log("wesite", bank);
+      // if (!bank) {
+      //   return res.status(404).send({ message: "Bank not found" });
+      // }
+      // const newWalletBalance = Number(bank.walletBalance) - Number(editRequest.currentBankBalance);
+      // console.log("newWalletBalance", newWalletBalance)
+      // bank.walletBalance = newWalletBalance;
+      // await bank.save();
+      // await website.save();
       await Transaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
       res.status(200).send({ message: "Bank Transaction deleted" });

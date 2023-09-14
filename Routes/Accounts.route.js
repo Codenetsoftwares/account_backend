@@ -286,6 +286,12 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userName = req.user;
         const { amount, transactionType, remarks } = req.body;
+        if (!remarks) {
+          throw { code: 400, message: "Remark is required" };
+        }
+        if (!amount || typeof amount !== "number") {
+          return res.status(400).send({ message: "Invalid amount" });
+        }
         if (transactionType !== "Manual-Bank-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -294,12 +300,12 @@ const AccountsRoute = (app) => {
         if (!bank) {
           return res.status(404).send({ message: "Bank account not found" });
         }
-        bank.walletBalance += amount;
+        bank.walletBalance += Number(amount);
         bank.subAdminId = userName.userName;
         bank.subAdminName = userName.firstname;
         bank.transactionType = transactionType.transactionType;
-        await bank.save();
-
+        
+        
         const bankTransaction = new BankTransaction({
           accountHolderName: bank.accountHolderName,
           bankName: bank.bankName,
@@ -318,7 +324,7 @@ const AccountsRoute = (app) => {
           isSubmit: false
         });
         console.log("banktrans", bankTransaction);
-
+        await bank.save();
         await bankTransaction.save();
 
         res
@@ -336,6 +342,12 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userName = req.user;
         const { amount, transactionType, remarks } = req.body;
+        if (!remarks) {
+          throw { code: 400, message: "Remark is required" };
+        }
+        if (!amount || typeof amount !== "number") {
+          return res.status(400).send({ message: "Invalid amount" });
+        }
         if (transactionType !== "Manual-Website-Deposit") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -344,16 +356,16 @@ const AccountsRoute = (app) => {
         if (!website) {
           return res.status(404).send({ message: "Website  not found" });
         }
-        website.walletBalance += amount;
+        website.walletBalance += Number(amount);
         website.subAdminId = userName.userName;
         website.subAdminName = userName.firstname;
         website.transactionType = transactionType.transactionType;
-        await website.save();
+        
 
         // let beforBal = website.walletBalance - amount;
         let currentBal = website.walletBalance;
         console.log("currentBal", currentBal);
-
+        
         const websiteTransaction = new WebsiteTransaction({
           websiteName: website.websiteName,
           transactionType: transactionType,
@@ -366,7 +378,7 @@ const AccountsRoute = (app) => {
           isSubmit: false
         });
         console.log("websiteTransaction", websiteTransaction);
-
+        await website.save();
         await websiteTransaction.save();
         res
           .status(200)
@@ -383,6 +395,12 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userName = req.user;
         const { amount, transactionType, remarks } = req.body;
+        if (!remarks) {
+          throw { code: 400, message: "Remark is required" };
+        }
+        if (!amount || typeof amount !== "number") {
+          return res.status(400).send({ message: "Invalid amount" });
+        }
         if (transactionType !== "Manual-Bank-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -392,7 +410,7 @@ const AccountsRoute = (app) => {
         if (!bank) {
           return res.status(404).send({ message: "Bank account not found" });
         }
-        bank.walletBalance -= amount;
+        bank.walletBalance -= Number(amount);
         console.log("bankwallet", bank.walletBalance);
         bank.transactionType = transactionType;
         bank.subAdminId = userName.userName;
@@ -436,6 +454,12 @@ const AccountsRoute = (app) => {
         const id = req.params.id;
         const userName = req.user;
         const { amount, transactionType, remarks } = req.body;
+        if (!remarks) {
+          throw { code: 400, message: "Remark is required" };
+        }
+        if (!amount || typeof amount !== "number") {
+          return res.status(400).send({ message: "Invalid amount" });
+        }
         if (transactionType !== "Manual-Website-Withdraw") {
           return res.status(500).send({ message: "Invalid transaction type" });
         }
@@ -445,7 +469,7 @@ const AccountsRoute = (app) => {
         if (!website) {
           return res.status(404).send({ message: "Websitet not found" });
         }
-        website.walletBalance -= amount;
+        website.walletBalance -= Number(amount);
         console.log("Websitewallet", website.walletBalance);
         website.transactionType = transactionType;
         website.subAdminId = userName.userName;
@@ -817,8 +841,8 @@ app.post(
       if (!req.params.id) {
         throw { code: 400, message: "Sub Admin's Id not present" };
       }
-      const subadminId = req.params.id;
-      const subAdmin = await Admin.findById(subadminId);
+      const subAdminId = req.params.id;
+      const subAdmin = await Admin.findById(subAdminId);
       if (!subAdmin) {
         throw { code: 500, message: "Sub Admin not found with the given Id" };
       }
@@ -833,12 +857,12 @@ app.post(
 app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
   async (req, res) => {
     try {
-      const subadminId = req.params.id;
+      const subAdminId = req.params.id;
       const { roles } = req.body;
-      if (!subadminId) {
+      if (!subAdminId) {
         throw { code: 400, message: "Id not found" };
       }
-      const subAdmin = await Admin.findById(subadminId);
+      const subAdmin = await Admin.findById(subAdminId);
       if (!subAdmin) {
         throw { code: 400, message: "Sub Admin not found" };
       }
