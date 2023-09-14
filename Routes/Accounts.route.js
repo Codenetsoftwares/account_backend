@@ -746,7 +746,7 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
       const transaction = await Transaction.findOne({ accountNumber }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        const bankSummary = await BankTransaction.find({ accountNumber }).exec();
+        const bankSummary = await BankTransaction.find({ accountNumber }).sort({ createdAt: -1 }).exec();
         if (bankSummary.length > 0) {
           res.status(200).send(bankSummary);
         } else {
@@ -763,13 +763,12 @@ app.get("/api/admin/manual-user-bank-account-summary/:accountNumber", Authorize(
         allTransactions.sort((a, b) => {
           const dateA = new Date(a.createdAt);
           const dateB = new Date(b.createdAt);
-  
+
           if (dateA < dateB) {
             return 1;
           } else if (dateA > dateB) {
             return -1;
           } else {
-            // If the dates are equal, sort by time in descending order
             return b.createdAt - a.createdAt;
           }
         });
@@ -794,7 +793,7 @@ app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize
       const transaction = await Transaction.findOne({ websiteName }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
-        const websiteSummary = await WebsiteTransaction.find({ websiteName }).exec();
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
         if (websiteSummary.length > 0) {
           res.status(200).send(websiteSummary);
         } else {
