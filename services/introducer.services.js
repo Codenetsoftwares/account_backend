@@ -8,21 +8,6 @@ dotenv.config();
 
 export const introducerUser = {
   createintroducerUser: async (data) => {
-    const existingUser = await IntroducerUser.findOne({ userName: data.userName}).exec();
-    const existingOtherUser = await User.findOne({ userName: data.userName });
-    const existingAdminUser = await Admin.findOne({ userName: data.userName });
-    if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingOtherUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingAdminUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-
     if (!data.firstname) {
       throw { code: 400, message: "Firstname is required" };
     }
@@ -30,27 +15,39 @@ export const introducerUser = {
       throw { code: 400, message: "Lastname is required" };
     }
     if (!data.userName) {
-      throw { code: 400, message: "User Name is required" };
+      throw { code: 400, message: "Username is required" };
     }
     if (!data.password) {
       throw { code: 400, message: "Password is required" };
     }
+  
+    const existingUser = await IntroducerUser.findOne({ userName: data.userName }).exec();
+    const existingOtherUser = await User.findOne({ userName: data.userName });
+    const existingAdminUser = await Admin.findOne({ userName: data.userName });
+  
+    if (existingUser || existingOtherUser || existingAdminUser) {
+      throw { code: 409, message: `User already exists: ${data.userName}` };
+    }
+  
+    const passwordSalt = await bcrypt.genSalt();
+    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
+  
     const newIntroducerUser = new IntroducerUser({
       firstname: data.firstname,
       lastname: data.lastname,
       userName: data.userName,
       password: encryptedPassword,
-      role: data.role
-      // introducerId: data.introducerId,
+      role: data.role,
     });
-
-    newIntroducerUser.save().catch((err) => {
+  
+    try {
+      await newIntroducerUser.save();
+      return true;
+    } catch (err) {
       console.error(err);
       throw { code: 500, message: "Failed to Save New Introducer User" };
-    });
-
-    return true;
-  },
+    }
+  },  
   
 
   intorducerPasswordResetCode: async (userName, password) => {
@@ -209,7 +206,7 @@ export const introducerUser = {
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
 
-    existingUser.save().catch((err) => {
+    await existingUser.save().catch((err) => {
       console.error(err);
       throw {
         code: 500,
@@ -229,7 +226,7 @@ export const introducerUser = {
           message: `Introducer with ID ${id} not found`,
         };
       }
-      
+  
       const IntroducerId = introId.userName;
       const userIntroId = await User.find({
         introducersUserName: IntroducerId,
@@ -242,20 +239,15 @@ export const introducerUser = {
         };
       }
   
-      console.log("userIntroId", userIntroId);
-      const userInroducerId = userIntroId[0].introducersUserName;
+      let totalAmount = 0;
+      for (const user of userIntroId) {
+        const introducerpercent = user.introducerPercentage;
+        const transDetails = user.transactionDetail;
   
-      if (IntroducerId === userInroducerId) {
-        const introducerpercent = userIntroId[0].introducerPercentage;
-        console.log("introducerpercent", introducerpercent);
-  
-        const transDetails = userIntroId[0].transactionDetail;
-        console.log("transDetails", transDetails);
         let totalDep = 0;
         let totalWith = 0;
   
         transDetails?.forEach((res) => {
-          console.log("res", res);
           if (res.transactionType === "Deposit") {
             totalDep += Number(res.amount);
           }
@@ -268,16 +260,20 @@ export const introducerUser = {
         if (totalDep > totalWith) {
           let diff = totalDep - totalWith;
           amount = (introducerpercent / 100) * diff;
-          return amount;
         } else {
           let diff = totalDep - totalWith;
           amount = (introducerpercent / 100) * diff;
-          return amount;
         }
+  
+        totalAmount += amount;
       }
+  
+      return totalAmount;
     } catch (error) {
       console.error(error);
       throw error;
     }
-  },  
+  },
+  
+  
 };

@@ -12,7 +12,18 @@ const TransactionService = {
       const {
         transactionID,transactionType,amount,paymentMethod,userName,subAdminUserName,accountNumber,websiteName,bankName,bankCharges,bonus,remarks
       } = req.body;
-
+      if (!transactionID) {
+        throw { code: 400, message: "Transaction ID is required" };
+      }
+      
+      if (!amount || isNaN(amount)) {
+        throw { code: 400, message: "Amount is required and must be a number" };
+      }
+      
+      if (!paymentMethod) {
+        throw { code: 400, message: "Payment Method is required" };
+      }
+         
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
       }).exec();

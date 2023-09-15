@@ -70,23 +70,26 @@ const AccountsRoute = (app) => {
   // API To Add Bank Name
 
   app.post("/api/add-bank-name", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
-      try {
-        const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
-        if (!bankName) {
-          throw { code: 400, message: "Please give a bank name to add" };
-        }
-        const newBankName = new Bank({
-          accountHolderName: accountHolderName,
-          bankName: bankName,
-          accountNumber: accountNumber,
-          ifscCode: ifscCode,
-          upiId: upiId,
-          upiAppName: upiAppName,
-          upiNumber: upiNumber,
-          walletBalance: 0,
-        });
-        newBankName.save();
-        res.status(200).send({ message: "Bank name registered successfully!" });
+    try {
+      const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber } = req.body;
+      if (!bankName) {
+        throw { code: 400, message: "Please provide a bank name to add" };
+      }
+      if (!accountNumber) {
+        throw { code: 400, message: "Please provide an account number to add" };
+      }
+      const newBankName = new Bank({
+        accountHolderName: accountHolderName,
+        bankName: bankName,
+        accountNumber: accountNumber,
+        ifscCode: ifscCode,
+        upiId: upiId,
+        upiAppName: upiAppName,
+        upiNumber: upiNumber,
+        walletBalance: 0,
+      });
+      await newBankName.save();
+      res.status(200).send({ message: "Bank name registered successfully!" });
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -174,7 +177,7 @@ const AccountsRoute = (app) => {
           websiteName: websiteName,
           walletBalance: 0,
         });
-        newWebsiteName.save();
+        await newWebsiteName.save();
         res.status(200).send({ message: "Website registered successfully!" });
       } catch (e) {
         console.error(e);
@@ -508,7 +511,7 @@ const AccountsRoute = (app) => {
         res.status(200).send(superAdmin);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -580,7 +583,7 @@ const AccountsRoute = (app) => {
       res.status(200).send(allTransactions);
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
+      res.status(e.code).send({ message: e.message });
     }
     }
   );
@@ -601,7 +604,7 @@ const AccountsRoute = (app) => {
         res.status(200).send(accountSummary);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -622,7 +625,7 @@ const AccountsRoute = (app) => {
         res.status(200).send(accountSummary);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -863,9 +866,9 @@ app.get(
       arr.length === 0
         ? res.status(200).send("No sub-admins")
         : res.status(200).send(arr);
-    } catch (error) {
-      console.log(error);
-      res.status(e.code).send(e.message);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
   }
 );
@@ -884,9 +887,9 @@ app.post(
         throw { code: 500, message: "Sub Admin not found with the given Id" };
       }
       res.status(200).send(subAdmin);
-    } catch (error) {
-      console.log(error);
-      res.status(error.code).send(error.message);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
   }
 );
@@ -906,9 +909,9 @@ app.put("/api/admin/edit-subadmin-roles/:id", Authorize(["superAdmin"]),
       subAdmin.roles = roles;
       await subAdmin.save();
       res.status(200).send(`${subAdmin.firstname} ${subAdmin.lastname} roles Edited with ${roles}`);
-    } catch (error) {
-      console.log(error);
-      res.status(error.code).send(error.message);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
   }
 );
@@ -924,7 +927,7 @@ app.get("/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer
     res.send(users);
   } catch (e) {
     console.error(e);
-    res.status(500).send({ message: 'Internal Server Error' });
+    res.status(e.code).send({ message: e.message });
   }
 });
 
@@ -1007,9 +1010,9 @@ app.get("/api/admin/user/introducersUserName/:userId", Authorize(["superAdmin"])
     }
     const introducersUserName = user.introducersUserName;
     res.status(200).send(introducersUserName);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Internal Server error");
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
   }
 });
 

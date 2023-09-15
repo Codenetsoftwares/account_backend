@@ -134,7 +134,7 @@ app.post(
       res.status(200).send({ message: "Website details updated successfully." });
     } catch (e) {
       console.error(e);
-      res.status(500).send({ message: "Internal Server Error" });
+      res.status(e.code).send({ message: e.message });
     }
   }
 );
