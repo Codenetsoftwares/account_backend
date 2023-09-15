@@ -3,10 +3,10 @@ import mongoose from "mongoose";
 export const Bank = mongoose.model(
   "Bank",
   new mongoose.Schema({
-    accountHolderName: { type: String, required: true },
+    accountHolderName: { type: String },
     bankName: { type: String, required: true },
     accountNumber: { type: Number, required: true },
-    ifscCode: { type: String, required: true },
+    ifscCode: { type: String },
     transactionType: { type: String },
     upiId: { type: String },
     upiAppName: { type: String },

@@ -21,7 +21,7 @@ const TransactionRoutes = (app) => {
         await TransactionServices.createTransaction(req, res, subAdminName);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -36,7 +36,7 @@ const TransactionRoutes = (app) => {
         await TransactionServices.depositView(req, res);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -51,7 +51,7 @@ const TransactionRoutes = (app) => {
         await TransactionServices.withdrawView(req, res);
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
@@ -189,7 +189,7 @@ const TransactionRoutes = (app) => {
       }
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+      res.status(e.code).send({ message: e.message });
     }
   });
   
@@ -252,7 +252,7 @@ const TransactionRoutes = (app) => {
       }
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+      res.status(e.code).send({ message: e.message });
     }
   });
   
@@ -315,7 +315,7 @@ const TransactionRoutes = (app) => {
       }
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
+      res.status(e.code).send({ message: e.message });
     }
   });
   

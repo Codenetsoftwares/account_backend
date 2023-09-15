@@ -39,21 +39,33 @@ const AccountServices = {
   },
 
   createAdmin: async (data) => {
+    if (!data.firstname) {
+      throw { code: 400, message: "Firstname is required" };
+    }
+    if (!data.lastname) {
+      throw { code: 400, message: "Last Name is required" };
+    }
+    if (!data.userName) {
+      throw { code: 400, message: "Username is required" };
+    }
+    if (!data.password) {
+      throw { code: 400, message: "Password is required" };
+    }
+    if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
+      throw { code: 400, message: "Roles is required" };
+    }
+  
     const existingUser = await Admin.findOne({ userName: data.userName }).exec();
     const existingOtherUser = await User.findOne({ userName: data.userName });
     const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
-    if (existingUser) {
+  
+    if (existingUser || existingOtherUser || existingIntroUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-    if (existingOtherUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingIntroUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
+  
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-
+  
     const newAdmin = new Admin({
       firstname: data.firstname,
       lastname: data.lastname,
@@ -61,14 +73,14 @@ const AccountServices = {
       password: encryptedPassword,
       roles: data.roles,
     });
-
-    newAdmin.save().catch((err) => {
+  
+    try {
+      await newAdmin.save();
+    } catch (err) {
       console.error(err);
       throw { code: 500, message: "Failed to Save New Admin" };
-    });
-
-    return true;
-  },
+    }
+  },  
 
   SubAdminPasswordResetCode: async (userName, password) => {
     const existingUser = await AccountServices.findAdmin({ userName: userName });
@@ -252,7 +264,7 @@ const AccountServices = {
     existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
     existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
 
-    existingUser.save().catch((err) => {
+    await existingUser.save().catch((err) => {
       console.error(err);
       throw {
         code: 500,
@@ -416,7 +428,7 @@ const AccountServices = {
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
 
-    existingUser.save().catch((err) => {
+    await existingUser.save().catch((err) => {
       console.error(err);
       throw {
         code: 500,

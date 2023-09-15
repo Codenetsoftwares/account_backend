@@ -49,16 +49,9 @@ export const userservice = {
       introducersUserName : data.introducersUserName,
       password: encryptedPassword,
       wallet: 0,
-      // introducersUserId : data.introducersUserId,
-      // userId: data.userId,
-      // emailVerified: false,
-      // tokens: {
-      //   emailVerification: emailVerificationCode,
-      //   passwordReset: null,
-      // },
     });
 
-    newUser.save().catch((err) => {console.error(err); throw { code: 500, message: "Failed to save user" };});
+    await newUser.save().catch((err) => {console.error(err); throw { code: 500, message: "Failed to save user" };});
     return true;
   },
   
