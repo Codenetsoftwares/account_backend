@@ -15,20 +15,11 @@ export const Transaction = mongoose.model(
     bankCharges: { type: Number },
     remarks: { type: String },
     accountNumber: { type: Number },
-    bankName: { type: String, required: true },
+    bankName: { type: String },
     websiteName: { type: String },
     createdAt: { type: Date },
     currentWebsiteBalance : { type: Number },
-    currentBankBalance : { type: Number },
-    // beforeBalanceBankDeposit: { type: Number },
-    // currentBalanceWebsiteDeposit: { type: Number },
-    // beforeBalanceWebsiteDeposit: { type: Number },
-    // currentBalanceBankDeposit: { type: Number },
-    // beforeBalanceBankWithdraw: { type: Number },
-    // currentBalanceWebsiteWithdraw: { type: Number },
-    // beforeBalanceWebsiteWithdraw: { type: Number },
-    // currentBalanceBankWithdraw: { type: Number },
-    // isSubmit: { type: Boolean, default: false }
+    currentBankBalance : { type: Number }
   }),
   "Transaction"
 );
