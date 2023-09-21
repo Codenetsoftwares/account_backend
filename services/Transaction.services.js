@@ -46,7 +46,8 @@ const TransactionService = {
       if (transactionType === "Deposit") {
         // Website Balance Calculation
         const websiteBalance = websiteId.walletBalance;
-        if (websiteBalance <= amount) {
+        const totalBalance =  bonus + amount
+        if (websiteBalance < totalBalance) {
           throw { code: 400, message: "Insufficient Website balance" };
         }
         const newWebsiteBalance = (Number(websiteBalance) - Number(bonus)) - Number(amount);
@@ -92,7 +93,8 @@ const TransactionService = {
         const bankBalance = bankId.walletBalance;
         console.log("bankCharges", bankCharges)
         console.log("bankBalance", bankBalance)
-        if (bankBalance <= amount) {
+        const totalBalance =  bankCharges + amount
+        if (bankBalance < totalBalance) {
           console.log('first')
           throw { code: 400, message: "Insufficient Bank balance" }
         }
