@@ -75,12 +75,6 @@ const AccountsRoute = (app) => {
       if (!bankName) {
         throw { code: 400, message: "Please provide a bank name to add" };
       }
-      // if (!accountNumber) {
-      //   throw { code: 400, message: "Please provide an account number to add" };
-      // }
-
-
-      // console.log('id',id.bankName)
       const newBankName = new Bank({
         accountHolderName: accountHolderName,
         bankName: bankName,
@@ -126,28 +120,28 @@ const AccountsRoute = (app) => {
 
   // API To Delete Bank Name
 
-  app.post("/api/delete-bank-name", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
-    try {
-      const { bankName } = req.body;
-      console.log("req.body", bankName);
+  // app.post("/api/delete-bank-name", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
+  //   try {
+  //     const { bankName } = req.body;
+  //     console.log("req.body", bankName);
 
-      const bankToDelete = await Bank.findOne({ bankName: bankName }).exec();
-      if (!bankToDelete) {
-        return res.status(404).send({ message: "Bank not found" });
-      }
+  //     const bankToDelete = await Bank.findOne({ bankName: bankName }).exec();
+  //     if (!bankToDelete) {
+  //       return res.status(404).send({ message: "Bank not found" });
+  //     }
 
-      console.log("bankToDelete", bankToDelete);
+  //     console.log("bankToDelete", bankToDelete);
 
-      const deleteData = await Bank.deleteOne({ _id: bankToDelete._id }).exec();
-      console.log("deleteData", deleteData);
+  //     const deleteData = await Bank.deleteOne({ _id: bankToDelete._id }).exec();
+  //     console.log("deleteData", deleteData);
 
-      res.status(200).send({ message: "Bank name removed successfully!" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
-    }
-  }
-  );
+  //     res.status(200).send({ message: "Bank name removed successfully!" });
+  //   } catch (e) {
+  //     console.error(e);
+  //     res.status(e.code || 500).send({ message: e.message });
+  //   }
+  // }
+  // );
 
   // API To View Bank Name
 
@@ -187,6 +181,13 @@ const AccountsRoute = (app) => {
         websiteName: websiteName,
         walletBalance: 0,
       });
+      const id = await Website.find(req.params.id);
+      id.map((data) => {
+        console.log(data.websiteName)
+        if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {
+          throw { code: 400, message: "Website name exists already!" };
+        }
+      })
       await newWebsiteName.save();
       res.status(200).send({ message: "Website registered successfully!" });
     } catch (e) {
@@ -299,14 +300,14 @@ const AccountsRoute = (app) => {
       const id = req.params.id;
       const userName = req.user;
       const { amount, transactionType, remarks } = req.body;
-      if (!remarks) {
-        throw { code: 400, message: "Remark is required" };
+      if (transactionType !== "Manual-Bank-Deposit") {
+        return res.status(500).send({ message: "Invalid transaction type" });
       }
       if (!amount || typeof amount !== "number") {
         return res.status(400).send({ message: "Invalid amount" });
       }
-      if (transactionType !== "Manual-Bank-Deposit") {
-        return res.status(500).send({ message: "Invalid transaction type" });
+      if (!remarks) {
+        throw { code: 400, message: "Remark is required" };
       }
       const bank = await Bank.findOne({ _id: id }).exec();
       console.log("bank", bank);
@@ -317,7 +318,6 @@ const AccountsRoute = (app) => {
       bank.subAdminId = userName.userName;
       bank.subAdminName = userName.firstname;
       bank.transactionType = transactionType.transactionType;
-
 
       const bankTransaction = new BankTransaction({
         accountHolderName: bank.accountHolderName,
@@ -339,7 +339,6 @@ const AccountsRoute = (app) => {
       console.log("banktrans", bankTransaction);
       await bank.save();
       await bankTransaction.save();
-
       res
         .status(200)
         .send({ message: "Wallet Balance Added to Your Bank Account" });
@@ -355,14 +354,14 @@ const AccountsRoute = (app) => {
       const id = req.params.id;
       const userName = req.user;
       const { amount, transactionType, remarks } = req.body;
-      if (!remarks) {
-        throw { code: 400, message: "Remark is required" };
+      if (transactionType !== "Manual-Website-Deposit") {
+        return res.status(500).send({ message: "Invalid transaction type" });
       }
       if (!amount || typeof amount !== "number") {
         return res.status(400).send({ message: "Invalid amount" });
       }
-      if (transactionType !== "Manual-Website-Deposit") {
-        return res.status(500).send({ message: "Invalid transaction type" });
+      if (!remarks) {
+        throw { code: 400, message: "Remark is required" };
       }
       const website = await Website.findOne({ _id: id }).exec();
       console.log("website", website);
@@ -408,14 +407,14 @@ const AccountsRoute = (app) => {
       const id = req.params.id;
       const userName = req.user;
       const { amount, transactionType, remarks } = req.body;
-      if (!remarks) {
-        throw { code: 400, message: "Remark is required" };
+      if (transactionType !== "Manual-Bank-Withdraw") {
+        return res.status(500).send({ message: "Invalid transaction type" });
       }
       if (!amount || typeof amount !== "number") {
         return res.status(400).send({ message: "Invalid amount" });
       }
-      if (transactionType !== "Manual-Bank-Withdraw") {
-        return res.status(500).send({ message: "Invalid transaction type" });
+      if (!remarks) {
+        throw { code: 400, message: "Remark is required" };
       }
       console.log("amount", amount);
       const bank = await Bank.findOne({ _id: id }).exec();
@@ -471,14 +470,14 @@ const AccountsRoute = (app) => {
       const id = req.params.id;
       const userName = req.user;
       const { amount, transactionType, remarks } = req.body;
-      if (!remarks) {
-        throw { code: 400, message: "Remark is required" };
-      }
       if (!amount || typeof amount !== "number") {
         return res.status(400).send({ message: "Invalid amount" });
       }
       if (transactionType !== "Manual-Website-Withdraw") {
         return res.status(500).send({ message: "Invalid transaction type" });
+      }
+      if (!remarks) {
+        throw { code: 400, message: "Remark is required" };
       }
       console.log("amount", amount);
       const website = await Website.findOne({ _id: id }).exec();
@@ -557,7 +556,7 @@ const AccountsRoute = (app) => {
 
   app.get("/api/admin/bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const accountNumber = req.params.accountNumber;
+      const accountNumber = req.params.bankName;
       const bankSummary = await BankTransaction.find({ accountNumber }).exec();
       res.status(200).send(bankSummary);
     } catch (e) {
@@ -607,13 +606,13 @@ const AccountsRoute = (app) => {
 
   app.get("/api/admin/user-bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const accountNumber = req.params.accountNumber;
+      const accountNumber = req.params.bankName;
       const transaction = await Transaction.findOne({ accountNumber }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
         return res.status(404).send({ message: "Account not found" });
       }
-      const userId = transaction.userId;
+      const userId = transaction.userName;
       if (!userId) {
         return res.status(404).send({ message: "User Id not found" });
       }
@@ -634,7 +633,7 @@ const AccountsRoute = (app) => {
       if (!transaction) {
         return res.status(404).send({ message: "Website Name not found" });
       }
-      const userId = transaction.userId;
+      const userId = transaction.userName;
       if (!userId) {
         return res.status(404).send({ message: "User Id not found" });
       }

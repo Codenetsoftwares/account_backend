@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 export const WebsiteTransaction = mongoose.model(
   "WebsiteTransaction",
   new mongoose.Schema({
-    websiteName: { type: String, required: true },
-    remarks: { type: String, required: true },
+    websiteName: { type: String },
+    remarks: { type: String },
     transactionType: { type: String },
     withdrawAmount: { type: Number },
     depositAmount: { type: Number },

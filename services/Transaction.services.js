@@ -24,100 +24,39 @@ const TransactionService = {
         throw { code: 400, message: "Payment Method is required" };
       }
 
-      const existingTransaction = await Transaction.findOne({
-        transactionID: transactionID,
-      }).exec();
+      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
       if (existingTransaction) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Transaction already exists" });
+        return res.status(400).json({ status: false, message: "Transaction already exists" });
       }
 
-      // console.log('existingTransaction',existingTransaction)
-
       const websiteId = await Website.findOne({ websiteName: websiteName }).exec();
-      // console.log("wesiteId", websiteId);
-      console.log('Request body:', req.body);
-
 
       const bankId = await Bank.findOne({ bankName: bankName }).exec();
       if (!bankId) {
         console.error(`No bank found with bankName: ${bankName}`);
-        // Handle the error or return an appropriate response.
       }
-
-      console.log("Searching for bankName:", bankName);
-
-      console.log("bankId", bankId);
-
-
-      // Auto select user's introducersUserName
+// Auto select user's introducersUserName
       const user = await User.findOne({ userName: userName }).exec();
       console.log("user", user)
       if (!user) {
         return res.status(404).send("User not found");
       }
       const introducersUserName = user.introducersUserName;
-
-      // Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
-
-
+// Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
       if (transactionType === "Deposit") {
+        // Website Balance Calculation
         const websiteBalance = websiteId.walletBalance;
-
-        console.log('websiteId', websiteId)
-        console.log('websiteBalance', websiteId.walletBalance)
-        if (websiteBalance < amount) {
-          throw new Error("Insufficient Website balance");
+        if (websiteBalance <= amount) {
+          throw { code: 400, message: "Insufficient Website balance" };
         }
         const newWebsiteBalance = (Number(websiteBalance) - Number(bonus)) - Number(amount);
         console.log("newWebsiteBalance", newWebsiteBalance);
         websiteId.walletBalance = newWebsiteBalance;
-        await websiteId.save();
-
+        // Bank Balance Calculation
         const bankBalance = bankId.walletBalance;
-        if (bankBalance < amount) {
-          throw new Error("Insufficient Bank balance");
-        }
-        const newBankBalance = parseInt(bankBalance) + parseInt(amount);
+        const newBankBalance = Number(bankBalance) + Number(amount);
         console.log("newBankBalance", newBankBalance);
         bankId.walletBalance = newBankBalance;
-        await bankId.save();
-      }
-      // Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
-      if (transactionType === "Withdraw") {
-        // console.log('bankid',bankId)
-        const bankBalance = bankId.walletBalance;
-        console.log('bankbalance', bankBalance)
-        console.log('amount', amount)
-        if (bankBalance < amount) {
-          throw Error("Insufficient Bank balance");
-        } //correctly handled
-        const newbankBalance = (Number(bankBalance) - Number(bankCharges)) - Number(amount);
-        console.log("newbankBalance", newbankBalance);
-        bankId.walletBalance = newbankBalance;
-        await bankId.save();
-        // if (bankId) {
-        //   return res
-        //     .status(200)
-        //     .json({ status: true, message: "Transaction created successfully" });
-        // }
-        // else {
-        //   console.log('walletBalance', websiteId.walletBalance)
-        //   const websiteBalance = websiteId.walletBalance;
-        //   console.log("first", websiteBalance)
-        //   if (websiteBalance < amount) {
-        //     throw new Error("Insufficient Website balance");
-        //   }
-        //   const newWebsiteBalance = Number(websiteBalance) + Number(amount);
-        //   console.log("newWebsiteBalance", newWebsiteBalance);
-        //   websiteId.walletBalance = newWebsiteBalance;
-        //   await websiteId.save();
-        // }
-
-      }
-
-      if (transactionType === "Deposit") {
         const newTransaction = new Transaction({
           transactionID: transactionID,
           transactionType: transactionType,
@@ -138,18 +77,31 @@ const TransactionService = {
           isSubmit: false
         });
         await newTransaction.save();
+        await bankId.save();
+        await websiteId.save();
         const user = await User.findOne({ userName: userName });
-
         if (!user) {
-          return res
-            .status(404)
-            .json({ status: false, message: "User not found" });
+          return res.status(404).json({ status: false, message: "User not found" });
         }
         user.transactionDetail.push(newTransaction);
         await user.save();
       }
-
+// Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
       if (transactionType === "Withdraw") {
+        // Bank Balance Calculation
+        const bankBalance = bankId.walletBalance;
+        console.log("bankCharges", bankCharges)
+        console.log("bankBalance", bankBalance)
+        if (bankBalance <= amount) {
+          console.log('first')
+          throw { code: 400, message: "Insufficient Bank balance" }
+        }
+        const newbankBalance = (Number(bankBalance) - Number(bankCharges)) - Number(amount);
+        console.log("newbankBalance", newbankBalance)
+        bankId.walletBalance = newbankBalance;
+        const websiteBalance = websiteId.walletBalance;
+        const newWebsiteBalance = Number(websiteBalance) + Number(amount);
+        websiteId.walletBalance = newWebsiteBalance;
         const newTransaction = new Transaction({
           transactionID: transactionID,
           transactionType: transactionType,
@@ -170,6 +122,8 @@ const TransactionService = {
           isSubmit: false
         });
         await newTransaction.save();
+        await bankId.save();
+        await websiteId.save();
         const user = await User.findOne({ userName: userName });
 
         if (!user) {
@@ -179,8 +133,8 @@ const TransactionService = {
         }
         user.transactionDetail.push(newTransaction);
         await user.save();
-      }
 
+      }
       return res
         .status(200)
         .json({ status: true, message: "Transaction created successfully" });
@@ -226,7 +180,7 @@ const TransactionService = {
     const existingTransaction = await Transaction.findById(trans);
     console.log("existingTransaction", existingTransaction);
 
-    const cbb = await Bank.findOne({ accountNumber: existingTransaction.accountNumber }).exec();
+    const cbb = await Bank.findOne({ bankName: existingTransaction.bankName }).exec();
     const currBankBal = cbb.walletBalance
     const cwb = await Website.findOne({ websiteName: existingTransaction.websiteName }).exec();
     const currWebsiteBal = cwb.walletBalance
@@ -303,7 +257,7 @@ const TransactionService = {
       bankTransaction
     );
 
-    const cbb = await Bank.findOne({ accountNumber: existingBankTransaction.accountNumber }).exec();
+    const cbb = await Bank.findOne({ bankName: existingBankTransaction.bankName }).exec();
     const currBankBal = cbb.walletBalance
 
     let updatedTransactionData = {};

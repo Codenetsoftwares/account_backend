@@ -286,7 +286,7 @@ app.post("/api/admin/approve-website-detail-edit-request/:requestId", Authorize(
 );
 
 
-app.post("/api/admin/save-bank-request", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/save-bank-request", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
   try {
     const { requestId } = req.body;
     console.log(requestId);
