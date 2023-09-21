@@ -795,7 +795,7 @@ const AccountsRoute = (app) => {
               return b.createdAt - a.createdAt;
             }
           });
-          if (accountSummary.length > 0 && bankSummary.length > 0) {
+          if (accountSummary.length > 0 || bankSummary.length > 0) {
             res.status(200).send(allTransactions);
           } else {
             return res.status(404).send({ message: "Account not found" });
@@ -810,51 +810,53 @@ const AccountsRoute = (app) => {
 
 
   app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
-    async (req, res) => {
-      try {
-        const websiteName = req.params.websiteName;
-        const transaction = await Transaction.findOne({ websiteName }).exec();
-        console.log("transaction", transaction);
-        if (!transaction) {
-          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          if (websiteSummary.length > 0) {
-            res.status(200).send(websiteSummary);
-          } else {
-            return res.status(404).send({ message: "Website Name not found" });
-          }
+  async (req, res) => {
+    try {
+      const websiteName = req.params.websiteName;
+      const transaction = await Transaction.findOne({ websiteName: websiteName }).exec();
+      console.log("transaction", transaction);
+      if (!transaction) {
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        console.log("first", websiteSummary)
+        if (websiteSummary.length > 0) {
+          res.status(200).send(websiteSummary);
         } else {
-          const userId = transaction.userName;
-          if (!userId) {
-            return res.status(404).send({ message: "User Id not found" });
-          }
-          const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
-          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          const allTransactions = [...accountSummary, ...websiteSummary]
-          allTransactions.sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
-
-            if (dateA < dateB) {
-              return 1;
-            } else if (dateA > dateB) {
-              return -1;
-            } else {
-              // If the dates are equal, sort by time in descending order
-              return b.createdAt - a.createdAt;
-            }
-          });
-          if (accountSummary.length > 0 && websiteSummary.length > 0) {
-            res.status(200).send(allTransactions);
-          } else {
-            return res.status(404).send({ message: "Website Name not found" });
-          }
+          return res.status(404).send({ message: "Website Name not found" });
         }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+      } else {
+        const userId = transaction.userName;
+        if (!userId) {
+          return res.status(404).send({ message: "User Id not found" });
+        }
+        const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        const allTransactions = [...accountSummary, ...websiteSummary]
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+
+          if (dateA < dateB) {
+            return 1;
+          } else if (dateA > dateB) {
+            return -1;
+          } else {
+            // If the dates are equal, sort by time in descending order
+            return b.createdAt - a.createdAt;
+          }
+        });
+        if (accountSummary.length > 0 || websiteSummary.length > 0) {
+          res.status(200).send(allTransactions);
+        } else {
+          return res.status(404).send({ message: "Website Name not found" });
+        }
       }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message });
     }
-  );
+  }
+);
+
 
 
 

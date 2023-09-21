@@ -333,7 +333,13 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Transaction not found with id: ${id}`};
     }
-    
+    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    if (existingEditRequest) {
+      throw {
+      code: 409,
+      message: "Delete Request Already Sent For Approval",
+      };
+      }
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
@@ -360,9 +366,15 @@ const AccountServices = {
   deleteWebsiteTransaction: async (id) => {
     const existingTransaction = await WebsiteTransaction.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Transaction not found with id: ${id}`};
+      throw {code: 404, message: `Website Transaction not found with id: ${id}`};
     }
-    
+    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    if (existingEditRequest) {
+      throw {
+      code: 409,
+      message: "Delete Request Already Sent For Approval",
+      };
+      }
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
@@ -389,7 +401,13 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Transaction not found with id: ${id}`};
     }
-    
+    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    if (existingEditRequest) {
+      throw {
+      code: 409,
+      message: "Delete Request Already Sent For Approval",
+      };
+      }
     const updatedTransactionData = {
       id: id._id,
       transactionID: id.transactionID,
@@ -444,7 +462,13 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Bank not found with id: ${id}`};
     }
-    
+    const existingEditRequest = await EditBankRequest.findOne({ bankName: id, type: "Delete" });
+    if (existingEditRequest) {
+      throw {
+      code: 409,
+      message: "Delete Request Already Sent For Approval",
+      };
+      }
     const updatedTransactionData = {
       id: id._id,
       accountHolderName: id.accountHolderName,
@@ -469,7 +493,13 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Website not found with id: ${id}`};
     }
-    
+    const existingEditRequest = await EditWebsiteRequest.findOne({ websiteName: id, type: "Delete" });
+    if (existingEditRequest) {
+      throw {
+      code: 409,
+      message: "Delete Request Already Sent For Approval",
+      };
+      }
     const updatedTransactionData = {
       id: id._id,
       websiteName: id.websiteName,
