@@ -181,11 +181,15 @@ const TransactionService = {
   updateTransaction: async (trans, data) => {
     const existingTransaction = await Transaction.findById(trans);
     console.log("existingTransaction", existingTransaction);
-
+    
     const cbb = await Bank.findOne({ bankName: existingTransaction.bankName }).exec();
+    console.log("cbb", cbb);
     const currBankBal = cbb.walletBalance
+    console.log("currBankBal", currBankBal);
     const cwb = await Website.findOne({ websiteName: existingTransaction.websiteName }).exec();
+    console.log("cwb", cwb);
     const currWebsiteBal = cwb.walletBalance
+    console.log("currWebsiteBal", currWebsiteBal);
 
     let updatedTransactionData = {};
     let changedFields = {};
@@ -203,7 +207,7 @@ const TransactionService = {
         websiteName: data.websiteName || existingTransaction.websiteName,
         remarks: data.remarks || existingTransaction.remarks,
         currentBankBalance: Number(currBankBal) + Math.abs(Number(existingTransaction.amount - data.amount)) || existingTransaction.currentBankBalance,
-        currentWebsiteBalance: Number(currWebsiteBal) - Math.abs(Number(existingTransaction.amount - data.amount)) || existingTransaction.currentWebsiteBalance,
+        currentWebsiteBalance: Number(currWebsiteBal) - (Number(existingTransaction.amount - data.amount)) || existingTransaction.currentWebsiteBalance,
       };
 
       for (const key in data) {
@@ -231,7 +235,7 @@ const TransactionService = {
         bankName: data.bankName || existingTransaction.bankName,
         websiteName: data.websiteName || existingTransaction.websiteName,
         remark: data.remark || existingTransaction.remarks,
-        currentBankBalance: Number(currBankBal) - Math.abs(Number(existingTransaction.amount - data.amount)) || existingTransaction.currentBankBalance,
+        currentBankBalance: Number(currBankBal) - (Number(existingTransaction.amount - data.amount)) || existingTransaction.currentBankBalance,
         currentWebsiteBalance: Number(currWebsiteBal) + Math.abs(Number(existingTransaction.amount - data.amount)) || existingTransaction.currentWebsiteBalance,
       };
 
