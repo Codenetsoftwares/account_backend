@@ -5,7 +5,7 @@ export const Bank = mongoose.model(
   new mongoose.Schema({
     accountHolderName: { type: String },
     bankName: { type: String, required: true },
-    accountNumber: { type: Number, required: true },
+    accountNumber: { type: Number },
     ifscCode: { type: String },
     transactionType: { type: String },
     upiId: { type: String },
