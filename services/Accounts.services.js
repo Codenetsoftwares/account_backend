@@ -333,7 +333,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Transaction not found with id: ${id}`};
     }
-    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
       code: 409,
@@ -368,7 +368,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Website Transaction not found with id: ${id}`};
     }
-    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
       code: 409,
@@ -401,7 +401,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Transaction not found with id: ${id}`};
     }
-    const existingEditRequest = await EditRequest.findOne({ transactionId: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
       code: 409,
@@ -462,7 +462,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Bank not found with id: ${id}`};
     }
-    const existingEditRequest = await EditBankRequest.findOne({ bankName: id, type: "Delete" });
+    const existingEditRequest = await EditBankRequest.findOne({ id: id, type: "Delete Bank Detail's" });
     if (existingEditRequest) {
       throw {
       code: 409,
@@ -493,7 +493,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw {code: 404, message: `Website not found with id: ${id}`};
     }
-    const existingEditRequest = await EditWebsiteRequest.findOne({ websiteName: id, type: "Delete" });
+    const existingEditRequest = await EditWebsiteRequest.findOne({ id: id, type: "Delete Website Detail's" });
     if (existingEditRequest) {
       throw {
       code: 409,

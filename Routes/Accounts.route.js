@@ -813,7 +813,7 @@ const AccountsRoute = (app) => {
   async (req, res) => {
     try {
       const websiteName = req.params.websiteName;
-      const transaction = await Transaction.findOne({ websiteName: websiteName }).exec();
+      const transaction = await Transaction.findOne({ websiteName }).exec();
       console.log("transaction", transaction);
       if (!transaction) {
         const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
