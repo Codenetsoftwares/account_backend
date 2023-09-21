@@ -342,7 +342,7 @@ app.post("/api/admin/save-website-request", Authorize(["superAdmin"]), async (re
     const updateResult = await AccountServices.deleteWebsite(transaction, req.body);
     console.log(updateResult);
     if (updateResult) {
-      res.status(201).send("Website request sent to Super Admin");
+      res.status(201).send("Website Delete request sent to Super Admin");
     }
   } catch (e) {
     console.error(e);
