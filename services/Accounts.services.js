@@ -54,18 +54,18 @@ const AccountServices = {
     if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
       throw { code: 400, message: "Roles is required" };
     }
-  
+
     const existingUser = await Admin.findOne({ userName: data.userName }).exec();
     const existingOtherUser = await User.findOne({ userName: data.userName });
     const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
-  
+
     if (existingUser || existingOtherUser || existingIntroUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
     }
-  
+
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-  
+
     const newAdmin = new Admin({
       firstname: data.firstname,
       lastname: data.lastname,
@@ -73,18 +73,18 @@ const AccountServices = {
       password: encryptedPassword,
       roles: data.roles,
     });
-  
+
     try {
       await newAdmin.save();
     } catch (err) {
       console.error(err);
       throw { code: 500, message: "Failed to Save New Admin" };
     }
-  },  
+  },
 
   SubAdminPasswordResetCode: async (userName, password) => {
     const existingUser = await AccountServices.findAdmin({ userName: userName });
-  
+
     const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
     if (passwordIsDuplicate) {
@@ -182,9 +182,9 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Bank not found with id: ${id}` };
     }
-  
+
     let changedFields = {};
-  
+
     // Compare each field in the data object with the existingTransaction
     if (data.accountHolderName !== existingTransaction.accountHolderName) {
       changedFields.accountHolderName = data.accountHolderName;
@@ -207,7 +207,7 @@ const AccountServices = {
     if (data.upiNumber !== existingTransaction.upiNumber) {
       changedFields.upiNumber = data.upiNumber;
     }
-  
+
     // Create updatedTransactionData using a ternary operator
     const updatedTransactionData = {
       id: id._id,
@@ -219,15 +219,27 @@ const AccountServices = {
       upiAppName: data.upiAppName || existingTransaction.upiAppName,
       upiNumber: data.upiNumber || existingTransaction.upiNumber,
     };
-  
-    const editRequest = new EditBankRequest({ ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+
+    const editRequest = new EditBankRequest({
+      ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
       message: "Bank Detail's has been edited",
     });
-  
+
     await editRequest.save();
     return true;
   },
-  
+
+  getBankBalance: async (bankId) => {
+    const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+
+    let balance = 0;
+    bankTransactions.forEach(transaction => {
+      balance += transaction.depositAmount || 0;
+      balance -= transaction.withdrawAmount || 0;
+    });
+
+    return balance;
+  },
 
   updateWebsite: async (id, data) => {
     const existingTransaction = await Website.findById(id);
@@ -242,13 +254,14 @@ const AccountServices = {
       id: id._id,
       websiteName: data.websiteName || existingTransaction.websiteName,
     };
-    const backupTransaction = new EditWebsiteRequest({ ...updatedTransactionData, changedFields, message : "Website Detail's has been edited",
+    const backupTransaction = new EditWebsiteRequest({
+      ...updatedTransactionData, changedFields, message: "Website Detail's has been edited",
       isApproved: false,
     });
     await backupTransaction.save();
     return true;
   },
-  
+
 
   updateUserProfile: async (id, data) => {
     const existingUser = await User.findById(id);
@@ -280,7 +293,7 @@ const AccountServices = {
   //   if (!existingTransaction) {
   //     throw {code: 404, message: `Transaction not found with id: ${id}`};
   //   }
-    
+
   //   const updatedTransactionData = {
   //     id: id._id,
   //     transactionType: data.transactionType,
@@ -331,15 +344,15 @@ const AccountServices = {
   deleteBankTransaction: async (id) => {
     const existingTransaction = await BankTransaction.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Transaction not found with id: ${id}`};
+      throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
     const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
-      code: 409,
-      message: "Delete Request Already Sent For Approval",
+        code: 409,
+        message: "Delete Request Already Sent For Approval",
       };
-      }
+    }
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
@@ -357,7 +370,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
+      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
       await backupTransaction.save();
     }
     return true;
@@ -366,15 +379,15 @@ const AccountServices = {
   deleteWebsiteTransaction: async (id) => {
     const existingTransaction = await WebsiteTransaction.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Website Transaction not found with id: ${id}`};
+      throw { code: 404, message: `Website Transaction not found with id: ${id}` };
     }
     const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
-      code: 409,
-      message: "Delete Request Already Sent For Approval",
+        code: 409,
+        message: "Delete Request Already Sent For Approval",
       };
-      }
+    }
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
@@ -389,25 +402,25 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
+      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
       await backupTransaction.save();
     }
 
     return true;
   },
-  
+
   deleteTransaction: async (id) => {
     const existingTransaction = await Transaction.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Transaction not found with id: ${id}`};
+      throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
     const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
     if (existingEditRequest) {
       throw {
-      code: 409,
-      message: "Delete Request Already Sent For Approval",
+        code: 409,
+        message: "Delete Request Already Sent For Approval",
       };
-      }
+    }
     const updatedTransactionData = {
       id: id._id,
       transactionID: id.transactionID,
@@ -417,18 +430,18 @@ const AccountServices = {
       subAdminId: id.subAdminId,
       userId: id.userId,
       paymentMethod: id.paymentMethod,
-      websiteName : id.websiteName,
+      websiteName: id.websiteName,
       bankName: id.bankName,
-      amount:id.amount,
+      amount: id.amount,
       bonus: id.bonus,
       bankCharges: id.bankCharges,
-      currentWebsiteBalance : id.currentWebsiteBalance,
-      currentBankBalance : id.currentBankBalance,
+      currentWebsiteBalance: id.currentWebsiteBalance,
+      currentBankBalance: id.currentBankBalance,
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete"});
+      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
       await backupTransaction.save();
     }
     return true;
@@ -460,15 +473,15 @@ const AccountServices = {
   deleteBank: async (id) => {
     const existingTransaction = await Bank.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Bank not found with id: ${id}`};
+      throw { code: 404, message: `Bank not found with id: ${id}` };
     }
     const existingEditRequest = await EditBankRequest.findOne({ id: id, type: "Delete Bank Detail's" });
     if (existingEditRequest) {
       throw {
-      code: 409,
-      message: "Delete Request Already Sent For Approval",
+        code: 409,
+        message: "Delete Request Already Sent For Approval",
       };
-      }
+    }
     const updatedTransactionData = {
       id: id._id,
       accountHolderName: id.accountHolderName,
@@ -482,7 +495,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.bankName} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditBankRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Bank Detail's"});
+      const backupTransaction = new EditBankRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Bank Detail's" });
       await backupTransaction.save();
     }
     return true;
@@ -491,15 +504,15 @@ const AccountServices = {
   deleteWebsite: async (id) => {
     const existingTransaction = await Website.findById(id);
     if (!existingTransaction) {
-      throw {code: 404, message: `Website not found with id: ${id}`};
+      throw { code: 404, message: `Website not found with id: ${id}` };
     }
     const existingEditRequest = await EditWebsiteRequest.findOne({ id: id, type: "Delete Website Detail's" });
     if (existingEditRequest) {
       throw {
-      code: 409,
-      message: "Delete Request Already Sent For Approval",
+        code: 409,
+        message: "Delete Request Already Sent For Approval",
       };
-      }
+    }
     const updatedTransactionData = {
       id: id._id,
       websiteName: id.websiteName,
@@ -507,7 +520,7 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.websiteName} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditWebsiteRequest({...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Website Detail's"});
+      const backupTransaction = new EditWebsiteRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Website Detail's" });
       await backupTransaction.save();
     }
     return true;

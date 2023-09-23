@@ -13,7 +13,6 @@ import { userservice } from "../services/user.service.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
-
 const AccountsRoute = (app) => {
   // API For Admin Login
 
@@ -147,7 +146,13 @@ const AccountsRoute = (app) => {
 
   app.get("/api/get-bank-name", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
     try {
-      const bankData = await Bank.find({}).exec();
+      let dbBankData = await Bank.find().exec();
+      let bankData = JSON.parse(JSON.stringify(dbBankData));
+
+      for (var index = 0; index < bankData.length; index++) {
+        bankData[index].balance = await AccountServices.getBankBalance(bankData[index]._id);
+      }
+
       res.status(200).send(bankData);
     } catch (e) {
       console.error(e);
@@ -320,6 +325,7 @@ const AccountsRoute = (app) => {
       bank.transactionType = transactionType.transactionType;
 
       const bankTransaction = new BankTransaction({
+        bankId: bank.id,
         accountHolderName: bank.accountHolderName,
         bankName: bank.bankName,
         accountNumber: bank.accountNumber,
@@ -422,7 +428,7 @@ const AccountsRoute = (app) => {
       if (!bank) {
         return res.status(404).send({ message: "Bank account not found" });
       }
-      if (bank.walletBalance < Number(amount)) {
+      if (await AccountServices.getBankBalance(id) < Number(amount)) {
         return res.status(400).send({ message: "Insufficient Balance " });
       };
 
@@ -436,6 +442,7 @@ const AccountsRoute = (app) => {
       let currentBal = bank.walletBalance;
 
       const bankTransaction = new BankTransaction({
+        bankId: id,
         accountHolderName: bank.accountHolderName,
         bankName: bank.bankName,
         accountNumber: bank.accountNumber,
@@ -557,7 +564,9 @@ const AccountsRoute = (app) => {
   app.get("/api/admin/bank-account-summary/:accountNumber", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const accountNumber = req.params.bankName;
-      const bankSummary = await BankTransaction.find({ accountNumber }).exec();
+      const bankSummary = await BankTransaction.find({ accountNumber }).sort({ createdAt: 1 }).exec();
+      console.log(bankSummary);
+
       res.status(200).send(bankSummary);
     } catch (e) {
       console.error(e);
@@ -810,52 +819,52 @@ const AccountsRoute = (app) => {
 
 
   app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
-  async (req, res) => {
-    try {
-      const websiteName = req.params.websiteName;
-      const transaction = await Transaction.findOne({ websiteName }).exec();
-      console.log("transaction", transaction);
-      if (!transaction) {
-        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-        console.log("first", websiteSummary)
-        if (websiteSummary.length > 0) {
-          res.status(200).send(websiteSummary);
-        } else {
-          return res.status(404).send({ message: "Website Name not found" });
-        }
-      } else {
-        const userId = transaction.userName;
-        if (!userId) {
-          return res.status(404).send({ message: "User Id not found" });
-        }
-        const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
-        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-        const allTransactions = [...accountSummary, ...websiteSummary]
-        allTransactions.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-
-          if (dateA < dateB) {
-            return 1;
-          } else if (dateA > dateB) {
-            return -1;
+    async (req, res) => {
+      try {
+        const websiteName = req.params.websiteName;
+        const transaction = await Transaction.findOne({ websiteName }).exec();
+        console.log("transaction", transaction);
+        if (!transaction) {
+          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+          console.log("first", websiteSummary)
+          if (websiteSummary.length > 0) {
+            res.status(200).send(websiteSummary);
           } else {
-            // If the dates are equal, sort by time in descending order
-            return b.createdAt - a.createdAt;
+            return res.status(404).send({ message: "Website Name not found" });
           }
-        });
-        if (accountSummary.length > 0 || websiteSummary.length > 0) {
-          res.status(200).send(allTransactions);
         } else {
-          return res.status(404).send({ message: "Website Name not found" });
+          const userId = transaction.userName;
+          if (!userId) {
+            return res.status(404).send({ message: "User Id not found" });
+          }
+          const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
+          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+          const allTransactions = [...accountSummary, ...websiteSummary]
+          allTransactions.sort((a, b) => {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+
+            if (dateA < dateB) {
+              return 1;
+            } else if (dateA > dateB) {
+              return -1;
+            } else {
+              // If the dates are equal, sort by time in descending order
+              return b.createdAt - a.createdAt;
+            }
+          });
+          if (accountSummary.length > 0 || websiteSummary.length > 0) {
+            res.status(200).send(allTransactions);
+          } else {
+            return res.status(404).send({ message: "Website Name not found" });
+          }
         }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
       }
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message });
     }
-  }
-);
+  );
 
 
 
