@@ -17,9 +17,7 @@ export const Transaction = mongoose.model(
     accountNumber: { type: Number },
     bankName: { type: String },
     websiteName: { type: String },
-    createdAt: { type: Date },
-    currentWebsiteBalance : { type: Number },
-    currentBankBalance : { type: Number }
+    createdAt: { type: Date }
   }),
   "Transaction"
 );
