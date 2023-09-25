@@ -241,6 +241,18 @@ const AccountServices = {
     return balance;
   },
 
+  getWebsiteBalance: async (websiteId) => {
+    const websiteTransactions = await WebsiteTransaction.find({ websiteId: websiteId }).exec();
+    console.log("websiteTransactions", websiteTransactions)
+    let balance = 0;
+    websiteTransactions.forEach(transaction => {
+      balance += transaction.depositAmount || 0;
+      balance -= transaction.withdrawAmount || 0;
+    });
+   console.log("balance", balance)
+    return balance;
+  },
+
   updateWebsite: async (id, data) => {
     const existingTransaction = await Website.findById(id);
     if (!existingTransaction) {
