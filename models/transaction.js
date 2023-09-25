@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export const Transaction = mongoose.model(
   "Transaction",
   new mongoose.Schema({
-    subAdminUserName: { type: String,  },
+    subAdminUserName: { type: String },
     subAdminName: { type: String},
     transactionID: { type: String },
     transactionType: { type: String },

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 export const WebsiteTransaction = mongoose.model(
   "WebsiteTransaction",
   new mongoose.Schema({
+    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
     websiteName: { type: String },
     remarks: { type: String },
     transactionType: { type: String },
@@ -10,8 +11,6 @@ export const WebsiteTransaction = mongoose.model(
     depositAmount: { type: Number },
     subAdminId: { type: String },
     subAdminName: { type: String },
-    currentWebsiteBalance : { type: Number },
-    isSubmit: { type: Boolean, default: false },
     createdAt: { type: Date },
   }),
   "WebsiteTransaction"

@@ -10,6 +10,8 @@ import UserRoutes from './Routes/User.route.js';
 import TransactionRoute from './Routes/Transaction.route.js';
 import IntroducerRoutes from './Routes/IntroducerUser.route.js';
 import EditApiRoute from './Routes/EditApi.route.js'
+import BankRoutes from './Routes/Bank.route.js'
+import WebisteRoutes from './Routes/Website.route.js';
 import crypto from 'crypto';
 
 dotenv.config();
@@ -85,6 +87,8 @@ TransactionRoute(app);
 UserRoutes(app);
 IntroducerRoutes(app);
 EditApiRoute(app);
+BankRoutes(app);
+WebisteRoutes(app);
 
 app.listen(process.env.PORT, () => {
   console.log(`Read the docs - http://localhost:${process.env.PORT || 8000}/api/docs`);
