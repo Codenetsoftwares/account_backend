@@ -231,25 +231,57 @@ const AccountServices = {
 
   getBankBalance: async (bankId) => {
     const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
-
+    console.log('bankTransactions',bankTransactions)
+    const transaction = await Transaction.find({  bankId: bankId }).exec();
+    console.log('transaction',transaction)
     let balance = 0;
     bankTransactions.forEach(transaction => {
       balance += transaction.depositAmount || 0;
       balance -= transaction.withdrawAmount || 0;
     });
 
+    transaction.forEach(transaction => {
+      // console.log('first',transaction)
+      if(transaction.transactionType === "Deposit"){
+        balance = Number(balance) + Number(transaction.amount);
+        console.log("newBankBalance", balance)
+      }
+      else{
+        const totalBalance = transaction.bankCharges + transaction.amount;
+        if (balance < totalBalance) {
+          console.log("first");
+          throw { code: 400, message: "Insufficient Bank balance" };
+        }
+        balance = Number(balance) - Number(transaction.bankCharges) - Number(transaction.amount);
+      }
+    })
     return balance;
   },
-
+  
   getWebsiteBalance: async (websiteId) => {
     const websiteTransactions = await WebsiteTransaction.find({ websiteId: websiteId }).exec();
-    console.log("websiteTransactions", websiteTransactions)
+    const transaction = await Transaction.find({  websiteId: websiteId }).exec();
+    console.log('transaction',transaction)
     let balance = 0;
     websiteTransactions.forEach(transaction => {
       balance += transaction.depositAmount || 0;
       balance -= transaction.withdrawAmount || 0;
     });
-   console.log("balance", balance)
+
+    transaction.forEach(transaction => {
+      // console.log('first',transaction)
+      if(transaction.transactionType === "Deposit"){
+        const totalBalance = transaction.bonus + transaction.amount;
+        if (balance < totalBalance) {
+          throw { code: 400, message: "Insufficient Website balance" };
+        }
+        balance = Number(balance) - Number(transaction.bonus) - Number(transaction.amount);
+      }
+      else{
+        balance = Number(balance) + Number(transaction.amount);
+      }
+    })
+
     return balance;
   },
 

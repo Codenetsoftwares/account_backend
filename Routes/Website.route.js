@@ -107,6 +107,29 @@ const WebisteRoutes = (app) => {
     }
   );
 
+  app.get("/api/get-single-webiste-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const dbWebsiteData = await Website.findOne({ _id: id }).exec();     
+      if (!dbWebsiteData) {
+        return res.status(404).send({ message: 'Website not found' });
+      }
+      const websiteId = dbWebsiteData._id;
+      const bankBalance = await AccountServices.getWebsiteBalance(websiteId);
+      const response = {
+        _id: dbWebsiteData._id,
+        websiteName: dbWebsiteData.websiteName,
+        subAdminId: dbWebsiteData.subAdminId,
+        subAdminName: dbWebsiteData.subAdminName,
+        balance: bankBalance,
+      };
+  
+      res.status(200).send(response);
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: 'Internal server error' });
+    }
+  });
 
   app.post("/api/admin/add-website-balance/:id", Authorize(["superAdmin", "Website-View", "Transaction-View"]), async (req, res) => {
     try {

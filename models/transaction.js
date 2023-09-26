@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 export const Transaction = mongoose.model(
   "Transaction",
   new mongoose.Schema({
+    bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
+    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
     subAdminUserName: { type: String },
     subAdminName: { type: String},
     transactionID: { type: String },
