@@ -108,14 +108,27 @@ const BankRoutes = (app) => {
   app.get("/api/get-single-bank-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
     try {
       const id = req.params.id;
-      const bankData = await Bank.findOne({ _id: id }).exec();
-      res.status(200).send(bankData);
+      const dbBankData = await Bank.findOne({ _id: id }).exec();     
+      if (!dbBankData) {
+        return res.status(404).send({ message: 'Bank not found' });
+      }
+      const bankId = dbBankData._id;
+      const bankBalance = await AccountServices.getBankBalance(bankId);
+      const response = {
+        _id: dbBankData._id,
+        bankName: dbBankData.bankName,
+        subAdminId: dbBankData.subAdminId,
+        subAdminName: dbBankData.subAdminName,
+        balance: bankBalance,
+      };
+  
+      res.status(200).send(response);
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message });
+      res.status(500).send({ message: 'Internal server error' });
     }
-  }
-  );
+  });
+  
 
 
   app.post("/api/admin/add-bank-balance/:id", Authorize(["superAdmin", "Bank-View", "Transaction-View"]), async (req, res) => {
