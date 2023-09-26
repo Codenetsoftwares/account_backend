@@ -45,19 +45,19 @@ const TransactionService = {
 // Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
       if (transactionType === "Deposit") {
         // Website Balance Calculation
-        const websiteBalance = websiteId.walletBalance;
+        const websiteBalance = websiteId.balance;
         const totalBalance =  bonus + amount
         if (websiteBalance < totalBalance) {
           throw { code: 400, message: "Insufficient Website balance" };
         }
         const newWebsiteBalance = (Number(websiteBalance) - Number(bonus)) - Number(amount);
         console.log("newWebsiteBalance", newWebsiteBalance);
-        websiteId.walletBalance = newWebsiteBalance;
+        // websiteId.walletBalance = newWebsiteBalance;
         // Bank Balance Calculation
-        const bankBalance = bankId.walletBalance;
+        const bankBalance = bankId.balance;
         const newBankBalance = Number(bankBalance) + Number(amount);
         console.log("newBankBalance", newBankBalance);
-        bankId.walletBalance = newBankBalance;
+        // bankId.walletBalance = newBankBalance;
         const newTransaction = new Transaction({
           transactionID: transactionID,
           transactionType: transactionType,
@@ -72,8 +72,6 @@ const TransactionService = {
           bonus: bonus,
           remarks: remarks,
           introducerUserName: introducersUserName,
-          currentWebsiteBalance: websiteId.walletBalance,
-          currentBankBalance: bankId.walletBalance,
           createdAt: new Date(),
           isSubmit: false
         });
@@ -90,7 +88,7 @@ const TransactionService = {
 // Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
       if (transactionType === "Withdraw") {
         // Bank Balance Calculation
-        const bankBalance = bankId.walletBalance;
+        const bankBalance = bankId.balance;
         console.log("bankCharges", bankCharges)
         console.log("bankBalance", bankBalance)
         const totalBalance =  bankCharges + amount
@@ -100,10 +98,10 @@ const TransactionService = {
         }
         const newbankBalance = (Number(bankBalance) - Number(bankCharges)) - Number(amount);
         console.log("newbankBalance", newbankBalance)
-        bankId.walletBalance = newbankBalance;
-        const websiteBalance = websiteId.walletBalance;
+        // bankId.walletBalance = newbankBalance;
+        const websiteBalance = websiteId.balance;
         const newWebsiteBalance = Number(websiteBalance) + Number(amount);
-        websiteId.walletBalance = newWebsiteBalance;
+        // websiteId.walletBalance = newWebsiteBalance;
         const newTransaction = new Transaction({
           transactionID: transactionID,
           transactionType: transactionType,
@@ -118,8 +116,6 @@ const TransactionService = {
           bankCharges: bankCharges,
           remarks: remarks,
           introducerUserName: introducersUserName,
-          currentWebsiteBalance: websiteId.walletBalance,
-          currentBankBalance: bankId.walletBalance,
           createdAt: new Date(),
           isSubmit: false
         });
