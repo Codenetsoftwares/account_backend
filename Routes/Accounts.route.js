@@ -404,35 +404,51 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
+  // app.get("/api/all/transaction/pages/:requestId",async(req,res)=>{
+       
+  //   try {
+
+  //     const page = req.query.page * 1 || 1;
+  //     const limit = req.query.limit * 1 || 10;
+  //     const skip = (page - 1) * limit;     
+  //     const bankTransaction = await BankTransaction.find().limit(limit).skip(skip);      
+  //     res.status(200).json({ bankTransaction });
+  //   } catch (error) {
+  //     console.log(error); 
+  //   }
+  // });
   
-  app.post("/api/admin/filter-data", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/admin/filter-data/", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const { transactionType, introducerList, subAdminList, BankList, WebsiteList } = req.body;
-      const query = {};
-      console.log('Query:', query);
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 10;
+      const skip = (page - 1) * limit; 
+      const filter = {};
+      console.log('Query:', filter);
       if (transactionType) {
-        query.transactionType = transactionType;
+        filter.transactionType = transactionType;
       }
   
       if (introducerList) {
-        query.introducerUserName = introducerList;
+        filter.introducerUserName = introducerList;
       }
   
       if (subAdminList) {
-        query.subAdminName = subAdminList;
+        filter.subAdminName = subAdminList;
       }
   
       if (BankList) {
-        query.bankName = BankList;
+        filter.bankName = BankList;
       }
   
       if (WebsiteList) {
-        query.websiteName = WebsiteList;
+        filter.websiteName = WebsiteList;
       }
-      const transactions = await Transaction.find(query).sort({ createdAt: 1 }).exec();
-      console.log('Query:', query); 
-      const websiteTransactions = await WebsiteTransaction.find(query).sort({ createdAt: 1 }).exec();
-      const bankTransactions = await BankTransaction.find(query).sort({ createdAt: 1 }).exec();
+      const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
+      console.log('Query:', filter); 
+      const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
+      const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
@@ -440,7 +456,7 @@ const AccountsRoute = (app) => {
       ) {
         return res.status(404).json({ message: "No data found for the selected criteria." });
       }
-      res.status(200).json({ transactions, websiteTransactions, bankTransactions });
+      res.status(200).json([ ...transactions, ...websiteTransactions, ...bankTransactions ]);
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
