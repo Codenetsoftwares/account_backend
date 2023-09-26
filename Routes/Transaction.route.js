@@ -318,6 +318,21 @@ const TransactionRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
+ 
+  app.get("/api/all/transaction/pages/:requestId",async(req,res)=>{
+       
+    try {
+
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 10;
+      const skip = (page - 1) * limit;     
+      const bankTransaction = await BankTransaction.find().limit(limit).skip(skip);      
+      res.status(200).json({ bankTransaction });
+    } catch (error) {
+      console.log(error); 
+    }
+  })
+ ;
   
 };
 
