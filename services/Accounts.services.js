@@ -231,32 +231,33 @@ const AccountServices = {
 
   getBankBalance: async (bankId) => {
     const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
-    console.log('bankTransactions',bankTransactions)
-    const transaction = await Transaction.find({  bankId: bankId }).exec();
-    console.log('transaction',transaction)
+    const transactions = await Transaction.find({ bankId: bankId }).exec();
     let balance = 0;
-    bankTransactions.forEach(transaction => {
-      balance += transaction.depositAmount || 0;
-      balance -= transaction.withdrawAmount || 0;
-    });
-
-    transaction.forEach(transaction => {
-      // console.log('first',transaction)
-      if(transaction.transactionType === "Deposit"){
-        balance = Number(balance) + Number(transaction.amount);
-        console.log("newBankBalance", balance)
+  
+    bankTransactions.forEach((transaction) => {
+      if (transaction.depositAmount) {
+        balance += transaction.depositAmount;
       }
-      else{
-        const totalBalance = transaction.bankCharges + transaction.amount;
-        if (balance < totalBalance) {
-          console.log("first");
+      if (transaction.withdrawAmount) {
+        balance -= transaction.withdrawAmount;
+      }
+    });
+  
+    transactions.forEach((transaction) => {
+      if (transaction.transactionType === "Deposit") {
+        balance += transaction.amount;
+      } else {
+        const totalBalance = balance - transaction.bankCharges - transaction.amount;
+        if (totalBalance < 0) {
           throw { code: 400, message: "Insufficient Bank balance" };
         }
-        balance = Number(balance) - Number(transaction.bankCharges) - Number(transaction.amount);
+        balance = totalBalance;
       }
-    })
+    });
+  
     return balance;
   },
+  
   
   getWebsiteBalance: async (websiteId) => {
     const websiteTransactions = await WebsiteTransaction.find({ websiteId: websiteId }).exec();
@@ -284,6 +285,40 @@ const AccountServices = {
 
     return balance;
   },
+
+
+  // getTransactionBalance: async (bankId) => {
+  //   console.log("bankId", bankId)
+  //   const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+  //   console.log("bankTransactions",bankTransactions)
+  //   const transactions = await Transaction.find({ bankId: bankId }).exec();
+  //   console.log("transactions",transactions)
+  //   let balance = 0;
+  
+  //   bankTransactions.forEach((transaction) => {
+  //     console.log("transaction", transaction)
+  //     if (transaction.depositAmount) {
+  //       balance += transaction.depositAmount;
+  //     }
+  //     if (transaction.withdrawAmount) {
+  //       balance -= transaction.withdrawAmount;
+  //     }
+  //   });
+  
+  //   transactions.forEach((transaction) => {
+  //     if (transaction.transactionType === "Deposit") {
+  //       balance += transaction.amount;
+  //     } else {
+  //       const totalBalance = balance - transaction.bankCharges - transaction.amount;
+  //       if (totalBalance < 0) {
+  //         throw { code: 400, message: "Insufficient Bank balance" };
+  //       }
+  //       balance = totalBalance;
+  //     }
+  //   });
+  
+  //   return balance;
+  // },
 
   updateWebsite: async (id, data) => {
     const existingTransaction = await Website.findById(id);
