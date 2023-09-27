@@ -330,8 +330,7 @@ const TransactionRoutes = (app) => {
     } catch (error) {
       console.log(error); 
     }
-  })
- ;
+  });
   
 };
 
