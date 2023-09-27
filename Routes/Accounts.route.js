@@ -419,14 +419,23 @@ const AccountsRoute = (app) => {
   //   }
   // });
   
-  app.post("/api/admin/filter-data/", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/admin/filter-data/:id/:userid", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const { transactionType, introducerList, subAdminList, BankList, WebsiteList } = req.body;
-      const page = req.query.page * 1 || 1;
-      const limit = req.query.limit * 1 || 5;
+        const userid = req.params.userid;
+        const user = await Admin.findById(userid).exec();
+        const user1 = await Transaction.findById(userid).exec();
+        const user2 = await BankTransaction.findById(userid).exec();  
+        const user3= await WebsiteTransaction.findById(userid).exec();  
+  
+        if (!user||!user1||!user2||!user3) {
+          return res.status(404).send("User not found");
+        }
+      const { transactionType, introducerList, subAdminList, BankList, WebsiteList,sdate, edate } = req.body;
+      const page = req.params.id;
+      const limit = 1;
       const skip = (page - 1) * limit; 
       const filter = {};
-      console.log('Query:', filter);
+      console.log('Filter:', filter);
       if (transactionType) {
         filter.transactionType = transactionType;
       }
@@ -445,6 +454,12 @@ const AccountsRoute = (app) => {
   
       if (WebsiteList) {
         filter.websiteName = WebsiteList;
+      }
+      if (sdate) {
+        filter.websiteName = sdate;
+      }
+      if (edate) {
+        filter.websiteName = edate;
       }
       const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       console.log('Query:', filter); 
