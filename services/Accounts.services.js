@@ -286,39 +286,34 @@ const AccountServices = {
     return balance;
   },
 
-
-  // getTransactionBalance: async (bankId) => {
-  //   console.log("bankId", bankId)
-  //   const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
-  //   console.log("bankTransactions",bankTransactions)
-  //   const transactions = await Transaction.find({ bankId: bankId }).exec();
-  //   console.log("transactions",transactions)
-  //   let balance = 0;
+  getEditedBankBalance: async (bankId) => {
+    const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+    const transactions = await Transaction.find({ bankId: bankId }).exec();
+    let balance = 0;
   
-  //   bankTransactions.forEach((transaction) => {
-  //     console.log("transaction", transaction)
-  //     if (transaction.depositAmount) {
-  //       balance += transaction.depositAmount;
-  //     }
-  //     if (transaction.withdrawAmount) {
-  //       balance -= transaction.withdrawAmount;
-  //     }
-  //   });
+    bankTransactions.forEach((transaction) => {
+      if (transaction.depositAmount) {
+        balance += transaction.depositAmount;
+      }
+      if (transaction.withdrawAmount) {
+        balance -= transaction.withdrawAmount;
+      }
+    });
   
-  //   transactions.forEach((transaction) => {
-  //     if (transaction.transactionType === "Deposit") {
-  //       balance += transaction.amount;
-  //     } else {
-  //       const totalBalance = balance - transaction.bankCharges - transaction.amount;
-  //       if (totalBalance < 0) {
-  //         throw { code: 400, message: "Insufficient Bank balance" };
-  //       }
-  //       balance = totalBalance;
-  //     }
-  //   });
+    transactions.forEach((transaction) => {
+      if (transaction.transactionType === "Deposit") {
+        balance += transaction.amount;
+      } else {
+        const totalBalance = balance - transaction.bankCharges - transaction.amount;
+        if (totalBalance < 0) {
+          throw { code: 400, message: "Insufficient Bank balance" };
+        }
+        balance = totalBalance;
+      }
+    });
   
-  //   return balance;
-  // },
+    return balance;
+  },
 
   updateWebsite: async (id, data) => {
     const existingTransaction = await Website.findById(id);
