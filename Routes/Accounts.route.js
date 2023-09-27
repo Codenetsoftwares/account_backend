@@ -8,6 +8,7 @@ import { Transaction } from "../models/transaction.js";
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { userservice } from "../services/user.service.js";
+import lodash from 'lodash'
 import { Website } from "../models/website.model.js";
 import { Bank } from "../models/bank.model.js";
 
@@ -422,7 +423,7 @@ const AccountsRoute = (app) => {
     try {
       const { transactionType, introducerList, subAdminList, BankList, WebsiteList } = req.body;
       const page = req.query.page * 1 || 1;
-      const limit = req.query.limit * 1 || 10;
+      const limit = req.query.limit * 1 || 5;
       const skip = (page - 1) * limit; 
       const filter = {};
       console.log('Query:', filter);
@@ -449,6 +450,10 @@ const AccountsRoute = (app) => {
       console.log('Query:', filter); 
       const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
+      const alltrans=[ ...transactions, ...websiteTransactions, ...bankTransactions ]
+      const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');
+      const allTransactions = sortedTransactions.reverse()
+      // console.log(allTransactions)
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
@@ -456,7 +461,7 @@ const AccountsRoute = (app) => {
       ) {
         return res.status(404).json({ message: "No data found for the selected criteria." });
       }
-      res.status(200).json([ ...transactions, ...websiteTransactions, ...bankTransactions ]);
+      res.status(200).json(allTransactions);
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message });
