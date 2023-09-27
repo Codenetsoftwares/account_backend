@@ -36,35 +36,21 @@ const EditApiRoute = (app) => {
 app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
-    const editRequest = await EditRequest.findById(id).exec();
+    const editRequest = await EditBankRequest.findById(id).exec();
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Bank Request not found" });
     }
     const isApproved = true;
     if (isApproved) {
-      if (editRequest.transactionType === "Manual-Bank-Deposit") {
-        const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
-        const currentWalletBalance = bankId.walletBalance;
-        const updatedWalletBalance = currentWalletBalance - Number(editRequest.depositAmount);
-        bankId.walletBalance = updatedWalletBalance;
-        await bankId.save();
-      }
-      if (editRequest.transactionType === "Manual-Bank-Withdraw") {
-        const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
-        const currentWalletBalance = bankId.walletBalance;
-        const updatedWalletBalance = currentWalletBalance + Number(editRequest.withdrawAmount);
-        bankId.walletBalance = updatedWalletBalance;
-        await bankId.save();
-      }
       await BankTransaction.deleteOne({ _id: editRequest.id }).exec();
-      await EditRequest.deleteOne({ _id: req.params.id }).exec();
+      await EditBankRequest.deleteOne({ _id: req.params.id }).exec();
       res.status(200).send({ message: "Bank Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
   } catch (e) {
     console.error(e);
-    res.status(e.code).send({ message: e.message });
+    res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -92,35 +78,21 @@ app.post("/api/admin/save-website-transaction-request", Authorize(["superAdmin",
 app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
-    const editRequest = await EditRequest.findById(id).exec();
+    const editRequest = await EditWebsiteRequest.findById(id).exec();
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Website Request not found" });
     }
     const isApproved = true;
     if (isApproved) {
-      if (editRequest.transactionType === "Manual-Website-Deposit") {
-        const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
-        const currentWalletBalance = websiteId.walletBalance;
-        const updatedWalletBalance = currentWalletBalance - Number(editRequest.depositAmount);
-        websiteId.walletBalance = updatedWalletBalance;
-        await websiteId.save();
-      }
-      if (editRequest.transactionType === "Manual-Website-Withdraw") {
-        const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
-        const currentWalletBalance = websiteId.walletBalance;
-        const updatedWalletBalance = currentWalletBalance + Number(editRequest.withdrawAmount);
-        websiteId.walletBalance = updatedWalletBalance;
-        await websiteId.save();
-      }
       await WebsiteTransaction.deleteOne({ _id: editRequest.id }).exec();
-      await EditRequest.deleteOne({ _id: req.params.id }).exec();
+      await EditWebsiteRequest.deleteOne({ _id: req.params.id }).exec();
       res.status(200).send({ message: "Bank Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
     }
   } catch (e) {
     console.error(e);
-    res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -152,24 +124,8 @@ app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, r
     if (!editRequest) {
       return res.status(404).send({ message: "Edit Website Request not found" });
     }
-    const websiteId = await Website.findOne({ websiteName: editRequest.websiteName }).exec();
-    const bankId = await Bank.findOne({ bankName: editRequest.bankName }).exec();
     const isApproved = true;
     if (isApproved) {
-      if (editRequest.transactionType === "Deposit") {
-        const amountToBeTransferred = Number(editRequest.amount) + Number(editRequest.bonus);
-        websiteId.walletBalance += amountToBeTransferred;
-        bankId.walletBalance -= Number(editRequest.amount);
-        await websiteId.save();
-        await bankId.save();
-      }
-      if (editRequest.transactionType === "Withdraw") {
-        const amountToBeTransferred = Number(editRequest.amount) + Number(editRequest.bankCharges);
-        websiteId.walletBalance -= amountToBeTransferred;
-        bankId.walletBalance += Number(editRequest.amount);
-        await websiteId.save();
-        await bankId.save();
-      }
       await Transaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
       res.status(200).send({ message: "Transaction deleted" });

@@ -6,6 +6,7 @@ import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { Bank } from "../models/bank.model.js"
 import { Website } from "../models/website.model.js"
+import AccountServices from "../services/Accounts.services.js";
 
 const TransactionRoutes = (app) => {
 
@@ -116,8 +117,14 @@ const TransactionRoutes = (app) => {
 
   app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const resultArray = await EditRequest.find().exec();
-      res.status(200).send(resultArray);
+      const dbBankData = await EditRequest.find().exec();
+      let bankData = JSON.parse(JSON.stringify(dbBankData));
+      for (var index = 0; index < bankData.length; index++) {
+        bankData[index].balance = await AccountServices.getEditedBankBalance(
+          bankData[index]._id
+        );
+      }
+      res.status(200).send(bankData);
     } catch (error) {
       console.log(error);
       res.status(500).send("Internal Server error");
@@ -209,7 +216,6 @@ const TransactionRoutes = (app) => {
           remarks: editRequest.remarks,
           withdrawAmount: editRequest.withdrawAmount,
           depositAmount: editRequest.depositAmount,
-          currentBankBalance : editRequest.currentBankBalance,
           subAdminId: editRequest.subAdminId,
           subAdminName: editRequest.subAdminName,
         });
@@ -224,25 +230,11 @@ const TransactionRoutes = (app) => {
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-  
-          // Update Bank model
-          try {
-            const bank = await Bank.findOneAndUpdate({ accountNumber: editRequest.accountNumber }, { walletBalance: editRequest.currentBankBalance }, { returnDocument: true });
-  
-            if (!bank) {
-              console.log("bank not found")
-              return res.status(404).send({ message: "Bank not found" });
-            }
-  
-            return res.status(200).send({
-              message: "Edit request approved and data updated",
-              updatedTransaction,
-              bank
-            });
-          } catch (error) {
-            console.log(error)
-            return res.status(500).send({ message: "Error updating Bank" });
-          }
+             
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction,
+          });
         } else {
           return res.status(200).send({ message: "Edit request rejected" });
         }
