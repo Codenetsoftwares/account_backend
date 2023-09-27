@@ -259,10 +259,9 @@ const WebisteRoutes = (app) => {
       try {
         const websiteName = req.params.websiteName;
         const transaction = await Transaction.findOne({ websiteName }).exec();
-        console.log("transaction", transaction);
+        let balances = 0;
         if (!transaction) {
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          console.log("first", websiteSummary)
           if (websiteSummary.length > 0) {
             res.status(200).send(websiteSummary);
           } else {
@@ -275,7 +274,32 @@ const WebisteRoutes = (app) => {
           }
           const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          const allTransactions = [...accountSummary, ...websiteSummary]
+
+          let bankData = JSON.parse(JSON.stringify(websiteSummary));
+          bankData.slice(0).reverse().map((data) => {
+            if (data.withdrawAmount) {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            } else {
+              balances += data.depositAmount;
+              data.balance = balances;
+            }
+          });
+          let accountData = JSON.parse(JSON.stringify(accountSummary));
+          accountData.slice(0).reverse().map((data) => {
+            if (data.transactionType === "Deposit") {
+              const netAmount = balances - data.bonus - data.amount;
+              console.log("netAmount", netAmount);
+              balances = netAmount;
+              data.balance = balances;
+            } else {
+              let totalamount = 0;
+              totalamount += data.amount;
+              balances += totalamount;
+              data.balance = balances;
+            }
+          });
+          const allTransactions = [...accountData, ...bankData]
           allTransactions.sort((a, b) => {
             const dateA = new Date(a.createdAt);
             const dateB = new Date(b.createdAt);
