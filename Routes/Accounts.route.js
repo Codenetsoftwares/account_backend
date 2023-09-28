@@ -419,14 +419,14 @@ const AccountsRoute = (app) => {
   //   }
   // });
   
-  app.post("/api/admin/filter-data/", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-      const { transactionType, introducerList, subAdminList, BankList, WebsiteList } = req.body;
-      const page = req.query.page * 1 || 1;
-      const limit = req.query.limit * 1 || 5;
+  app.post("/api/admin/filter-data/:page", Authorize(["superAdmin"]), async (req, res) => {
+    try {   
+      const { transactionType, introducerList, subAdminList, BankList, WebsiteList, sdate, edate } = req.body;
+      const page = req.params.page;
+      const limit = 1;
       const skip = (page - 1) * limit; 
       const filter = {};
-      console.log('Query:', filter);
+  
       if (transactionType) {
         filter.transactionType = transactionType;
       }
@@ -446,14 +446,23 @@ const AccountsRoute = (app) => {
       if (WebsiteList) {
         filter.websiteName = WebsiteList;
       }
+  
+      if (sdate && edate) {
+        filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+      } else if (sdate) {
+        filter.createdAt = { $gte: new Date(sdate) };
+      } else if (edate) {
+        filter.createdAt = { $lte: new Date(edate) };
+      }
+  
       const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      console.log('Query:', filter); 
       const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const alltrans=[ ...transactions, ...websiteTransactions, ...bankTransactions ]
+      const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
       const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');
-      const allTransactions = sortedTransactions.reverse()
-      // console.log(allTransactions)
+      
+      const allTransactions = sortedTransactions.reverse();
+  
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
@@ -467,6 +476,7 @@ const AccountsRoute = (app) => {
       res.status(e.code || 500).send({ message: e.message });
     }
   });
+  
 
 };
 
