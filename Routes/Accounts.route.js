@@ -419,23 +419,14 @@ const AccountsRoute = (app) => {
   //   }
   // });
   
-  app.post("/api/admin/filter-data/:id/:userid", Authorize(["superAdmin"]), async (req, res) => {
-    try {
-        const userid = req.params.userid;
-        const user = await Admin.findById(userid).exec();
-        const user1 = await Transaction.findById(userid).exec();
-        const user2 = await BankTransaction.findById(userid).exec();  
-        const user3= await WebsiteTransaction.findById(userid).exec();  
-  
-        if (!user||!user1||!user2||!user3) {
-          return res.status(404).send("User not found");
-        }
-      const { transactionType, introducerList, subAdminList, BankList, WebsiteList,sdate, edate } = req.body;
-      const page = req.params.id;
+  app.post("/api/admin/filter-data/:page", Authorize(["superAdmin"]), async (req, res) => {
+    try {   
+      const { transactionType, introducerList, subAdminList, BankList, WebsiteList, sdate, edate } = req.body;
+      const page = req.params.page;
       const limit = 1;
       const skip = (page - 1) * limit; 
       const filter = {};
-      console.log('Filter:', filter);
+  
       if (transactionType) {
         filter.transactionType = transactionType;
       }
@@ -455,20 +446,23 @@ const AccountsRoute = (app) => {
       if (WebsiteList) {
         filter.websiteName = WebsiteList;
       }
-      if (sdate) {
-        filter.websiteName = sdate;
+  
+      if (sdate && edate) {
+        filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+      } else if (sdate) {
+        filter.createdAt = { $gte: new Date(sdate) };
+      } else if (edate) {
+        filter.createdAt = { $lte: new Date(edate) };
       }
-      if (edate) {
-        filter.websiteName = edate;
-      }
+  
       const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      console.log('Query:', filter); 
       const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const alltrans=[ ...transactions, ...websiteTransactions, ...bankTransactions ]
+      const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
       const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');
-      const allTransactions = sortedTransactions.reverse()
-      // console.log(allTransactions)
+      
+      const allTransactions = sortedTransactions.reverse();
+  
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
@@ -482,6 +476,7 @@ const AccountsRoute = (app) => {
       res.status(e.code || 500).send({ message: e.message });
     }
   });
+  
 
 };
 
