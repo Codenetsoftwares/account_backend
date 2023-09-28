@@ -422,6 +422,7 @@ const AccountsRoute = (app) => {
   app.post("/api/admin/filter-data/:page", Authorize(["superAdmin"]), async (req, res) => {
     try {   
       const { transactionType, introducerList, subAdminList, BankList, WebsiteList, sdate, edate } = req.body;
+      let balances = 0;
       const page = req.params.page;
       const limit = 1;
       const skip = (page - 1) * limit; 
@@ -458,7 +459,58 @@ const AccountsRoute = (app) => {
       const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
       const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
+      let bankData = JSON.parse(JSON.stringify(bankTransactions));
+          bankData.slice(0).reverse().map((data) => {
+              if (data.withdrawAmount) {
+                balances -= data.withdrawAmount;
+                data.balance = balances;
+              } else {
+                balances += data.depositAmount;
+                data.balance = balances;
+              }
+            });
+       let accountData = JSON.parse(JSON.stringify(transactions));
+            accountData.slice(0).reverse().map((data) => {
+              console.log("accountData", data)
+                if (data.transactionType === "Deposit") {
+                  const netAmount = balances - data.bonus - data.amount;
+                  console.log("netAmount", netAmount);
+                  balances = netAmount;
+                  data.balance = balances;
+
+                  let totalamount = 0;
+                  totalamount += data.amount;
+                  balances += totalamount;
+                  data.balance = balances;
+                  console.log("first", data.balance)
+                  // let totalamount = 0;
+                  // totalamount += data.amount;
+                  // balances += totalamount;
+                  // data.balance = balances;
+                } else {
+                  const netAmount = balances - data.bankCharges - data.amount;
+                  console.log("netAmount", netAmount);
+                  balances = netAmount;
+                  data.balance = balances;
+
+                  let totalamount = 0;
+                  totalamount += data.amount;
+                  balances += totalamount;
+                  data.balance = balances;
+                  console.log("first1", data.balance)
+                }
+              });
+        let websiteData = JSON.parse(JSON.stringify(websiteTransactions));
+              websiteData.slice(0).reverse().map((data) => {
+            if (data.withdrawAmount) {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            } else {
+              balances += data.depositAmount;
+              data.balance = balances;
+            }
+          });
+      const alltrans=[ ...accountData, ...websiteData, ...bankData ]
       const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');
       
       const allTransactions = sortedTransactions.reverse();
