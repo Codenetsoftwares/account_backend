@@ -273,6 +273,8 @@ const AccountServices = {
       // console.log('first',transaction)
       if(transaction.transactionType === "Deposit"){
         const totalBalance = transaction.bonus + transaction.amount;
+        console.log('bal',balance)
+        console.log('totalbal',totalBalance)
         if (balance < totalBalance) {
           throw { code: 400, message: "Insufficient Website balance" };
         }
@@ -439,7 +441,6 @@ const AccountServices = {
       bankName: id.bankName,
       accountNumber: id.accountNumber,
       ifscCode: id.ifscCode,
-      currentBankBalance: id.currentBankBalance
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
@@ -470,7 +471,6 @@ const AccountServices = {
       depositAmount: id.depositAmount,
       subAdminId: id.subAdminId,
       subAdminName: id.subAdminName,
-      currentWebsiteBalance: id.currentWebsiteBalance,
       websiteName: id.websiteName
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
@@ -509,8 +509,6 @@ const AccountServices = {
       amount: id.amount,
       bonus: id.bonus,
       bankCharges: id.bankCharges,
-      currentWebsiteBalance: id.currentWebsiteBalance,
-      currentBankBalance: id.currentBankBalance,
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);

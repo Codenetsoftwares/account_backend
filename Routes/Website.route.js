@@ -262,6 +262,16 @@ const WebisteRoutes = (app) => {
         let balances = 0;
         if (!transaction) {
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+          let bankData = JSON.parse(JSON.stringify(websiteSummary));
+          bankData.slice(0).reverse().map((data) => {
+            if (data.withdrawAmount) {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            } else {
+              balances += data.depositAmount;
+              data.balance = balances;
+            }
+          });
           if (websiteSummary.length > 0) {
             res.status(200).send(websiteSummary);
           } else {
