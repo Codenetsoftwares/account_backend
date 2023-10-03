@@ -607,7 +607,7 @@ const AccountsRoute = (app) => {
         const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
         const allTransactions = sortedTransactions.reverse();
         const ArrayLength = allTransactions.length;
-        const pageNumber = Math.floor(ArrayLength / 10 + 1);
+        let pageNumber = Math.floor(ArrayLength / 10 + 1);
         console.log("pageNumber",pageNumber);
         while ((page - 1) * 10 < ArrayLength) {
           let SecondArray = [];
@@ -620,11 +620,8 @@ const AccountsRoute = (app) => {
               SecondArray.push(allTransactions[j]);
             }
           }
-          const mainArray = [
-            ...Object.values(SecondArray),
-            { pageNumber: pageNumber },
-          ];
-          return res.status(200).json({ mainArray });
+          
+          return res.status(200).json({ SecondArray,pageNumber });
         }
 
         if (page > pageNumber) {
