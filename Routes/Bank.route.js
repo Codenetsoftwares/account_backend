@@ -333,8 +333,19 @@ const BankRoutes = (app) => {
         let balances = 0;
         if (!transaction) {
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-          if (bankSummary.length > 0) {
-            res.status(200).send(bankSummary);
+          console.log('bankSummary',bankSummary)
+          let bankData = JSON.parse(JSON.stringify(bankSummary));
+          bankData.slice(0).reverse().map((data) => {
+              if (data.depositAmount) {
+                balances += data.depositAmount;
+                data.balance = balances;
+              } else {
+                balances -= data.withdrawAmount;
+                data.balance = balances;
+              }
+            });
+          if (bankData.length > 0) {
+            res.status(200).send(bankData);
           } else {
             return res.status(404).send({ message: "Account not found" });
           }
@@ -348,11 +359,13 @@ const BankRoutes = (app) => {
 
           let bankData = JSON.parse(JSON.stringify(bankSummary));
           bankData.slice(0).reverse().map((data) => {
-              if (data.withdrawAmount) {
-                balances -= data.withdrawAmount;
+              if (data.depositAmount) {
+                console.log('353')
+                balances += data.depositAmount;
                 data.balance = balances;
               } else {
-                balances += data.depositAmount;
+                console.log('357')
+                balances -= data.withdrawAmount;
                 data.balance = balances;
               }
             });

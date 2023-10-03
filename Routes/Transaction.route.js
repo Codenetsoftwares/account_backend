@@ -153,8 +153,6 @@ const TransactionRoutes = (app) => {
           subAdminId: editRequest.subAdminId,
           bankName: editRequest.bankName,
           websiteName: editRequest.websiteName,
-          currentBankBalance: editRequest.currentBankBalance,
-          currentWebsiteBalance: editRequest.currentWebsiteBalance,
           remarks: editRequest.remarks
         });
         console.log("updatedTransaction", updatedTransaction)
@@ -168,25 +166,10 @@ const TransactionRoutes = (app) => {
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-  
-          // Update Bank and Website models
-          try {
-            const bank = await Bank.findOneAndUpdate({ bankName: editRequest.bankName }, { walletBalance: editRequest.currentBankBalance }, { returnDocument: "full" });
-            const website = await Website.findOneAndUpdate({ websiteName: editRequest.websiteName }, { walletBalance: editRequest.currentWebsiteBalance }, { returnDocument: "full" });
-  
-            if (!bank || !website) {
-              return res.status(404).send({ message: "Bank or Website not found" });
-            }
-  
-            return res.status(200).send({
-              message: "Edit request approved and data updated",
-              updatedTransaction,
-              bank,
-              website
-            });
-          } catch (error) {
-            return res.status(500).send({ message: "Error updating Bank or Website" });
-          }
+          
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction,})
         } else {
           return res.status(200).send({ message: "Edit request rejected" });
         }
@@ -280,24 +263,10 @@ const TransactionRoutes = (app) => {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
   
-          // Update Website model
-          try {
-            const website = await Website.findOneAndUpdate({ websiteName: editRequest.websiteName }, { walletBalance: editRequest.currentWebsiteBalance }, { returnDocument: true });
-  
-            if (!website) {
-              console.log("website not found")
-              return res.status(404).send({ message: "Website not found" });
-            }
-  
-            return res.status(200).send({
-              message: "Edit request approved and data updated",
-              updatedTransaction,
-              website
-            });
-          } catch (error) {
-            console.log(error)
-            return res.status(500).send({ message: "Error updating Website" });
-          }
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction,
+          });
         } else {
           return res.status(200).send({ message: "Edit request rejected" });
         }
