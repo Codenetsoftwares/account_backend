@@ -560,8 +560,6 @@ const AccountsRoute = (app) => {
           edate,
         } = req.body;
         const page = req.params.page;
-        // const limit = 3;
-        // const skip = (page - 1) * limit;
         const filter = {};
 
         if (transactionType) {
@@ -609,15 +607,18 @@ const AccountsRoute = (app) => {
         const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
         const allTransactions = sortedTransactions.reverse();
         const ArrayLength = allTransactions.length;
-        console.log("arrayle", ArrayLength);
-        console.log("page", page);
         const pageNumber = Math.floor(ArrayLength / 10 + 1);
+        console.log("pageNumber",pageNumber);
         while ((page - 1) * 10 < ArrayLength) {
-          console.log("object");
           let SecondArray = [];
           const Limit = page * 10;
+          console.log("Limit",Limit);
+
           for (let j = Limit - 10; j < Limit; j++) {
-            SecondArray.push(allTransactions[j]);
+            console.log('all',allTransactions[j])
+            if(allTransactions[j] !== undefined){
+              SecondArray.push(allTransactions[j]);
+            }
           }
           const mainArray = [
             ...Object.values(SecondArray),
