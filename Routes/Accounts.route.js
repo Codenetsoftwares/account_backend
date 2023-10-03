@@ -410,8 +410,8 @@ const AccountsRoute = (app) => {
     try {   
       const { transactionType, introducerList, subAdminList, BankList, WebsiteList, sdate, edate } = req.body;
       const page = req.params.page;
-      const limit = 1;
-      const skip = (page - 1) * limit; 
+      // const limit = 3;
+      // const skip = (page - 1) * limit; 
       const filter = {};
   
       if (transactionType) {
@@ -441,13 +441,27 @@ const AccountsRoute = (app) => {
       } else if (edate) {
         filter.createdAt = { $lte: new Date(edate) };
       }
-  
-      const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).limit(limit).skip(skip).exec();
-      const alltrans=[ ...transactions, ...websiteTransactions, ...bankTransactions ]
-      const sortedTransactions = lodash.sortBy(alltrans, 'createdAt')
+   
+      const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).exec();
+      const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).exec();
+      const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).exec();
+      const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
+      const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');      
       const allTransactions = sortedTransactions.reverse();
+      const ArrayLength=allTransactions.length
+
+      const pageNumber=Math.floor((ArrayLength/10)+1)
+      while((page*10)<ArrayLength){
+        let SecondArray=[]
+        const Limit=page*10
+        for(let j=Limit-10;j<Limit;j++){
+             SecondArray.push(allTransactions[j])                        
+        }
+        const mainArray=[...Object.values(SecondArray), {"pageNumber":pageNumber}]
+        return res.status(200).json({mainArray})        
+        
+      }  
+
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
