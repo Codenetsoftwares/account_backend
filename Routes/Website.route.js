@@ -272,8 +272,8 @@ const WebisteRoutes = (app) => {
               data.balance = balances;
             }
           });
-          if (websiteSummary.length > 0) {
-            res.status(200).send(websiteSummary);
+          if (bankData.length > 0) {
+            res.status(200).send(bankData);
           } else {
             return res.status(404).send({ message: "Website Name not found" });
           }
