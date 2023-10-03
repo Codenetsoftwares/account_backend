@@ -11,7 +11,7 @@ import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
-import { IntroducerUser } from "../models/introducer.model.js"
+import { IntroducerUser } from "../models/introducer.model.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -55,9 +55,13 @@ const AccountServices = {
       throw { code: 400, message: "Roles is required" };
     }
 
-    const existingUser = await Admin.findOne({ userName: data.userName }).exec();
+    const existingUser = await Admin.findOne({
+      userName: data.userName,
+    }).exec();
     const existingOtherUser = await User.findOne({ userName: data.userName });
-    const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
+    const existingIntroUser = await IntroducerUser.findOne({
+      userName: data.userName,
+    });
 
     if (existingUser || existingOtherUser || existingIntroUser) {
       throw { code: 409, message: `User already exists: ${data.userName}` };
@@ -83,9 +87,14 @@ const AccountServices = {
   },
 
   SubAdminPasswordResetCode: async (userName, password) => {
-    const existingUser = await AccountServices.findAdmin({ userName: userName });
+    const existingUser = await AccountServices.findAdmin({
+      userName: userName,
+    });
 
-    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+    const passwordIsDuplicate = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
 
     if (passwordIsDuplicate) {
       throw {
@@ -114,7 +123,9 @@ const AccountServices = {
       throw { code: 400, message: "Invalid value for: password" };
     }
 
-    const existingUser = await AccountServices.findAdmin({ userName: userName });
+    const existingUser = await AccountServices.findAdmin({
+      userName: userName,
+    });
     if (!existingUser) {
       throw { code: 401, message: "Invalid User Name or password" };
     }
@@ -211,7 +222,8 @@ const AccountServices = {
     // Create updatedTransactionData using a ternary operator
     const updatedTransactionData = {
       id: id._id,
-      accountHolderName: data.accountHolderName || existingTransaction.accountHolderName,
+      accountHolderName:
+        data.accountHolderName || existingTransaction.accountHolderName,
       bankName: data.bankName || existingTransaction.bankName,
       accountNumber: data.accountNumber || existingTransaction.accountNumber,
       ifscCode: data.ifscCode || existingTransaction.ifscCode,
@@ -221,7 +233,10 @@ const AccountServices = {
     };
 
     const editRequest = new EditBankRequest({
-      ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+      ...updatedTransactionData,
+      changedFields,
+      isApproved: false,
+      type: "Edit",
       message: "Bank Detail's has been edited",
     });
 
@@ -230,10 +245,10 @@ const AccountServices = {
   },
 
   getBankBalance: async (bankId) => {
-    const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+    const bankTransactions = await BankTransaction.find({bankId: bankId}).exec();
     const transactions = await Transaction.find({ bankId: bankId }).exec();
     let balance = 0;
-  
+
     bankTransactions.forEach((transaction) => {
       if (transaction.depositAmount) {
         balance += transaction.depositAmount;
@@ -242,57 +257,46 @@ const AccountServices = {
         balance -= transaction.withdrawAmount;
       }
     });
-  
+
     transactions.forEach((transaction) => {
       if (transaction.transactionType === "Deposit") {
         balance += transaction.amount;
       } else {
         const totalBalance = balance - transaction.bankCharges - transaction.amount;
-        if (totalBalance < 0) {
-          throw { code: 400, message: "Insufficient Bank balance" };
-        }
         balance = totalBalance;
       }
     });
-  
+
     return balance;
   },
-  
-  
+
   getWebsiteBalance: async (websiteId) => {
-    const websiteTransactions = await WebsiteTransaction.find({ websiteId: websiteId }).exec();
-    const transaction = await Transaction.find({  websiteId: websiteId }).exec();
-    console.log('transaction',transaction)
+    const websiteTransactions = await WebsiteTransaction.find({websiteId: websiteId}).exec();
+    const transaction = await Transaction.find({ websiteId: websiteId }).exec();
     let balance = 0;
-    websiteTransactions.forEach(transaction => {
+    websiteTransactions.forEach((transaction) => {
       balance += transaction.depositAmount || 0;
       balance -= transaction.withdrawAmount || 0;
     });
 
-    transaction.forEach(transaction => {
-      // console.log('first',transaction)
-      if(transaction.transactionType === "Deposit"){
-        const totalBalance = transaction.bonus + transaction.amount;
-        console.log('bal',balance)
-        console.log('totalbal',totalBalance)
-        if (balance < totalBalance) {
-          throw { code: 400, message: "Insufficient Website balance" };
-        }
-        balance = Number(balance) - Number(transaction.bonus) - Number(transaction.amount);
+    transaction.forEach((transactions) => {
+      if (transactions.transactionType === "Deposit") {
+        balance = Number(balance) - Number(transactions.bonus) - Number(transactions.amount);
+      } else {
+        balance += transactions?.amount;
       }
-      else{
-        balance = Number(balance) + Number(transaction.amount);
-      }
-    })
+    });
 
     return balance;
   },
 
   getEditedBankBalance: async (bankId) => {
-    const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+    const bankTransactions = await BankTransaction.find({
+      bankId: bankId,
+    }).exec();
     const transactions = await Transaction.find({ bankId: bankId }).exec();
     let balance = 0;
-  
+
     bankTransactions.forEach((transaction) => {
       if (transaction.depositAmount) {
         balance += transaction.depositAmount;
@@ -301,19 +305,20 @@ const AccountServices = {
         balance -= transaction.withdrawAmount;
       }
     });
-  
+
     transactions.forEach((transaction) => {
       if (transaction.transactionType === "Deposit") {
         balance += transaction.amount;
       } else {
-        const totalBalance = balance - transaction.bankCharges - transaction.amount;
+        const totalBalance =
+          balance - transaction.bankCharges - transaction.amount;
         if (totalBalance < 0) {
           throw { code: 400, message: "Insufficient Bank balance" };
         }
         balance = totalBalance;
       }
     });
-  
+
     return balance;
   },
 
@@ -331,13 +336,14 @@ const AccountServices = {
       websiteName: data.websiteName || existingTransaction.websiteName,
     };
     const backupTransaction = new EditWebsiteRequest({
-      ...updatedTransactionData, changedFields, message: "Website Detail's has been edited",
+      ...updatedTransactionData,
+      changedFields,
+      message: "Website Detail's has been edited",
       isApproved: false,
     });
     await backupTransaction.save();
     return true;
   },
-
 
   updateUserProfile: async (id, data) => {
     const existingUser = await User.findById(id);
@@ -347,11 +353,14 @@ const AccountServices = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
+    existingUser.contactNumber =
+      data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
-    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.introducerPercentage =
+      data.introducerPercentage || existingUser.introducerPercentage;
+    existingUser.webSiteDetail =
+      data.webSiteDetail || existingUser.webSiteDetail;
 
     await existingUser.save().catch((err) => {
       console.error(err);
@@ -422,7 +431,10 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
-    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({
+      id: id,
+      type: "Delete",
+    });
     if (existingEditRequest) {
       throw {
         code: 409,
@@ -445,7 +457,12 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
+      const backupTransaction = new EditRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+        message: editMessage,
+        type: "Delete",
+      });
       await backupTransaction.save();
     }
     return true;
@@ -454,9 +471,15 @@ const AccountServices = {
   deleteWebsiteTransaction: async (id) => {
     const existingTransaction = await WebsiteTransaction.findById(id);
     if (!existingTransaction) {
-      throw { code: 404, message: `Website Transaction not found with id: ${id}` };
+      throw {
+        code: 404,
+        message: `Website Transaction not found with id: ${id}`,
+      };
     }
-    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({
+      id: id,
+      type: "Delete",
+    });
     if (existingEditRequest) {
       throw {
         code: 409,
@@ -471,12 +494,17 @@ const AccountServices = {
       depositAmount: id.depositAmount,
       subAdminId: id.subAdminId,
       subAdminName: id.subAdminName,
-      websiteName: id.websiteName
+      websiteName: id.websiteName,
     };
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
+      const backupTransaction = new EditRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+        message: editMessage,
+        type: "Delete",
+      });
       await backupTransaction.save();
     }
 
@@ -488,7 +516,10 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
-    const existingEditRequest = await EditRequest.findOne({ id: id, type: "Delete" });
+    const existingEditRequest = await EditRequest.findOne({
+      id: id,
+      type: "Delete",
+    });
     if (existingEditRequest) {
       throw {
         code: 409,
@@ -513,7 +544,12 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete" });
+      const backupTransaction = new EditRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+        message: editMessage,
+        type: "Delete",
+      });
       await backupTransaction.save();
     }
     return true;
@@ -547,7 +583,10 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Bank not found with id: ${id}` };
     }
-    const existingEditRequest = await EditBankRequest.findOne({ id: id, type: "Delete Bank Detail's" });
+    const existingEditRequest = await EditBankRequest.findOne({
+      id: id,
+      type: "Delete Bank Detail's",
+    });
     if (existingEditRequest) {
       throw {
         code: 409,
@@ -562,12 +601,17 @@ const AccountServices = {
       ifscCode: id.ifscCode,
       upiId: id.upiId,
       upiAppName: id.upiAppName,
-      upiNumber: id.upiNumber
+      upiNumber: id.upiNumber,
     };
     const editMessage = `${updatedTransactionData.bankName} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditBankRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Bank Detail's" });
+      const backupTransaction = new EditBankRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+        message: editMessage,
+        type: "Delete Bank Detail's",
+      });
       await backupTransaction.save();
     }
     return true;
@@ -578,7 +622,10 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Website not found with id: ${id}` };
     }
-    const existingEditRequest = await EditWebsiteRequest.findOne({ id: id, type: "Delete Website Detail's" });
+    const existingEditRequest = await EditWebsiteRequest.findOne({
+      id: id,
+      type: "Delete Website Detail's",
+    });
     if (existingEditRequest) {
       throw {
         code: 409,
@@ -592,7 +639,12 @@ const AccountServices = {
     const editMessage = `${updatedTransactionData.websiteName} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditWebsiteRequest({ ...updatedTransactionData, isApproved: false, message: editMessage, type: "Delete Website Detail's" });
+      const backupTransaction = new EditWebsiteRequest({
+        ...updatedTransactionData,
+        isApproved: false,
+        message: editMessage,
+        type: "Delete Website Detail's",
+      });
       await backupTransaction.save();
     }
     return true;
