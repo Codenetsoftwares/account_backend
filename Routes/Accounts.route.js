@@ -405,19 +405,6 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  // app.get("/api/all/transaction/pages/:requestId",async(req,res)=>{
-       
-  //   try {
-
-  //     const page = req.query.page * 1 || 1;
-  //     const limit = req.query.limit * 1 || 10;
-  //     const skip = (page - 1) * limit;     
-  //     const bankTransaction = await BankTransaction.find().limit(limit).skip(skip);      
-  //     res.status(200).json({ bankTransaction });
-  //   } catch (error) {
-  //     console.log(error); 
-  //   }
-  // });
   
   app.post("/api/admin/filter-data/:page", Authorize(["superAdmin"]), async (req, res) => {
     try {   
@@ -461,24 +448,20 @@ const AccountsRoute = (app) => {
       const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
       const sortedTransactions = lodash.sortBy(alltrans, 'createdAt');      
       const allTransactions = sortedTransactions.reverse();
-    //  const ArrayLength=allTransactions.length
+      const ArrayLength=allTransactions.length
 
-
-
-const ArrayLength=Array.length
-const pageNumber=Math.floor((ArrayLength/10)+1)
-console.log(pageNumber)
-console.log(ArrayLength)
+      const pageNumber=Math.floor((ArrayLength/10)+1)
       while((page*10)<ArrayLength){
         let SecondArray=[]
         const Limit=page*10
         for(let j=Limit-10;j<Limit;j++){
-             SecondArray.push(Array[j])                        
+             SecondArray.push(allTransactions[j])                        
         }
         const mainArray=[...Object.values(SecondArray), {"pageNumber":pageNumber}]
-        res.status(200).json({mainArray})        
-        return
+        return res.status(200).json({mainArray})        
+        
       }  
+
       if (
         transactions.length === 0 &&
         websiteTransactions.length === 0 &&
