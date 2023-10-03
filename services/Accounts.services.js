@@ -431,16 +431,10 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
-    const existingEditRequest = await EditRequest.findOne({
-      id: id,
-      type: "Delete",
-    });
-    if (existingEditRequest) {
-      throw {
-        code: 409,
-        message: "Delete Request Already Sent For Approval",
-      };
+    const existingEditRequest = await EditRequest.findOne({id: id,type: "Delete",});
+    if (existingEditRequest) {throw {code: 409,message: "Delete Request Already Sent For Approval"};
     }
+    
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,

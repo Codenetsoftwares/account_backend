@@ -165,8 +165,9 @@ const TransactionService = {
 
   updateTransaction: async (trans, data) => {
     const existingTransaction = await Transaction.findById(trans);
-    if (existingTransaction) {throw {code: 409,message: "Edit Request Already Sent For Approval"};
-    }
+
+    const existingEditRequest = await EditRequest.findOne({id: trans,type: "Edit",});
+    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
 
     let updatedTransactionData = {};
     let changedFields = {};
@@ -235,7 +236,10 @@ const TransactionService = {
 
   updateBankTransaction: async (bankTransaction, data) => {
     const existingBankTransaction = await BankTransaction.findById(bankTransaction);
-    if (existingBankTransaction) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+
+    const existingEditRequest = await EditRequest.findOne({id: bankTransaction,type: "Edit",});
+    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+
     let updatedTransactionData = {};
     let changedFields = {};
    
@@ -292,7 +296,9 @@ const TransactionService = {
 
   updateWebsiteTransaction: async (websiteTransaction, data) => {
     const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
-    if (existingWebsiteTransaction) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+
+    const existingEditRequest = await EditRequest.findOne({id: websiteTransaction,type: "Edit",});
+    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
 
     let updatedTransactionData = {};
     let changedFields = {};
