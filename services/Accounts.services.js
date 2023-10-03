@@ -245,7 +245,9 @@ const AccountServices = {
   },
 
   getBankBalance: async (bankId) => {
-    const bankTransactions = await BankTransaction.find({bankId: bankId}).exec();
+    const bankTransactions = await BankTransaction.find({
+      bankId: bankId,
+    }).exec();
     const transactions = await Transaction.find({ bankId: bankId }).exec();
     let balance = 0;
 
@@ -262,7 +264,8 @@ const AccountServices = {
       if (transaction.transactionType === "Deposit") {
         balance += transaction.amount;
       } else {
-        const totalBalance = balance - transaction.bankCharges - transaction.amount;
+        const totalBalance =
+          balance - transaction.bankCharges - transaction.amount;
         balance = totalBalance;
       }
     });
@@ -271,7 +274,9 @@ const AccountServices = {
   },
 
   getWebsiteBalance: async (websiteId) => {
-    const websiteTransactions = await WebsiteTransaction.find({websiteId: websiteId}).exec();
+    const websiteTransactions = await WebsiteTransaction.find({
+      websiteId: websiteId,
+    }).exec();
     const transaction = await Transaction.find({ websiteId: websiteId }).exec();
     let balance = 0;
     websiteTransactions.forEach((transaction) => {
@@ -281,7 +286,10 @@ const AccountServices = {
 
     transaction.forEach((transactions) => {
       if (transactions.transactionType === "Deposit") {
-        balance = Number(balance) - Number(transactions.bonus) - Number(transactions.amount);
+        balance =
+          Number(balance) -
+          Number(transactions.bonus) -
+          Number(transactions.amount);
       } else {
         balance += transactions?.amount;
       }
@@ -431,10 +439,14 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
-    const existingEditRequest = await EditRequest.findOne({id: id,type: "Delete",});
-    if (existingEditRequest) {throw {code: 409,message: "Delete Request Already Sent For Approval"};
+    const existingEditRequest = await EditRequest.findOne({
+      id: id,
+      type: "Delete",
+    });
+    if (existingEditRequest) {
+      throw { code: 409, message: "Delete Request Already Sent For Approval" };
     }
-    
+
     const updatedTransactionData = {
       id: id._id,
       transactionType: id.transactionType,
