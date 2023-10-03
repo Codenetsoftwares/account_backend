@@ -262,8 +262,8 @@ const WebisteRoutes = (app) => {
         let balances = 0;
         if (!transaction) {
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          let bankData = JSON.parse(JSON.stringify(websiteSummary));
-          bankData.slice(0).reverse().map((data) => {
+          let websiteData = JSON.parse(JSON.stringify(websiteSummary));
+          websiteData.slice(0).reverse().map((data) => {
             if (data.withdrawAmount) {
               balances -= data.withdrawAmount;
               data.balance = balances;
@@ -272,8 +272,8 @@ const WebisteRoutes = (app) => {
               data.balance = balances;
             }
           });
-          if (bankData.length > 0) {
-            res.status(200).send(bankData);
+          if (websiteData.length > 0) {
+            res.status(200).send(websiteData);
           } else {
             return res.status(404).send({ message: "Website Name not found" });
           }
@@ -285,8 +285,8 @@ const WebisteRoutes = (app) => {
           const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
 
-          let bankData = JSON.parse(JSON.stringify(websiteSummary));
-          bankData.slice(0).reverse().map((data) => {
+          let websiteData = JSON.parse(JSON.stringify(websiteSummary));
+          websiteData.slice(0).reverse().map((data) => {
             if (data.withdrawAmount) {
               balances -= data.withdrawAmount;
               data.balance = balances;
@@ -309,7 +309,7 @@ const WebisteRoutes = (app) => {
               data.balance = balances;
             }
           });
-          const allTransactions = [...accountData, ...bankData]
+          const allTransactions = [...accountData, ...websiteData]
           allTransactions.sort((a, b) => {
             const dateA = new Date(a.createdAt);
             const dateB = new Date(b.createdAt);
