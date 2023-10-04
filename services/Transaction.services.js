@@ -184,6 +184,7 @@ const TransactionService = {
         bankName: data.bankName || existingTransaction.bankName,
         websiteName: data.websiteName || existingTransaction.websiteName,
         remarks: data.remarks || existingTransaction.remarks,
+        userName : data.userName || existingTransaction.userName
       };
 
       for (const key in data) {

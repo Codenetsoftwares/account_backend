@@ -590,20 +590,10 @@ const AccountsRoute = (app) => {
           filter.createdAt = { $lte: new Date(edate) };
         }
 
-        const transactions = await Transaction.find(filter)
-          .sort({ createdAt: 1 })
-          .exec();
-        const websiteTransactions = await WebsiteTransaction.find(filter)
-          .sort({ createdAt: 1 })
-          .exec();
-        const bankTransactions = await BankTransaction.find(filter)
-          .sort({ createdAt: 1 })
-          .exec();
-        const alltrans = [
-          ...transactions,
-          ...websiteTransactions,
-          ...bankTransactions,
-        ];
+        const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).exec();
+        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).exec();
+        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).exec();
+        const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
         const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
         const allTransactions = sortedTransactions.reverse();
         const ArrayLength = allTransactions.length;
