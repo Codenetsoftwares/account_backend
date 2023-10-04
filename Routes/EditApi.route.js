@@ -8,6 +8,7 @@ import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js"
 import { EditBankRequest } from "../models/EditBankRequest.model.js"
 import { Bank } from "../models/bank.model.js"
 import { Website } from "../models/website.model.js"
+import { User } from "../models/user.model.js";
 
 const EditApiRoute = (app) => {
 
@@ -128,6 +129,10 @@ app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, r
     if (isApproved) {
       await Transaction.deleteOne({ _id: editRequest.id }).exec();
       await EditRequest.deleteOne({ _id: req.params.id }).exec();
+      await User.updateOne(
+        { "transactionDetail._id": editRequest.id },
+        { $pull: { transactionDetail: { _id: editRequest.id } } }
+      ).exec();
       res.status(200).send({ message: "Transaction deleted" });
     } else {
       res.status(400).send({ message: "Approval request rejected by super admin" });
