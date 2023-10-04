@@ -4,9 +4,8 @@ import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import { BankTransaction } from "../models/BankTransaction.model.js";
-import { Bank } from "../models/bank.model.js"
-import { Website } from "../models/website.model.js"
 import AccountServices from "../services/Accounts.services.js";
+import { User } from '../models/user.model.js';
 
 const TransactionRoutes = (app) => {
 
@@ -153,8 +152,33 @@ const TransactionRoutes = (app) => {
           subAdminId: editRequest.subAdminId,
           bankName: editRequest.bankName,
           websiteName: editRequest.websiteName,
-          remarks: editRequest.remarks
+          remarks: editRequest.remarks,
         });
+        const user = await User.findOne({
+          "transactionDetail": {
+            $elemMatch: { "_id": editRequest.id }
+          }
+        });
+        console.log("user", user)
+        if (!user) {
+          return res.status(404).json({ status: false, message: "User not found" });
+        }
+        // Find the specific transactionDetail within the user's document and update its fields
+        const transactionIndex = user.transactionDetail.findIndex(transaction => transaction._id.toString() === editRequest.id.toString());
+        if (transactionIndex !== -1) {
+          user.transactionDetail[transactionIndex].transactionID = editRequest.transactionID;
+          user.transactionDetail[transactionIndex].transactionType = editRequest.transactionType;
+          user.transactionDetail[transactionIndex].amount = editRequest.amount;
+          user.transactionDetail[transactionIndex].paymentMethod = editRequest.paymentMethod;
+          user.transactionDetail[transactionIndex].userId = editRequest.userId;
+          user.transactionDetail[transactionIndex].subAdminId = editRequest.subAdminId;
+          user.transactionDetail[transactionIndex].bankName = editRequest.bankName;
+          user.transactionDetail[transactionIndex].websiteName = editRequest.websiteName;
+          user.transactionDetail[transactionIndex].remarks = editRequest.remarks;
+          // Update other fields as needed
+        
+          // Save the updated user document
+          await user.save();}
         console.log("updatedTransaction", updatedTransaction)
         if (updatedTransaction.matchedCount === 0) {
           return res.status(404).send({ message: "Transaction not found" });
