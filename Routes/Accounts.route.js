@@ -605,7 +605,7 @@ const AccountsRoute = (app) => {
           console.log("Limit",Limit);
 
           for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all',allTransactions[j])
+            console.log('all',  [j])
             if(allTransactions[j] !== undefined){
               SecondArray.push(allTransactions[j]);
             }
