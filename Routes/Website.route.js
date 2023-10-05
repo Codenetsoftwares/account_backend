@@ -91,7 +91,7 @@ const WebisteRoutes = (app) => {
 
   // API To View Website Name
 
-  app.get("/api/get-website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request"]),
+  app.get("/api/get-website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Create-Transaction"]),
     async (req, res) => {
       try {
         const dbWebiteData = await Website.find({}).exec();
