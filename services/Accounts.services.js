@@ -361,14 +361,12 @@ const AccountServices = {
 
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber =
-      data.contactNumber || existingUser.contactNumber;
+    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.introducerPercentage =
-      data.introducerPercentage || existingUser.introducerPercentage;
-    existingUser.webSiteDetail =
-      data.webSiteDetail || existingUser.webSiteDetail;
+    existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
+    existingUser.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
+    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
 
     await existingUser.save().catch((err) => {
       console.error(err);
