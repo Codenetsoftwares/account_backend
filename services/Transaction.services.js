@@ -6,6 +6,7 @@ import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Bank } from "../models/bank.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
+import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import { IntroducerUser } from "../models/introducer.model.js"
 import { introducerUser } from "../services/introducer.services.js";
 import AccountServices from "../services/Accounts.services.js";
@@ -410,7 +411,7 @@ const TransactionService = {
   updateIntroTransaction: async (trans, data) => {
     const existingTransaction = await IntroducerTransaction.findById(trans);
 
-    const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit", });
+    const existingEditRequest = await IntroducerEditRequest.findOne({ id: trans, type: "Edit", });
     if (existingEditRequest) { throw { code: 409, message: "Edit Request Already Sent For Approval" }; }
 
     let updatedTransactionData = {};
@@ -433,7 +434,7 @@ const TransactionService = {
         }
       }
 
-      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+      const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
         message: "Introducer Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -454,7 +455,7 @@ const TransactionService = {
         }
       }
 
-      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+      const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
         message: "Introducer Withdraw transaction is being edited.",
       });
       await editRequest.save();

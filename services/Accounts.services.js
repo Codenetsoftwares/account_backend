@@ -14,6 +14,7 @@ import { Transaction } from "../models/transaction.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { introducerUser } from "../services/introducer.services.js";
+import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -598,7 +599,7 @@ const AccountServices = {
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
     }
-    const existingEditRequest = await EditRequest.findOne({
+    const existingEditRequest = await IntroducerEditRequest.findOne({
       id: id,
       type: "Delete",
     });
@@ -618,7 +619,7 @@ const AccountServices = {
     const editMessage = `Introducer ${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
     await createEditRequest(updatedTransactionData, editMessage);
     async function createEditRequest(updatedTransactionData, editMessage) {
-      const backupTransaction = new EditRequest({
+      const backupTransaction = new IntroducerEditRequest({
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
