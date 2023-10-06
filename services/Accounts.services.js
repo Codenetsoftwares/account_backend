@@ -13,6 +13,7 @@ import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
+import { introducerUser } from "../services/introducer.services.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -255,7 +256,12 @@ const AccountServices = {
         balance -= transaction.amount;
       }
     });
-    return balance;
+    const liveBalance = await introducerUser.introducerLiveBalance(introUserId);
+    const currentDue = liveBalance - balance;
+    return {
+      balance: balance,
+      currentDue: currentDue
+    };
   },
 
   getBankBalance: async (bankId) => {
