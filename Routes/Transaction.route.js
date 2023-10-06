@@ -5,6 +5,7 @@ import { EditRequest } from '../models/EditRequest.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
+import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import AccountServices from "../services/Accounts.services.js";
 import { User } from '../models/user.model.js';
 
@@ -337,7 +338,7 @@ const TransactionRoutes = (app) => {
   
   app.post("/api/admin/approve-introducer-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const editRequest = await EditRequest.findById(req.params.requestId);
+      const editRequest = await IntroducerEditRequest.findById(req.params.requestId);
       if (!editRequest) {
         return res.status(404).send({ message: "Edit request not found" });
       }
@@ -360,7 +361,7 @@ const TransactionRoutes = (app) => {
         }
         editRequest.isApproved = true;
         if (editRequest.isApproved === true) {
-          const deletedEditRequest = await EditRequest.deleteOne({_id: req.params.requestId,});
+          const deletedEditRequest = await IntroducerEditRequest.deleteOne({_id: req.params.requestId,});
           console.log(deletedEditRequest);
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });

@@ -10,6 +10,7 @@ import { Bank } from "../models/bank.model.js"
 import { Website } from "../models/website.model.js"
 import { User } from "../models/user.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
+import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 
 const EditApiRoute = (app) => {
 
@@ -169,14 +170,14 @@ app.post("/api/admin/save-introducer-transaction-request", Authorize(["superAdmi
 app.post("/api/delete-introducer-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
 try {
   const id = req.params.id;
-  const editRequest = await EditRequest.findById(id).exec();
+  const editRequest = await IntroducerEditRequest.findById(id).exec();
   if (!editRequest) {
-    return res.status(404).send({ message: "Edit Bank Request not found" });
+    return res.status(404).send({ message: "Edit Request not found" });
   }
   const isApproved = true;
   if (isApproved) {
     await IntroducerTransaction.deleteOne({ _id: editRequest.id }).exec();
-    await EditRequest.deleteOne({ _id: req.params.id }).exec();
+    await IntroducerEditRequest.deleteOne({ _id: req.params.id }).exec();
     res.status(200).send({ message: "Transaction deleted" });
   } else {
     res.status(400).send({ message: "Approval request rejected by super admin" });
