@@ -246,10 +246,10 @@ const AccountServices = {
     return true;
   },
 
-  getIntroBalance: async (introUserId) =>{
-     const intorTranasction = await IntroducerTransaction.find({introUserId:introUserId}).exec();
-     let balance = 0;
-     intorTranasction.forEach((transaction) => {
+  getIntroBalance: async (introUserId) => {
+    const intorTranasction = await IntroducerTransaction.find({ introUserId: introUserId }).exec();
+    let balance = 0;
+    intorTranasction.forEach((transaction) => {
       if (transaction.transactionType === "Deposit") {
         balance += transaction.amount;
       } else {
@@ -262,6 +262,20 @@ const AccountServices = {
       balance: balance,
       currentDue: currentDue
     };
+  },
+
+  IntroducerBalance: async (introUserId) => {
+    const intorTranasction = await IntroducerTransaction.find({ introUserId: introUserId }).exec();
+    let balance = 0;
+    intorTranasction.forEach((transaction) => {
+      if (transaction.transactionType === "Deposit") {
+        balance += transaction.amount;
+      } else {
+        balance -= transaction.amount;
+      }
+    });
+    return balance
+
   },
 
   getBankBalance: async (bankId) => {
