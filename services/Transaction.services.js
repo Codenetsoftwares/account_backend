@@ -405,6 +405,62 @@ const TransactionService = {
     }
     return changedFields;
   },
+
+
+  updateIntroTransaction: async (trans, data) => {
+    const existingTransaction = await IntroducerTransaction.findById(trans);
+
+    const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit", });
+    if (existingEditRequest) { throw { code: 409, message: "Edit Request Already Sent For Approval" }; }
+
+    let updatedTransactionData = {};
+    let changedFields = {};
+
+    if (existingTransaction.transactionType === "Deposit") {
+      updatedTransactionData = {
+        id: trans._id,
+        transactionType: data.transactionType || existingTransaction.transactionType,
+        amount: data.amount || existingTransaction.amount,
+        subAdminId: data.subAdminId || existingTransaction.subAdminId,
+        subAdminName: data.subAdminName || existingTransaction.subAdminName,
+        remarks: data.remarks || existingTransaction.remarks,
+        introducerUserName: data.introducerUserName || existingTransaction.introducerUserName
+      };
+
+      for (const key in data) {
+        if (existingTransaction[key] !== data[key]) {
+          changedFields[key] = data[key];
+        }
+      }
+
+      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        message: "Introducer Deposit transaction is being edited.",
+      });
+      await editRequest.save();
+    } else if (existingTransaction.transactionType === "Withdraw") {
+      updatedTransactionData = {
+        id: trans._id,
+        transactionType: data.transactionType || existingTransaction.transactionType,
+        amount: data.amount || existingTransaction.amount,
+        subAdminId: data.subAdminId || existingTransaction.subAdminId,
+        subAdminName: data.subAdminName || existingTransaction.subAdminName,
+        remarks: data.remarks || existingTransaction.remarks,
+        introducerUserName: data.introducerUserName || existingTransaction.introducerUserName
+      };
+
+      for (const key in data) {
+        if (existingTransaction[key] !== data[key]) {
+          changedFields[key] = data[key];
+        }
+      }
+
+      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        message: "Introducer Withdraw transaction is being edited.",
+      });
+      await editRequest.save();
+    }
+    return changedFields;
+  },
 };
 
 export default TransactionService;
