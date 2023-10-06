@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --experimental-modules index.js"
   },
-  "author": "Codenet Software's",
+  "author": "HOB",
   "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.1.0",
