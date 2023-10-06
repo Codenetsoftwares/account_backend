@@ -3,6 +3,7 @@ import { IntroducerUser } from "../models/introducer.model.js"
 import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
 import AccountServices from "../services/Accounts.services.js"
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
 
 export const IntroducerRoutes = (app) => {
   
@@ -137,7 +138,28 @@ export const IntroducerRoutes = (app) => {
     }
   );
     
-    
+  app.get("/api/introducer-account-summary/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const introSummary = await IntroducerTransaction.find({introUserId: id}).sort({ createdAt: 1 }).exec();
+      // let balances = 0;
+      // let accountData = JSON.parse(JSON.stringify(introSummary));
+      //   accountData.slice(0).reverse().map((data) => {
+      //       if (data.transactionType === "Deposit") {
+      //         balances += data.amount;
+      //         data.balance = balances;
+      //       } else {
+      //         balances -= data.amount;
+      //         data.balance = balances;
+      //       }
+      //     });
+      res.status(200).send(introSummary);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);  
 };
 
 

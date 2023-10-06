@@ -4,6 +4,7 @@ import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import { BankTransaction } from "../models/BankTransaction.model.js";
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import AccountServices from "../services/Accounts.services.js";
 import { User } from '../models/user.model.js';
 
@@ -111,19 +112,36 @@ const TransactionRoutes = (app) => {
       }
     }
   );
+
+  app.put(
+    "/api/admin/edit-introducer-transaction-request/:id",
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
+    async (req, res) => {
+      try {
+        const trans = await IntroducerTransaction.findById(req.params.id);
+        const updateResult = await TransactionServices.updateIntroTransaction(trans, req.body);
+        if (updateResult) {
+          res.status(201).send("Transaction update request send to Super Admin");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
   
   // API To View Edit Transaction Details
 
   app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
     try {
       const dbBankData = await EditRequest.find().exec();
-      let bankData = JSON.parse(JSON.stringify(dbBankData));
-      for (var index = 0; index < bankData.length; index++) {
-        bankData[index].balance = await AccountServices.getEditedBankBalance(
-          bankData[index]._id
-        );
-      }
-      res.status(200).send(bankData);
+      // let bankData = JSON.parse(JSON.stringify(dbBankData));
+      // for (var index = 0; index < bankData.length; index++) {
+      //   bankData[index].balance = await AccountServices.getEditedBankBalance(
+      //     bankData[index]._id
+      //   );
+      // }
+      res.status(200).send(dbBankData);
     } catch (error) {
       console.log(error);
       res.status(500).send("Internal Server error");
@@ -317,6 +335,52 @@ const TransactionRoutes = (app) => {
     }
   });
   
+  app.post("/api/admin/approve-introducer-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const editRequest = await EditRequest.findById(req.params.requestId);
+      if (!editRequest) {
+        return res.status(404).send({ message: "Edit request not found" });
+      }
+      const { isApproved } = req.body;
+      if (typeof isApproved !== "boolean") {
+        return res.status(400).send({ message: "isApproved field must be a boolean value" });
+      }
+      if (!editRequest.isApproved) {
+        const updatedTransaction = await IntroducerTransaction.updateOne({ _id: editRequest.id }, {
+          transactionType: editRequest.transactionType,
+          remarks: editRequest.remarks,
+          amount: editRequest.amount,
+          subAdminId: editRequest.subAdminId,
+          subAdminName: editRequest.subAdminName,
+          introducerUserName: editRequest.introducerUserName,
+        });
+        console.log("updatedTransaction", updatedTransaction);
+        if (updatedTransaction.matchedCount === 0) {
+          return res.status(404).send({ message: "Transaction not found" });
+        }
+        editRequest.isApproved = true;
+        if (editRequest.isApproved === true) {
+          const deletedEditRequest = await EditRequest.deleteOne({_id: req.params.requestId,});
+          console.log(deletedEditRequest);
+          if (!deletedEditRequest) {
+            return res.status(500).send({ message: "Error deleting edit request" });
+          }
+  
+          return res.status(200).send({
+            message: "Edit request approved and data updated",
+            updatedTransaction,
+          });
+        } else {
+          return res.status(200).send({ message: "Edit request rejected" });
+        }
+      } else {
+        return res.status(200).send({ message: "Edit request rejected" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  });
 };
 
 export default TransactionRoutes;
