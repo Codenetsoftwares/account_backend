@@ -5,6 +5,9 @@ import { User } from "../models/user.model.js";
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Bank } from "../models/bank.model.js";
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
+import { IntroducerUser } from "../models/introducer.model.js"
+import { introducerUser } from "../services/introducer.services.js";
 import AccountServices from "../services/Accounts.services.js";
 
 const TransactionService = {
@@ -36,18 +39,18 @@ const TransactionService = {
         throw { code: 400, message: "Payment Method is required" };
       }
 
-      const existingTransaction = await Transaction.findOne({transactionID: transactionID}).exec();
-      if (existingTransaction) {return res.status(400).json({ status: false, message: "Transaction already exists" });}
-      
+      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
+      if (existingTransaction) { return res.status(400).json({ status: false, message: "Transaction already exists" }); }
+
       // Website
       const dbWebsiteData = await Website.findOne({ websiteName: websiteName }).exec();
       const websiteId = dbWebsiteData._id;
       const websiteBalance = await AccountServices.getWebsiteBalance(websiteId);
       const totalBalance = bonus + amount;
-        if (websiteBalance < totalBalance) {
-          throw { code: 400, message: "Insufficient Website balance" };
-        }
-      console.log("totalBalance",totalBalance)
+      if (websiteBalance < totalBalance) {
+        throw { code: 400, message: "Insufficient Website balance" };
+      }
+      console.log("totalBalance", totalBalance)
 
 
       // Bank
@@ -69,7 +72,7 @@ const TransactionService = {
       const introducersUserName = user.introducersUserName;
       // Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
       if (transactionType === "Deposit") {
-       
+
         const newTransaction = new Transaction({
           bankId: dbBankData._id,
           websiteId: dbWebsiteData._id,
@@ -89,16 +92,16 @@ const TransactionService = {
           createdAt: new Date(),
           isSubmit: false,
         });
-       
+
         await newTransaction.save();
         const user = await User.findOne({ userName: userName });
-        if (!user) {return res.status(404).json({ status: false, message: "User not found" });}
+        if (!user) { return res.status(404).json({ status: false, message: "User not found" }); }
         user.transactionDetail.push(newTransaction);
         await user.save();
       }
       // Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
       if (transactionType === "Withdraw") {
-     
+
         const newTransaction = new Transaction({
           bankId: dbBankData._id,
           websiteId: dbWebsiteData._id,
@@ -119,12 +122,52 @@ const TransactionService = {
           isSubmit: false,
         });
         await newTransaction.save();
-      
+
         const user = await User.findOne({ userName: userName });
 
-        if (!user) {return res.status(404).json({ status: false, message: "User not found" });}
+        if (!user) { return res.status(404).json({ status: false, message: "User not found" }); }
         user.transactionDetail.push(newTransaction);
         await user.save();
+      }
+      return res.status(200).json({ status: true, message: "Transaction created successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  },
+
+  createIntroducerTransaction: async (req, res, subAdminName) => {
+    try {
+      const { amount, transactionType, remarks, subAdminId, subAdminName, introducerUserName } = req.body;
+
+      const introId = await IntroducerUser.findOne({ userName: introducerUserName }).exec();
+      if (transactionType === "Deposit") {
+
+        const NewIntroducerTransaction = new IntroducerTransaction({
+          introUserId: introId._id,
+          amount: amount,
+          transactionType: transactionType,
+          remarks: remarks,
+          subAdminId: subAdminId,
+          subAdminName: subAdminName,
+          introducerUserName: introducerUserName,
+          createdAt: new Date(),
+        });
+        await NewIntroducerTransaction.save();
+      }
+      if (transactionType === "Withdraw") {
+
+        const NewIntroducerTransaction = new IntroducerTransaction({
+          introUserId: introId._id,
+          amount: amount,
+          transactionType: transactionType,
+          remarks: remarks,
+          subAdminId: subAdminId,
+          subAdminName: subAdminName,
+          introducerUserName: introducerUserName,
+          createdAt: new Date(),
+        });
+        await NewIntroducerTransaction.save();
       }
       return res.status(200).json({ status: true, message: "Transaction created successfully" });
     } catch (e) {
@@ -166,8 +209,8 @@ const TransactionService = {
   updateTransaction: async (trans, data) => {
     const existingTransaction = await Transaction.findById(trans);
 
-    const existingEditRequest = await EditRequest.findOne({id: trans,type: "Edit",});
-    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+    const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit", });
+    if (existingEditRequest) { throw { code: 409, message: "Edit Request Already Sent For Approval" }; }
 
     let updatedTransactionData = {};
     let changedFields = {};
@@ -184,7 +227,7 @@ const TransactionService = {
         bankName: data.bankName || existingTransaction.bankName,
         websiteName: data.websiteName || existingTransaction.websiteName,
         remarks: data.remarks || existingTransaction.remarks,
-        userName : data.userName || existingTransaction.userName
+        userName: data.userName || existingTransaction.userName
       };
 
       for (const key in data) {
@@ -238,12 +281,12 @@ const TransactionService = {
   updateBankTransaction: async (bankTransaction, data) => {
     const existingBankTransaction = await BankTransaction.findById(bankTransaction);
 
-    const existingEditRequest = await EditRequest.findOne({id: bankTransaction,type: "Edit",});
-    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+    const existingEditRequest = await EditRequest.findOne({ id: bankTransaction, type: "Edit", });
+    if (existingEditRequest) { throw { code: 409, message: "Edit Request Already Sent For Approval" }; }
 
     let updatedTransactionData = {};
     let changedFields = {};
-   
+
     if (existingBankTransaction.transactionType === "Manual-Bank-Deposit") {
       for (const key in data) {
         if (existingBankTransaction[key] !== data[key]) {
@@ -262,7 +305,8 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         accountNumber: existingBankTransaction.accountNumber,
       };
-      const editRequest = new EditRequest({...updatedTransactionData,changedFields,isApproved: false, type: "Edit",
+      const editRequest = new EditRequest({
+        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
         message: "Manual-Bank-Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -287,8 +331,9 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         accountNumber: existingBankTransaction.accountNumber,
       };
-      const editRequest = new EditRequest({...updatedTransactionData, changedFields, isApproved: false,type: "Edit",
-      message: "Manual-Bank-Withdraw transaction is being edited.",
+      const editRequest = new EditRequest({
+        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        message: "Manual-Bank-Withdraw transaction is being edited.",
       });
       await editRequest.save();
     }
@@ -298,8 +343,8 @@ const TransactionService = {
   updateWebsiteTransaction: async (websiteTransaction, data) => {
     const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
 
-    const existingEditRequest = await EditRequest.findOne({id: websiteTransaction,type: "Edit",});
-    if (existingEditRequest) {throw {code: 409,message: "Edit Request Already Sent For Approval"};}
+    const existingEditRequest = await EditRequest.findOne({ id: websiteTransaction, type: "Edit", });
+    if (existingEditRequest) { throw { code: 409, message: "Edit Request Already Sent For Approval" }; }
 
     let updatedTransactionData = {};
     let changedFields = {};

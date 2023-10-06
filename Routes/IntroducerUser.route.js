@@ -2,6 +2,7 @@ import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerUser } from "../models/introducer.model.js"
 import { AuthorizeRole } from "../middleware/auth.js";
 import { User } from "../models/user.model.js";
+import AccountServices from "../services/Accounts.services.js"
 
 export const IntroducerRoutes = (app) => {
   
@@ -47,7 +48,20 @@ export const IntroducerRoutes = (app) => {
         try {
           const userId = req.user;
           const user = await IntroducerUser.findById(userId).exec();
-          res.status(201).send(user);
+          const introUserId = user._id;
+          const TPDLT = await AccountServices.getIntroBalance(introUserId);
+          const response = {
+          _id: user._id,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          role: user.role,
+          userName: user.userName,
+          balance: TPDLT,
+        };
+        const liveBalance = await introducerUser.introducerLiveBalance(introUserId);
+        const currentDue = liveBalance - response.balance;
+        response.currentDue = currentDue;
+        res.status(201).send(response);
         } catch (e) {
           console.error(e);
           res.status(e.code).send({ message: e.message })

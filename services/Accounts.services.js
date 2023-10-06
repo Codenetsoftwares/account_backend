@@ -12,6 +12,7 @@ import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 import { EditRequest } from "../models/EditRequest.model.js";
 import { Transaction } from "../models/transaction.js";
 import { IntroducerUser } from "../models/introducer.model.js";
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -242,6 +243,19 @@ const AccountServices = {
 
     await editRequest.save();
     return true;
+  },
+
+  getIntroBalance: async (introUserId) =>{
+     const intorTranasction = await IntroducerTransaction.find({introUserId:introUserId}).exec();
+     let balance = 0;
+     intorTranasction.forEach((transaction) => {
+      if (transaction.transactionType === "Deposit") {
+        balance += transaction.amount;
+      } else {
+        balance -= transaction.amount;
+      }
+    });
+    return balance;
   },
 
   getBankBalance: async (bankId) => {
