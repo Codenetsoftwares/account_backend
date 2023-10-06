@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { IntroducerUser } from "../models/introducer.model.js";
 import { Admin } from "../models/admin_user.js";
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -226,7 +227,6 @@ export const introducerUser = {
           message: `Introducer with ID ${id} not found`,
         };
       }
-  
       const IntroducerId = introId.userName;
       const userIntroId = await User.find({
         introducersUserName: IntroducerId,
@@ -239,7 +239,7 @@ export const introducerUser = {
         };
       }
   
-      let totalAmount = 0;
+      let liveBalance = 0;
       for (const user of userIntroId) {
         const introducerpercent = user.introducerPercentage;
         const transDetails = user.transactionDetail;
@@ -255,6 +255,8 @@ export const introducerUser = {
             totalWith += Number(res.amount);
           }
         });
+        console.log('dep',totalDep)
+        console.log('wid',totalWith)
   
         let amount = 0;
         if (totalDep > totalWith) {
@@ -265,10 +267,10 @@ export const introducerUser = {
           amount = (introducerpercent / 100) * diff;
         }
   
-        totalAmount += amount;
+        liveBalance += amount;
       }
-  
-      return totalAmount;
+        
+      return liveBalance;
     } catch (error) {
       console.error(error);
       throw error;

@@ -11,6 +11,8 @@ import { userservice } from "../services/user.service.js";
 import lodash from "lodash";
 import { Website } from "../models/website.model.js";
 import { Bank } from "../models/bank.model.js";
+import TransactionServices from "../services/Transaction.services.js"
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -256,8 +258,15 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]),
     async (req, res) => {
       try {
-        const introducerUser = await IntroducerUser.find({}).exec();
-        res.send(introducerUser);
+        const introducerUser = await IntroducerUser.find().exec();
+        let introData = JSON.parse(JSON.stringify(introducerUser));
+
+        for (var index = 0; index < introData.length; index++) {
+          introData[index].balance = await AccountServices.getIntroBalance(
+            introData[index]._id
+          );
+        }
+        res.send(introData);
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -624,6 +633,40 @@ const AccountsRoute = (app) => {
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
+  
+  app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin"]), async (req, res) => {
+      try {
+        const subAdminName = req.user;
+        await TransactionServices.createIntroducerTransaction(req, res, subAdminName);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get("/api/admin/introducer-account-summary/:id", Authorize(["superAdmin"]), async (req, res) => {
+      try {
+        const id = req.params.id;
+        const introSummary = await IntroducerTransaction.find({introUserId: id}).sort({ createdAt: 1 }).exec();
+        let balances = 0;
+        let accountData = JSON.parse(JSON.stringify(introSummary));
+          accountData.slice(0).reverse().map((data) => {
+              if (data.transactionType === "Deposit") {
+                balances += data.amount;
+                data.balance = balances;
+              } else {
+                balances -= data.amount;
+                data.balance = balances;
+              }
+            });
+        res.status(200).send(accountData);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
       }
     }
   );
