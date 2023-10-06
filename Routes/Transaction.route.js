@@ -149,6 +149,16 @@ const TransactionRoutes = (app) => {
     }
   });
 
+  app.get('/api/superadmin/view-edit-introducer-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const introEdit = await IntroducerEditRequest.find().exec();
+      res.status(200).send(introEdit);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal Server error");
+    }
+  });
+
   // API To View Approve Transaction Details
   
   app.post("/api/admin/approve-transaction-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
