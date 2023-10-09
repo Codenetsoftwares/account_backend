@@ -129,6 +129,7 @@ const AccountServices = {
     const existingUser = await AccountServices.findAdmin({
       userName: userName,
     });
+    console.log(existingUser)
     if (!existingUser) {
       throw { code: 401, message: "Invalid User Name or password" };
     }
