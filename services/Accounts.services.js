@@ -259,6 +259,7 @@ const AccountServices = {
     });
     const liveBalance = await introducerUser.introducerLiveBalance(introUserId);
     const currentDue = liveBalance - balance;
+    console.log("currentDue", currentDue)
     return {
       balance: balance,
       currentDue: currentDue
