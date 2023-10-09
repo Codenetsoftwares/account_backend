@@ -228,15 +228,15 @@ export const introducerUser = {
         };
       }
       const IntroducerId = introId.userName;
-      const userIntroId = await User.find({
-        introducersUserName: IntroducerId,
-      }).exec();
-  
+      const userIntroId = await User.find({introducersUserName: IntroducerId}).exec();
+      console.log("userIntroId", userIntroId)
+
       if (userIntroId.length === 0) {
-        throw {
-          code: 404,
-          message: `There is no user introduced by Introducer with ID ${IntroducerId}`,
-        };
+        // throw {
+        //   code: 404,
+        //   message: `There is no user introduced by Introducer with ID ${IntroducerId}`,
+        // };
+        return 0;
       }
   
       let liveBalance = 0;
