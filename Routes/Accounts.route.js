@@ -58,7 +58,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/create/user-admin",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Create-SubAdmin"]),
     async (req, res) => {
       try {
         await AccountServices.createAdmin(req.body);
