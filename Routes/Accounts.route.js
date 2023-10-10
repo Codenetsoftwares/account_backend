@@ -58,7 +58,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/create/user-admin",
-    Authorize(["superAdmin", "Create-SubAdmin"]),
+    // Authorize(["superAdmin", "Create-SubAdmin"]),
     async (req, res) => {
       try {
         await AccountServices.createAdmin(req.body);
@@ -76,7 +76,7 @@ const AccountsRoute = (app) => {
 
   app.get(
     "/api/user-profile/:page",
-    Authorize(["superAdmin", "Profile-View", "User-Profile-View", "Create-User"]),
+    Authorize(["superAdmin", "Profile-View", "User-Profile-View"]),
     async (req, res) => {
       const page = req.params.page;
       try {
@@ -143,6 +143,10 @@ const AccountsRoute = (app) => {
       "Transaction-View",
       "Transaction-Edit-Request",
       "Transaction-Delete-Request",
+      "Website-View",
+      "Bank-View",
+      "Profile-View",
+      "Introducer-Profile-View"
     ]),
     async (req, res) => {
       try {
@@ -166,6 +170,8 @@ const AccountsRoute = (app) => {
       "Transaction-View",
       "Transaction-Edit-Request",
       "Transaction-Delete-Request",
+      "Website-View",
+      "Bank-View"
     ]),
     async (req, res) => {
       try {
@@ -205,7 +211,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/admin/accounts/introducer/register",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Create-Introducer", "Create-Admin"]),
     async (req, res) => {
       try {
         await introducerUser.createintroducerUser(req.body);
@@ -386,6 +392,13 @@ const AccountsRoute = (app) => {
       "Create-Deposit-Transaction",
       "Create-Withdraw-Transaction",
       "Create-Transaction",
+      "Website-View",
+      "Bank-View",
+      "Profile-View",
+      "Create-User",
+      "Create-Admin",
+      "Transaction-Edit-Request",
+      "Transaction-Delete-Request"
     ]),
     async (req, res) => {
       try {
@@ -400,7 +413,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/admin/user/register",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Create-Admin", "Create-User"]),
     async (req, res) => {
       try {
         await userservice.createUser(req.body);
@@ -560,7 +573,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/admin/user/reset-password",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Create-User", "Create-Admin", "Profile-View", "User-Profile-View"]),
     async (req, res) => {
       try {
         const { userName, password } = req.body;
@@ -577,7 +590,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/admin/intorducer/reset-password",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin", "Create-Admin", "Create-Introducer", "Introducer-Profile-View", "Profile-View"]),
     async (req, res) => {
       try {
         const { userName, password } = req.body;
@@ -594,7 +607,7 @@ const AccountsRoute = (app) => {
 
   app.put(
     "/api/admin/subAdmin-profile-edit/:id",
-    Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]),
+    Authorize(["superAdmin"]),
     async (req, res) => {
       try {
         const id = await Admin.findById(req.params.id);
@@ -635,7 +648,7 @@ const AccountsRoute = (app) => {
 
   app.post(
     "/api/admin/filter-data/:page",
-    Authorize(["superAdmin"]),
+    Authorize(["superAdmin","Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Website-View", "Bank-View"]),
     async (req, res) => {
       try {
         const {
@@ -716,7 +729,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin"]), async (req, res) => {
+  app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const subAdminName = req.user;
       await TransactionServices.createIntroducerTransaction(req, res, subAdminName);
@@ -727,7 +740,7 @@ const AccountsRoute = (app) => {
   }
   );
 
-  app.get("/api/admin/introducer-account-summary/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/introducer-account-summary/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const id = req.params.id;
       const introSummary = await IntroducerTransaction.find({ introUserId: id }).sort({ createdAt: 1 }).exec();
