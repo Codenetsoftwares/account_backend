@@ -198,6 +198,21 @@ app.get("/api/user-profile-data/:userId", AuthorizeRole(["user"]), async (req, r
   }
 });
 
+
+app.post(
+  "/api/user/reset-password",
+  Authorize(["user"]),
+  async (req, res) => {
+    try {
+      const { userName, oldPassword, password } = req.body;
+      await userservice.userPasswordResetCode(userName, oldPassword, password);
+      res.status(200).send({ code: 200, message: "Password reset successful!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+);
 };
 
 
