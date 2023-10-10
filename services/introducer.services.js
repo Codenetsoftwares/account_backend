@@ -229,7 +229,7 @@ export const introducerUser = {
       }
       const IntroducerId = introId.userName;
       const userIntroId = await User.find({introducersUserName: IntroducerId}).exec();
-      console.log("userIntroId", userIntroId)
+      // console.log("userIntroId", userIntroId)
 
       if (userIntroId.length === 0) {
         // throw {
@@ -255,8 +255,8 @@ export const introducerUser = {
             totalWith += Number(res.amount);
           }
         });
-        console.log('dep',totalDep)
-        console.log('wid',totalWith)
+        // console.log('dep',totalDep)
+        // console.log('wid',totalWith)
   
         let amount = 0;
         if (totalDep > totalWith) {

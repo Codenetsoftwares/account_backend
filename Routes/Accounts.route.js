@@ -75,11 +75,35 @@ const AccountsRoute = (app) => {
   // API To View User Profiles
 
   app.get(
-    "/api/user-profile",
-    Authorize(["superAdmin", "Profile-View", "User-Profile-View"]),
+    "/api/user-profile/:page",
+    Authorize(["superAdmin", "Profile-View", "User-Profile-View", "Create-User"]),
     async (req, res) => {
+      const page = req.params.page;
       try {
         const user = await User.find({}).exec();
+        const allIntroDataLength = user.length;
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        console.log('pageNumber', pageNumber)
+        while ((page - 1) * 10 < allIntroDataLength) {
+          console.log('first')
+          let SecondArray = [];
+          const Limit = page * 10;
+          console.log("Limit", Limit);
+
+          for (let j = Limit - 10; j < Limit; j++) {
+            console.log('all', [j])
+            if (user[j] !== undefined) {
+              SecondArray.push(user[j]);
+            }
+          }
+
+          return res.status(200).json({ SecondArray, pageNumber });
+        }
+        if (page > pageNumber) {
+          return res
+            .status(404)
+            .json({ message: "No data found for the selected criteria." });
+        }
         res.send(user);
       } catch (e) {
         console.error(e);
@@ -254,9 +278,11 @@ const AccountsRoute = (app) => {
   );
 
   app.get(
-    "/api/intoducer-profile",
-    Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]),
+    "/api/intoducer-profile/:page",
+    Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View", "Create-Introducer"]),
     async (req, res) => {
+      const page = req.params.page;
+      console.log('page', page)
       try {
         const introducerUser = await IntroducerUser.find().exec();
         let introData = JSON.parse(JSON.stringify(introducerUser));
@@ -265,6 +291,30 @@ const AccountsRoute = (app) => {
           introData[index].balance = await AccountServices.getIntroBalance(
             introData[index]._id
           );
+        }
+        // console.log('intro',introData)
+        const allIntroDataLength = introData.length;
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        console.log('pageNumber', pageNumber)
+        while ((page - 1) * 10 < allIntroDataLength) {
+          console.log('first')
+          let SecondArray = [];
+          const Limit = page * 10;
+          console.log("Limit", Limit);
+
+          for (let j = Limit - 10; j < Limit; j++) {
+            console.log('all', [j])
+            if (introData[j] !== undefined) {
+              SecondArray.push(introData[j]);
+            }
+          }
+
+          return res.status(200).json({ SecondArray, pageNumber });
+        }
+        if (page > pageNumber) {
+          return res
+            .status(404)
+            .json({ message: "No data found for the selected criteria." });
         }
         res.send(introData);
       } catch (e) {
@@ -365,12 +415,13 @@ const AccountsRoute = (app) => {
   );
 
   app.get(
-    "/api/admin/view-sub-admins",
+    "/api/admin/view-sub-admins/:page",
     Authorize(["superAdmin"]),
     async (req, res) => {
+      const page = req.params.page;
       try {
         const allAdmins = await Admin.find().exec();
-        console.log(allAdmins);
+        console.log('allAdmins', allAdmins);
         let arr = [];
         for (let i = 0; i < allAdmins.length; i++) {
           if (!allAdmins[i].roles.includes("superAdmin")) {
@@ -379,9 +430,37 @@ const AccountsRoute = (app) => {
             arr.push(obj);
           }
         }
+        console.log('all', allAdmins);
+
+
+        const allIntroDataLength = allAdmins.length;
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        console.log('pageNumber', pageNumber)
+        while ((page - 1) * 10 < allIntroDataLength) {
+          console.log('first')
+          let SecondArray = [];
+          const Limit = page * 10;
+          console.log("Limit", Limit);
+
+          for (let j = Limit - 10; j < Limit; j++) {
+            console.log('all', [j])
+            if (allAdmins[j] !== undefined) {
+              SecondArray.push(allAdmins[j]);
+            }
+          }
+
+          return res.status(200).json({ SecondArray, pageNumber });
+        }
+        if (page > pageNumber) {
+          return res
+            .status(404)
+            .json({ message: "No data found for the selected criteria." });
+        }
+
         arr.length === 0
           ? res.status(200).send("No sub-admins")
           : res.status(200).send(arr);
+
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -607,20 +686,20 @@ const AccountsRoute = (app) => {
         const allTransactions = sortedTransactions.reverse();
         const ArrayLength = allTransactions.length;
         let pageNumber = Math.floor(ArrayLength / 10 + 1);
-        console.log("pageNumber",pageNumber);
+        console.log("pageNumber", pageNumber);
         while ((page - 1) * 10 < ArrayLength) {
           let SecondArray = [];
           const Limit = page * 10;
-          console.log("Limit",Limit);
+          console.log("Limit", Limit);
 
           for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all',  [j])
-            if(allTransactions[j] !== undefined){
+            console.log('all', [j])
+            if (allTransactions[j] !== undefined) {
               SecondArray.push(allTransactions[j]);
             }
           }
-          
-          return res.status(200).json({ SecondArray,pageNumber });
+
+          return res.status(200).json({ SecondArray, pageNumber });
         }
 
         if (page > pageNumber) {
@@ -636,39 +715,39 @@ const AccountsRoute = (app) => {
       }
     }
   );
-  
+
   app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin"]), async (req, res) => {
-      try {
-        const subAdminName = req.user;
-        await TransactionServices.createIntroducerTransaction(req, res, subAdminName);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
+    try {
+      const subAdminName = req.user;
+      await TransactionServices.createIntroducerTransaction(req, res, subAdminName);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
+  }
   );
 
   app.get("/api/admin/introducer-account-summary/:id", Authorize(["superAdmin"]), async (req, res) => {
-      try {
-        const id = req.params.id;
-        const introSummary = await IntroducerTransaction.find({introUserId: id}).sort({ createdAt: 1 }).exec();
-        let balances = 0;
-        let accountData = JSON.parse(JSON.stringify(introSummary));
-          accountData.slice(0).reverse().map((data) => {
-              if (data.transactionType === "Deposit") {
-                balances += data.amount;
-                data.balance = balances;
-              } else {
-                balances -= data.amount;
-                data.balance = balances;
-              }
-            });
-        res.status(200).send(accountData);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
+    try {
+      const id = req.params.id;
+      const introSummary = await IntroducerTransaction.find({ introUserId: id }).sort({ createdAt: 1 }).exec();
+      let balances = 0;
+      let accountData = JSON.parse(JSON.stringify(introSummary));
+      accountData.slice(0).reverse().map((data) => {
+        if (data.transactionType === "Deposit") {
+          balances += data.amount;
+          data.balance = balances;
+        } else {
+          balances -= data.amount;
+          data.balance = balances;
+        }
+      });
+      res.status(200).send(accountData);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
+  }
   );
 };
 
