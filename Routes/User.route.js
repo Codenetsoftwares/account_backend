@@ -201,7 +201,7 @@ app.get("/api/user-profile-data/:userId", AuthorizeRole(["user"]), async (req, r
 
 app.post(
   "/api/user/reset-password",
-  Authorize(["user"]),
+  AuthorizeRole(["user"]),
   async (req, res) => {
     try {
       const { userName, oldPassword, password } = req.body;
