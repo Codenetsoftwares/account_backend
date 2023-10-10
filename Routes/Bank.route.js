@@ -108,7 +108,7 @@ const BankRoutes = (app) => {
 
   app.get(
     "/api/get-bank-name",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction"]),
+    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction","Create-Deposit-Transaction","Create-Withdraw-Transaction"]),
     async (req, res) => {
       try {
         let dbBankData = await Bank.find().exec();
