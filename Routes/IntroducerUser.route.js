@@ -163,7 +163,7 @@ export const IntroducerRoutes = (app) => {
 
   app.post(
     "/api/introducer/reset-password",
-    Authorize(["introducer"]),
+    AuthorizeRole(["introducer"]),
     async (req, res) => {
       try {
         const { userName, oldPassword, password } = req.body;
