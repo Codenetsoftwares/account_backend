@@ -133,7 +133,7 @@ const TransactionRoutes = (app) => {
   
   // API To View Edit Transaction Details
 
-  app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
+  app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const dbBankData = await EditRequest.find().exec();
       // let bankData = JSON.parse(JSON.stringify(dbBankData));
@@ -149,7 +149,7 @@ const TransactionRoutes = (app) => {
     }
   });
 
-  app.get('/api/superadmin/view-edit-introducer-transaction-requests', Authorize(["superAdmin"]), async (req, res) => {
+  app.get('/api/superadmin/view-edit-introducer-transaction-requests', Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const introEdit = await IntroducerEditRequest.find().exec();
       res.status(200).send(introEdit);
@@ -161,7 +161,7 @@ const TransactionRoutes = (app) => {
 
   // API To View Approve Transaction Details
   
-  app.post("/api/admin/approve-transaction-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/admin/approve-transaction-edit-request/:requestId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const editRequest = await EditRequest.findById(req.params.requestId);
       if (!editRequest) {

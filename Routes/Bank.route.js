@@ -10,7 +10,7 @@ const BankRoutes = (app) => {
 
   app.post(
     "/api/add-bank-name",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
+    Authorize(["superAdmin", "Bank-View", "Transaction-View" ]),
     async (req, res) => {
       try {
         const userName = req.user;
@@ -263,6 +263,9 @@ const BankRoutes = (app) => {
       "superAdmin",
       "Dashboard-View",
       "Transaction-View",
+      "Bank-View",
+      "Website-View",
+      "Profile-View",
       "Transaction-Edit-Request",
       "Transaction-Delete-Request",
     ]),

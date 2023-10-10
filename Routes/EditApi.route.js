@@ -36,7 +36,7 @@ const EditApiRoute = (app) => {
   
 
 
-app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-bank-transaction/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
@@ -78,7 +78,7 @@ app.post("/api/admin/save-website-transaction-request", Authorize(["superAdmin",
   }
 });
 
-app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-website-transaction/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
@@ -120,7 +120,7 @@ app.post("/api/admin/save-transaction-request", Authorize(["superAdmin", "Transa
   }
 });
 
-app.post("/api/delete-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-transaction/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const editRequest = await EditRequest.findById(id).exec();
@@ -167,7 +167,7 @@ app.post("/api/admin/save-introducer-transaction-request", Authorize(["superAdmi
 
 
 
-app.post("/api/delete-introducer-transaction/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-introducer-transaction/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
 try {
   const id = req.params.id;
   const editRequest = await IntroducerEditRequest.findById(id).exec();
@@ -189,7 +189,7 @@ try {
 });
 
 
-app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.delete("/api/reject/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const result = await EditRequest.deleteOne({ _id: id });
@@ -206,7 +206,7 @@ app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
 
 //   API For Bank Detail Edit approval
 
-app.post("/api/admin/approve-bank-detail-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/approve-bank-detail-edit-request/:requestId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const editRequest = await EditBankRequest.findById(req.params.requestId);
     if (!editRequest) {
@@ -253,7 +253,7 @@ app.post("/api/admin/approve-bank-detail-edit-request/:requestId", Authorize(["s
 
 // API for Website name Edit API
 
-app.post("/api/admin/approve-website-detail-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/approve-website-detail-edit-request/:requestId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const editRequest = await EditWebsiteRequest.findById(req.params.requestId);
     if (!editRequest) {
@@ -313,7 +313,7 @@ app.post("/api/admin/save-bank-request", Authorize(["superAdmin", "Transaction-V
   }
 });
 
-app.post("/api/delete-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-bank/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const editRequest = await EditBankRequest.findById(id).exec();
@@ -337,7 +337,7 @@ app.post("/api/delete-bank/:id", Authorize(["superAdmin"]), async (req, res) => 
   }
 });
 
-app.post("/api/admin/save-website-request", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/admin/save-website-request", Authorize(["superAdmin", "Transaction-View", "Website-View"]), async (req, res) => {
   try {
     const { requestId } = req.body;
     console.log(requestId);
@@ -357,7 +357,7 @@ app.post("/api/admin/save-website-request", Authorize(["superAdmin"]), async (re
   }
 });
 
-app.post("/api/delete-website/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.post("/api/delete-website/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const editRequest = await EditWebsiteRequest.findById(id).exec();
@@ -381,7 +381,7 @@ app.post("/api/delete-website/:id", Authorize(["superAdmin"]), async (req, res) 
   }
 });
 
-app.delete("/api/reject/bank-detail/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.delete("/api/reject/bank-detail/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const result = await EditBankRequest.deleteOne({ _id: id });
@@ -396,7 +396,7 @@ app.delete("/api/reject/bank-detail/:id", Authorize(["superAdmin"]), async (req,
   }
 });
 
-app.delete("/api/reject/website-detail/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.delete("/api/reject/website-detail/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const result = await EditWebsiteRequest.deleteOne({ _id: id });

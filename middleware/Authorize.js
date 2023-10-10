@@ -162,7 +162,7 @@ export const Authorize = (roles) => {
         }
       }
 
-      if (roles.includes("Create-SubAdmin")) {
+      if (roles.includes("Create-Admin")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
@@ -181,6 +181,15 @@ export const Authorize = (roles) => {
         }
       }
       if (roles.includes("Create-Introducer")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+      if (roles.includes("RequestAdmin")) {
         existingUser = await Admin.findById(user.id).exec();
         if (!existingUser) {
           return res.status(401).send({
