@@ -749,6 +749,21 @@ const AccountsRoute = (app) => {
     }
   }
   );
+
+  app.post(
+    "/api/super-admin/reset-password",
+    Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Bank-View", "Website-View", "Profile-View", "User-Profile-View", "Introducer-Profile-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction", "Create-SubAdmin", "Create-User", "Create-Introducer"]),
+    async (req, res) => {
+      try {
+        const { userName, oldPassword, password } = req.body;
+        await AccountServices.SuperAdminPasswordResetCode(userName, oldPassword, password);
+        res.status(200).send({ code: 200, message: "Password reset successful!" });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
 };
 
 export default AccountsRoute;
