@@ -277,5 +277,44 @@ export const introducerUser = {
     }
   },
   
-  
+  introducerPasswordResetCode: async (userName, oldPassword, password) => {
+    const existingUser = await introducerUser.findIntroducerUser({
+      userName: userName,
+    });
+
+    const oldPasswordIsCorrect = await bcrypt.compare(
+      oldPassword,
+      existingUser.password
+    );
+
+    if (!oldPasswordIsCorrect) {
+      throw {
+        code: 401,
+        message: "Invalid old password",
+      };
+    }
+
+    const passwordIsDuplicate = await bcrypt.compare(
+      password,
+      existingUser.password
+    );
+
+    if (passwordIsDuplicate) {
+      throw {
+        code: 409,
+        message: "New Password cannot be the same as existing password",
+      };
+    }
+
+    const passwordSalt = await bcrypt.genSalt();
+    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+
+    existingUser.password = encryptedPassword;
+    existingUser.save().catch((err) => {
+      console.error(err);
+      throw { code: 500, message: "Failed to save new password" };
+    });
+
+    return true;
+  },
 };

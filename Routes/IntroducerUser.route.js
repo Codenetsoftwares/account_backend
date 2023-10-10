@@ -160,6 +160,21 @@ export const IntroducerRoutes = (app) => {
     }
   }
   );
+
+  app.post(
+    "/api/introducer/reset-password",
+    Authorize(["introducer"]),
+    async (req, res) => {
+      try {
+        const { userName, oldPassword, password } = req.body;
+        await introducerUser.introducerPasswordResetCode(userName, oldPassword, password);
+        res.status(200).send({ code: 200, message: "Password reset successful!" });
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
 };
 
 
