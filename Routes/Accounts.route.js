@@ -700,28 +700,42 @@ const AccountsRoute = (app) => {
         const ArrayLength = allTransactions.length;
         let pageNumber = Math.floor(ArrayLength / 10 + 1);
         console.log("pageNumber", pageNumber);
-        while ((page - 1) * 10 < ArrayLength) {
-          let SecondArray = [];
-          const Limit = page * 10;
-          console.log("Limit", Limit);
+        // while ((page - 1) * 10 < ArrayLength) {
+        //   let SecondArray = [];
+        //   const Limit = page * 10;
+        //   console.log("Limit", Limit);
 
-          for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all', [j])
-            if (allTransactions[j] !== undefined) {
-              SecondArray.push(allTransactions[j]);
-            }
-          }
+        //   for (let j = Limit - 10; j < Limit; j++) {
+        //     console.log('all', [j])
+        //     if (allTransactions[j] !== undefined) {
+        //       SecondArray.push(allTransactions[j]);
+        //     }
+        //   }
 
-          return res.status(200).json({ SecondArray, pageNumber });
-        }
-
+        //   return res.status(200).json({ SecondArray, pageNumber });
+        // }
+        const Limit = page * 10;
+        const startIdx = Limit - 10;
+        const endIdx = Math.min(startIdx + 10, ArrayLength);
+  
+        const SecondArray = allTransactions.slice(startIdx, endIdx);
+        const responseData = { SecondArray, pageNumber };
+  
         if (page > pageNumber) {
           return res
             .status(404)
             .json({ message: "No data found for the selected criteria." });
         }
+  
         console.log("irete");
-        return res.status(200).json(allTransactions);
+        return res.status(200).json(responseData);
+        // if (page > pageNumber) {
+        //   return res
+        //     .status(404)
+        //     .json({ message: "No data found for the selected criteria." });
+        // }
+        // console.log("irete");
+        // return res.status(200).json(allTransactions);
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
