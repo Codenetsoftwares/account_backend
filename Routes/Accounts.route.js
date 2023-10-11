@@ -82,6 +82,7 @@ const AccountsRoute = (app) => {
       try {
         const user = await User.find({}).exec();
         const allIntroDataLength = user.length;
+        console.log("allIntroDataLength", allIntroDataLength)
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         console.log('pageNumber', pageNumber)
         while ((page - 1) * 10 < allIntroDataLength) {
@@ -97,7 +98,7 @@ const AccountsRoute = (app) => {
             }
           }
 
-          return res.status(200).json({ SecondArray, pageNumber });
+          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
         if (page > pageNumber) {
           return res
@@ -300,6 +301,7 @@ const AccountsRoute = (app) => {
         }
         // console.log('intro',introData)
         const allIntroDataLength = introData.length;
+        console.log("allIntroDataLength", allIntroDataLength)
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         console.log('pageNumber', pageNumber)
         while ((page - 1) * 10 < allIntroDataLength) {
@@ -315,7 +317,7 @@ const AccountsRoute = (app) => {
             }
           }
 
-          return res.status(200).json({ SecondArray, pageNumber });
+          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
         if (page > pageNumber) {
           return res
@@ -444,8 +446,6 @@ const AccountsRoute = (app) => {
           }
         }
         console.log('all', allAdmins);
-
-
         const allIntroDataLength = allAdmins.length;
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         console.log('pageNumber', pageNumber)
@@ -461,19 +461,12 @@ const AccountsRoute = (app) => {
               SecondArray.push(allAdmins[j]);
             }
           }
-
-          return res.status(200).json({ SecondArray, pageNumber });
+          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
         if (page > pageNumber) {
-          return res
-            .status(404)
-            .json({ message: "No data found for the selected criteria." });
+          return res.status(404).json({ message: "No data found for the selected criteria." });
         }
-
-        arr.length === 0
-          ? res.status(200).send("No sub-admins")
-          : res.status(200).send(arr);
-
+        arr.length === 0 ? res.status(200).send("No sub-admins") : res.status(200).send(arr);
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -719,7 +712,7 @@ const AccountsRoute = (app) => {
         const endIdx = Math.min(startIdx + 10, ArrayLength);
   
         const SecondArray = allTransactions.slice(startIdx, endIdx);
-        const responseData = { SecondArray, pageNumber };
+        const responseData = { SecondArray, pageNumber, ArrayLength };
   
         if (page > pageNumber) {
           return res
