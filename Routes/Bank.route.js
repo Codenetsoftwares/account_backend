@@ -4,6 +4,7 @@ import { Bank } from "../models/bank.model.js";
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
+import lodash from "lodash";
 
 const BankRoutes = (app) => {
   // API To Add Bank Name
@@ -327,11 +328,12 @@ const BankRoutes = (app) => {
   );
 
   app.get(
-    "/api/admin/manual-user-bank-account-summary/:accountNumber",
+    "/api/admin/manual-user-bank-account-summary/:accountNumber/:page",
     Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
     async (req, res) => {
       try {
         const bankName = req.params.accountNumber;
+        const page = req.params.page;
         const transaction = await Transaction.findOne({bankName: bankName}).exec();
         let balances = 0;
         if (!transaction) {
@@ -387,13 +389,25 @@ const BankRoutes = (app) => {
                 data.balance = balances;
               }
             });
-          const allTransactions = [...accountData, ...bankData];
-          if (accountSummary.length > 0 || bankSummary.length > 0) {
-            res.status(200).send(allTransactions);
-          } else {
-            return res.status(404).send({ message: "Account not found" });
-          }
+          const alltrans = [...accountData, ...bankData];
+          const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
+          const allTransactions = sortedTransactions.reverse();
+          const ArrayLength = allTransactions.length;
+          let pageNumber = Math.floor(ArrayLength / 10 + 1);
+          const Limit = page * 10;
+          const startIdx = Limit - 10;
+          const endIdx = Math.min(startIdx + 10, ArrayLength);
+  
+          const SecondArray = allTransactions.slice(startIdx, endIdx);
+          const responseData = { SecondArray, pageNumber, ArrayLength };
+        if (page > pageNumber) {
+          return res
+            .status(404)
+            .json({ message: "No data found for the selected criteria." });
         }
+        console.log("irete");
+        return res.status(200).json(responseData);
+      }
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });

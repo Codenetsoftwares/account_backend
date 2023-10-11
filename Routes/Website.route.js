@@ -3,6 +3,7 @@ import { Authorize } from "../middleware/Authorize.js";
 import { Website } from "../models/website.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
+import lodash from "lodash";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 
 const WebisteRoutes = (app) => {
@@ -255,10 +256,11 @@ const WebisteRoutes = (app) => {
   }
   );
 
-  app.get("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin", "Bank-View", "Transaction-View", "Website-View"]),
+  app.get("/api/admin/manual-user-website-account-summary/:websiteName/:page", Authorize(["superAdmin", "Bank-View", "Transaction-View", "Website-View"]),
     async (req, res) => {
       try {
         const websiteName = req.params.websiteName;
+        const page = req.params.page;
         const transaction = await Transaction.findOne({ websiteName }).exec();
         let balances = 0;
         if (!transaction) {
@@ -310,26 +312,23 @@ const WebisteRoutes = (app) => {
               data.balance = balances;
             }
           });
-          const allTransactions = [...accountData, ...websiteData]
-          allTransactions.sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
-
-            if (dateA < dateB) {
-              return 1;
-            } else if (dateA > dateB) {
-              return -1;
-            } else {
-              // If the dates are equal, sort by time in descending order
-              return b.createdAt - a.createdAt;
-            }
-          });
-          if (accountSummary.length > 0 || websiteSummary.length > 0) {
-            res.status(200).send(allTransactions);
-          } else {
-            return res.status(404).send({ message: "Website Name not found" });
-          }
+          const alltrans = [...accountData, ...websiteData]
+          const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
+          const allTransactions = sortedTransactions.reverse();
+          const ArrayLength = allTransactions.length;
+          let pageNumber = Math.floor(ArrayLength / 10 + 1);
+          const Limit = page * 10;
+          const startIdx = Limit - 10;
+          const endIdx = Math.min(startIdx + 10, ArrayLength);
+  
+          const SecondArray = allTransactions.slice(startIdx, endIdx);
+          const responseData = { SecondArray, pageNumber, ArrayLength };
+        if (page > pageNumber) {
+          return res.status(404).json({ message: "No data found for the selected criteria." });
         }
+        console.log("irete");
+        return res.status(200).json(responseData);
+      }
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
