@@ -82,36 +82,33 @@ const AccountsRoute = (app) => {
       try {
         const user = await User.find({}).exec();
         const allIntroDataLength = user.length;
-        console.log("allIntroDataLength", allIntroDataLength)
+        console.log("allIntroDataLength", allIntroDataLength);
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-        console.log('pageNumber', pageNumber)
-        while ((page - 1) * 10 < allIntroDataLength) {
-          console.log('first')
-          let SecondArray = [];
-          const Limit = page * 10;
-          console.log("Limit", Limit);
-
-          for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all', [j])
-            if (user[j] !== undefined) {
-              SecondArray.push(user[j]);
-            }
+        console.log('pageNumber', pageNumber);
+  
+        let SecondArray = [];
+        const Limit = page * 10;
+        console.log("Limit", Limit);
+  
+        for (let j = Limit - 10; j < Limit; j++) {
+          console.log('all', [j])
+          if (user[j] !== undefined) {
+            SecondArray.push(user[j]);
           }
-
-          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
-        if (page > pageNumber) {
-          return res
-            .status(404)
-            .json({ message: "No data found for the selected criteria." });
+  
+        if (SecondArray.length === 0) {
+          return res.status(404).json({ message: "No data found for the selected criteria." });
         }
-        res.send(user);
+  
+        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
       }
     }
   );
+  
 
   // API To Edit User Profiles
 
@@ -285,7 +282,7 @@ const AccountsRoute = (app) => {
   );
 
   app.get(
-    "/api/intoducer-profile/:page",
+    "/api/introducer-profile/:page",
     Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View", "Create-Introducer"]),
     async (req, res) => {
       const page = req.params.page;
@@ -293,44 +290,41 @@ const AccountsRoute = (app) => {
       try {
         const introducerUser = await IntroducerUser.find().exec();
         let introData = JSON.parse(JSON.stringify(introducerUser));
-
+  
         for (var index = 0; index < introData.length; index++) {
           introData[index].balance = await AccountServices.getIntroBalance(
             introData[index]._id
           );
         }
-        // console.log('intro',introData)
+  
         const allIntroDataLength = introData.length;
         console.log("allIntroDataLength", allIntroDataLength)
-        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
         console.log('pageNumber', pageNumber)
-        while ((page - 1) * 10 < allIntroDataLength) {
-          console.log('first')
-          let SecondArray = [];
-          const Limit = page * 10;
-          console.log("Limit", Limit);
-
-          for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all', [j])
-            if (introData[j] !== undefined) {
-              SecondArray.push(introData[j]);
-            }
+  
+        let SecondArray = [];
+        const Limit = page * 10;
+        console.log("Limit", Limit);
+  
+        for (let j = Limit - 10; j < Limit; j++) {
+          console.log('all', [j])
+          if (introData[j] !== undefined) {
+            SecondArray.push(introData[j]);
           }
-
-          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
-        if (page > pageNumber) {
-          return res
-            .status(404)
-            .json({ message: "No data found for the selected criteria." });
+  
+        if (SecondArray.length === 0) {
+          return res.status(404).json({ message: "No data found for the selected criteria." });
         }
-        res.send(introData);
+  
+        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       } catch (e) {
         console.error(e);
-        res.status(e.code).send({ message: e.message });
+        res.status(500).send({ message: "Internal Server Error" });
       }
     }
   );
+  
 
   app.get(
     "/api/intoducer/client-data/:id",
@@ -446,33 +440,33 @@ const AccountsRoute = (app) => {
           }
         }
         console.log('all', allAdmins);
-        const allIntroDataLength = allAdmins.length;
-        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-        console.log('pageNumber', pageNumber)
-        while ((page - 1) * 10 < allIntroDataLength) {
-          console.log('first')
-          let SecondArray = [];
-          const Limit = page * 10;
-          console.log("Limit", Limit);
-
-          for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all', [j])
-            if (allAdmins[j] !== undefined) {
-              SecondArray.push(allAdmins[j]);
-            }
+        const allIntroDataLength = arr.length; // Use filtered array length
+        let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
+        console.log('pageNumber', pageNumber);
+  
+        let SecondArray = [];
+        const Limit = page * 10;
+        console.log("Limit", Limit);
+  
+        for (let j = Limit - 10; j < Limit; j++) {
+          console.log('all', [j])
+          if (arr[j] !== undefined) { // Use filtered array for pagination
+            SecondArray.push(arr[j]);
           }
-          return res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         }
-        if (page > pageNumber) {
+  
+        if (SecondArray.length === 0) {
           return res.status(404).json({ message: "No data found for the selected criteria." });
         }
-        arr.length === 0 ? res.status(200).send("No sub-admins") : res.status(200).send(arr);
+  
+        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       } catch (e) {
         console.error(e);
-        res.status(e.code).send({ message: e.message });
+        res.status(500).send({ message: "Internal Server Error" });
       }
     }
   );
+  
 
   app.post(
     "/api/admin/single-sub-admin/:id",
@@ -639,11 +633,23 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/filter-data/:page",
-    Authorize(["superAdmin","Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Website-View", "Bank-View"]),
+  app.get(
+    "/api/admin/filter-data",
+    Authorize([
+      "superAdmin",
+      "Dashboard-View",
+      "Transaction-View",
+      "Transaction-Edit-Request",
+      "Transaction-Delete-Request",
+      "Website-View",
+      "Bank-View"
+    ]),
     async (req, res) => {
       try {
+        const {
+          page,
+          itemsPerPage
+        } = req.query;
         const {
           transactionType,
           introducerList,
@@ -653,29 +659,22 @@ const AccountsRoute = (app) => {
           sdate,
           edate,
         } = req.body;
-        const page = req.params.page;
         const filter = {};
-
         if (transactionType) {
           filter.transactionType = transactionType;
         }
-
         if (introducerList) {
           filter.introducerUserName = introducerList;
         }
-
         if (subAdminList) {
           filter.subAdminName = subAdminList;
         }
-
         if (BankList) {
           filter.bankName = BankList;
         }
-
         if (WebsiteList) {
           filter.websiteName = WebsiteList;
         }
-
         if (sdate && edate) {
           filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
         } else if (sdate) {
@@ -683,58 +682,37 @@ const AccountsRoute = (app) => {
         } else if (edate) {
           filter.createdAt = { $lte: new Date(edate) };
         }
-
+        
         const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).exec();
         const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).exec();
         const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).exec();
+
+        
         const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
-        const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
-        const allTransactions = sortedTransactions.reverse();
-        const ArrayLength = allTransactions.length;
-        let pageNumber = Math.floor(ArrayLength / 10 + 1);
-        console.log("pageNumber", pageNumber);
-        // while ((page - 1) * 10 < ArrayLength) {
-        //   let SecondArray = [];
-        //   const Limit = page * 10;
-        //   console.log("Limit", Limit);
-
-        //   for (let j = Limit - 10; j < Limit; j++) {
-        //     console.log('all', [j])
-        //     if (allTransactions[j] !== undefined) {
-        //       SecondArray.push(allTransactions[j]);
-        //     }
-        //   }
-
-        //   return res.status(200).json({ SecondArray, pageNumber });
-        // }
-        const Limit = page * 10;
-        const startIdx = Limit - 10;
-        const endIdx = Math.min(startIdx + 10, ArrayLength);
-  
-        const SecondArray = allTransactions.slice(startIdx, endIdx);
-        const responseData = { SecondArray, pageNumber, ArrayLength };
-  
-        if (page > pageNumber) {
-          return res
-            .status(404)
-            .json({ message: "No data found for the selected criteria." });
+        console.log('all',alltrans.length)
+        const allIntroDataLength = alltrans.length;
+        console.log("allIntroDataLength", allIntroDataLength);
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        const skip = (page - 1) * itemsPerPage;
+        const limit = parseInt(itemsPerPage);
+        const paginatedResults = alltrans.slice(skip,skip + limit);
+        if(paginatedResults.length !== 0){
+         return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
         }
-  
-        console.log("irete");
-        return res.status(200).json(responseData);
-        // if (page > pageNumber) {
-        //   return res
-        //     .status(404)
-        //     .json({ message: "No data found for the selected criteria." });
-        // }
-        // console.log("irete");
-        // return res.status(200).json(allTransactions);
+        else{
+          const skip = (page - 1) * itemsPerPage;
+          const limit = parseInt(itemsPerPage);
+          const paginatedResults = alltrans.slice(skip,skip + limit);
+        return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
+
+       } 
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
       }
     }
   );
+
 
   app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
