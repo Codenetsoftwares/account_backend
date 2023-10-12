@@ -472,10 +472,11 @@ const AccountsRoute = (app) => {
           const Limit = page * 10;
           console.log("Limit", Limit);
           
-          for (let j = Limit - 10; j < Limit; j++) {
-              SecondArray.push(introData[j]);
-              console.log('lenth',SecondArray.length)
-          }
+          for (let j = Limit - 10; j < Limit && j < introData.length; j++) {
+            if (introData[j]) {
+                SecondArray.push(introData[j]);
+            }
+        }        
           allIntroDataLength = introData.length;
   
           if (SecondArray.length === 0) {
