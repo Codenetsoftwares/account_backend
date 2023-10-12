@@ -82,7 +82,6 @@ const AccountsRoute = (app) => {
       const searchQuery = req.query.search;
       try {
         let allIntroDataLength;
-  
         if (searchQuery) {
           console.log('first')
             let SecondArray = [];
@@ -301,28 +300,36 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View", "Create-Introducer"]),
     async (req, res) => {
       const page = req.params.page;
-      console.log('page', page)
-      try {
-        const introducerUser = await IntroducerUser.find().exec();
-        let introData = JSON.parse(JSON.stringify(introducerUser));
+      const  userName  = req.query.search;
   
-        for (var index = 0; index < introData.length; index++) {
+      console.log('page', page);
+      console.log('userName', userName);
+  
+      try {
+        let introducerUser = await IntroducerUser.find().exec();
+        let introData = JSON.parse(JSON.stringify(introducerUser));
+        if (userName) {
+          introData = introData.filter(user => user.userName === userName);
+        }
+  
+        for (let index = 0; index < introData.length; index++) {
           introData[index].balance = await AccountServices.getIntroBalance(
             introData[index]._id
           );
         }
   
         const allIntroDataLength = introData.length;
-        console.log("allIntroDataLength", allIntroDataLength)
+        console.log("allIntroDataLength", allIntroDataLength);
+  
         let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
-        console.log('pageNumber', pageNumber)
+        console.log('pageNumber', pageNumber);
   
         let SecondArray = [];
         const Limit = page * 10;
         console.log("Limit", Limit);
   
         for (let j = Limit - 10; j < Limit; j++) {
-          console.log('all', [j])
+          console.log('all', [j]);
           if (introData[j] !== undefined) {
             SecondArray.push(introData[j]);
           }
@@ -339,6 +346,7 @@ const AccountsRoute = (app) => {
       }
     }
   );
+  
   
 
   app.get(
