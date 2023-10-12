@@ -79,35 +79,50 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin", "Profile-View", "User-Profile-View"]),
     async (req, res) => {
       const page = req.params.page;
+      const searchQuery = req.query.search;
       try {
-        const user = await User.find({}).exec();
-        const allIntroDataLength = user.length;
-        console.log("allIntroDataLength", allIntroDataLength);
-        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-        console.log('pageNumber', pageNumber);
+        let allIntroDataLength;
   
-        let SecondArray = [];
-        const Limit = page * 10;
-        console.log("Limit", Limit);
-  
-        for (let j = Limit - 10; j < Limit; j++) {
-          console.log('all', [j])
-          if (user[j] !== undefined) {
-            SecondArray.push(user[j]);
+        if (searchQuery) {
+          console.log('first')
+            let SecondArray = [];
+            const users = await User.find({ userName: {$regex: new RegExp(searchQuery, "i"),},}).exec();
+            SecondArray = SecondArray.concat(users);
+            allIntroDataLength = SecondArray.length;
+            const pageNumber = Math.ceil(allIntroDataLength / 10);
+            res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        } else {
+          console.log('second')
+          let introducerUser = await User.find({}).exec();
+          let introData = JSON.parse(JSON.stringify(introducerUser));
+          console.log('introData',introData.length)
+
+          const SecondArray = [];
+          const Limit = page * 10;
+          console.log("Limit", Limit);
+          
+          for (let j = Limit - 10; j < Limit; j++) {
+              SecondArray.push(introData[j]);
+              console.log('lenth',SecondArray.length)
           }
-        }
+          allIntroDataLength = introData.length;
   
-        if (SecondArray.length === 0) {
-          return res.status(404).json({ message: "No data found for the selected criteria." });
+          if (SecondArray.length === 0) {
+            return res.status(404).json({ message: "No data found for the selected criteria." });
+          }
+
+          const pageNumber = Math.ceil(allIntroDataLength / 10);
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+          
         }
-  
-        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       } catch (e) {
         console.error(e);
-        res.status(e.code).send({ message: e.message });
+        res.status(500).send({ message: "Internal Server Error" });
       }
     }
   );
+  
+  
   
 
   // API To Edit User Profiles
