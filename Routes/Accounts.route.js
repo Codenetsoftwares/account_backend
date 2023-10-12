@@ -451,44 +451,48 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin"]),
     async (req, res) => {
       const page = req.params.page;
+      const searchQuery = req.query.search;
       try {
-        const allAdmins = await Admin.find().exec();
-        console.log('allAdmins', allAdmins);
-        let arr = [];
-        for (let i = 0; i < allAdmins.length; i++) {
-          if (!allAdmins[i].roles.includes("superAdmin")) {
-            let obj = {};
-            obj = allAdmins[i];
-            arr.push(obj);
+        let allIntroDataLength;
+        if (searchQuery) {
+          console.log('first')
+            let SecondArray = [];
+            const users = await Admin.find({ userName: {$regex: new RegExp(searchQuery, "i"),},}).exec();
+            SecondArray = SecondArray.concat(users);
+            allIntroDataLength = SecondArray.length;
+            const pageNumber = Math.ceil(allIntroDataLength / 10);
+            res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        } else {
+          console.log('second')
+          let introducerUser = await Admin.find({ roles: { $nin: ["superAdmin"] } }).exec();
+          let introData = JSON.parse(JSON.stringify(introducerUser));
+          console.log('introData',introData.length)
+
+          const SecondArray = [];
+          const Limit = page * 10;
+          console.log("Limit", Limit);
+          
+          for (let j = Limit - 10; j < Limit; j++) {
+              SecondArray.push(introData[j]);
+              console.log('lenth',SecondArray.length)
           }
-        }
-        console.log('all', allAdmins);
-        const allIntroDataLength = arr.length; // Use filtered array length
-        let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
-        console.log('pageNumber', pageNumber);
+          allIntroDataLength = introData.length;
   
-        let SecondArray = [];
-        const Limit = page * 10;
-        console.log("Limit", Limit);
-  
-        for (let j = Limit - 10; j < Limit; j++) {
-          console.log('all', [j])
-          if (arr[j] !== undefined) { // Use filtered array for pagination
-            SecondArray.push(arr[j]);
+          if (SecondArray.length === 0) {
+            return res.status(404).json({ message: "No data found for the selected criteria." });
           }
+
+          const pageNumber = Math.ceil(allIntroDataLength / 10);
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+          
         }
-  
-        if (SecondArray.length === 0) {
-          return res.status(404).json({ message: "No data found for the selected criteria." });
-        }
-  
-        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       } catch (e) {
         console.error(e);
         res.status(500).send({ message: "Internal Server Error" });
       }
     }
   );
+  
   
 
   app.post(
