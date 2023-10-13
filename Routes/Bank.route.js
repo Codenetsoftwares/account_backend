@@ -327,13 +327,44 @@ const BankRoutes = (app) => {
     }
   );
 
-  app.get(
-    "/api/admin/manual-user-bank-account-summary/:accountNumber/:page",
+  app.post(
+    "/api/admin/manual-user-bank-account-summary/:accountNumber",
     Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
     async (req, res) => {
       try {
         const bankName = req.params.accountNumber;
-        const page = req.params.page;
+        const {
+          page,
+          itemsPerPage
+        } = req.query;
+        const {
+          transactionType,
+          introducerList,
+          subAdminList,
+          BankList,
+          sdate,
+          edate,
+        } = req.body;
+        const filter = {};
+        if (transactionType) {
+          filter.transactionType = transactionType;
+        }
+        if (introducerList) {
+          filter.introducerUserName = introducerList;
+        }
+        if (subAdminList) {
+          filter.subAdminName = subAdminList;
+        }
+        if (BankList) {
+          filter.bankName = BankList;
+        }
+        if (sdate && edate) {
+          filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+        } else if (sdate) {
+          filter.createdAt = { $gte: new Date(sdate) };
+        } else if (edate) {
+          filter.createdAt = { $lte: new Date(edate) };
+        }
         const transaction = await Transaction.findOne({bankName: bankName}).exec();
         let balances = 0;
         if (!transaction) {
@@ -389,31 +420,56 @@ const BankRoutes = (app) => {
                 data.balance = balances;
               }
             });
-          const alltrans = [...accountData, ...bankData];
-          const sortedTransactions = lodash.sortBy(alltrans, "createdAt");
-          const allTransactions = sortedTransactions.reverse();
-          const ArrayLength = allTransactions.length;
-          let pageNumber = Math.floor(ArrayLength / 10 + 1);
-          const Limit = page * 10;
-          const startIdx = Limit - 10;
-          const endIdx = Math.min(startIdx + 10, ArrayLength);
-  
-          const SecondArray = allTransactions.slice(startIdx, endIdx);
-          const responseData = { SecondArray, pageNumber, ArrayLength };
-        if (page > pageNumber) {
-          return res
-            .status(404)
-            .json({ message: "No data found for the selected criteria." });
-        }
-        console.log("irete");
-        return res.status(200).json(responseData);
-      }
+            const filteredTrans = [...accountData, ...bankData].filter((data) => {
+              // Your filtering conditions here
+              return (
+                (!filter.transactionType || data.transactionType === filter.transactionType) &&
+                (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
+                (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
+                (!filter.bankName || data.bankName === filter.bankName) &&
+                (!filter.createdAt ||
+                  (data.createdAt >= filter.createdAt.$gte && data.createdAt <= filter.createdAt.$lte))
+              );
+            });
+      
+            const allIntroDataLength = filteredTrans.length;
+            let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+            const skip = (page - 1) * itemsPerPage;
+            const limit = parseInt(itemsPerPage);
+            const paginatedResults = filteredTrans.slice(skip, skip + limit);
+      
+            if (paginatedResults.length !== 0) {
+              console.log('afe')
+              return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+            } else {
+              console.log('ded',filteredTrans)
+              const itemsPerPage = 10; // Specify the number of items per page
+
+              const totalItems = filteredTrans.length;
+              const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+              let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+              page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+    
+              const skip = (page - 1) * itemsPerPage;
+              const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+              const paginatedResults = filteredTrans.slice(skip, skip + limit);
+    
+              const pageNumber = page;
+              const allIntroDataLength = totalItems;
+    
+              return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+    
+            }
+          } 
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
       }
     }
   );
+
+  
   app.get(
     "/api/superadmin/view-bank-edit-requests",
     Authorize(["superAdmin"]),
