@@ -724,7 +724,11 @@ const AccountsRoute = (app) => {
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = alltrans.slice(skip,skip + limit);
+        console.log('pagitren',paginatedResults.length)
+
         if(paginatedResults.length !== 0){
+          console.log('s')
+          console.log('pagin',paginatedResults.length)
          return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
         }
         else{
