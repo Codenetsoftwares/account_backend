@@ -661,7 +661,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get(
+  app.post(
     "/api/admin/filter-data",
     Authorize([
       "superAdmin",
@@ -732,10 +732,22 @@ const AccountsRoute = (app) => {
          return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
         }
         else{
+          const itemsPerPage = 10; // Specify the number of items per page
+
+          const totalItems = alltrans.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
           const skip = (page - 1) * itemsPerPage;
-          const limit = parseInt(itemsPerPage);
-          const paginatedResults = alltrans.slice(skip,skip + limit);
-        return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
+          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+          const paginatedResults = alltrans.slice(skip, skip + limit);
+
+          const pageNumber = page;
+          const allIntroDataLength = totalItems;
+
+          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
 
        } 
       } catch (e) {
