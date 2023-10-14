@@ -358,13 +358,17 @@ const BankRoutes = (app) => {
         if (BankList) {
           filter.bankName = BankList;
         }
-        if (sdate && edate) {
-          filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
-        } else if (sdate) {
-          filter.createdAt = { $gte: new Date(sdate) };
-        } else if (edate) {
-          filter.createdAt = { $lte: new Date(edate) };
-        }
+        const startDate = sdate ? new Date(sdate).toISOString() : null;
+      const endDate = edate ? new Date(edate).toISOString() : null;
+
+      if (startDate && endDate) {
+        filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      } else if (startDate) {
+        filter.createdAt = { $gte: new Date(startDate) };
+      } else if (endDate) {
+        filter.createdAt = { $lte: new Date(endDate) };
+      }
+        console.log("date", sdate, edate)
         const transaction = await Transaction.findOne({bankName: bankName}).exec();
         let balances = 0;
         if (!transaction) {
@@ -422,16 +426,17 @@ const BankRoutes = (app) => {
             });
             const filteredTrans = [...accountData, ...bankData].filter((data) => {
               // Your filtering conditions here
+              const dataCreatedAt = new Date(data.createdAt);
               return (
                 (!filter.transactionType || data.transactionType === filter.transactionType) &&
                 (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
                 (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
                 (!filter.bankName || data.bankName === filter.bankName) &&
                 (!filter.createdAt ||
-                  (data.createdAt >= filter.createdAt.$gte && data.createdAt <= filter.createdAt.$lte))
-              );
+                  (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
+          );
             });
-      
+            console.log("reurndate", filter.createdAt)
             const allIntroDataLength = filteredTrans.length;
             let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
             const skip = (page - 1) * itemsPerPage;
