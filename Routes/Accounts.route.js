@@ -711,20 +711,21 @@ const AccountsRoute = (app) => {
           filter.createdAt = { $lte: new Date(edate) };
         }
         
-        const transactions = await Transaction.find(filter).sort({ createdAt: 1 }).exec();
-        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: 1 }).exec();
-        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: 1 }).exec();
+        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
+        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
 
         
         const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
-        console.log('all',alltrans.length)
+        alltrans.sort((a, b) => b.createdAt - a.createdAt); 
+        // console.log('all',alltrans.length)
         const allIntroDataLength = alltrans.length;
-        console.log("allIntroDataLength", allIntroDataLength);
+        // console.log("allIntroDataLength", allIntroDataLength);
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = alltrans.slice(skip,skip + limit);
-        console.log('pagitren',paginatedResults.length)
+        // console.log('pagitren',paginatedResults.length)
 
         if(paginatedResults.length !== 0){
           console.log('s')
