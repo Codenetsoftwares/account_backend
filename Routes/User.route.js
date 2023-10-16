@@ -1,6 +1,9 @@
 import { AuthorizeRole } from "../middleware/auth.js";
+import AccountServices from "../services/Accounts.services.js";
+import { Authorize } from "../middleware/Authorize.js";
 import { User } from "../models/user.model.js";
 import { userservice } from "../services/user.service.js";
+import { Transaction } from "../models/transaction.js";
 
 export const UserRoutes = (app) => {
 
@@ -213,6 +216,128 @@ app.post(
     }
   }
 );
+
+app.get(
+  "/api/super-admin/user-profile/:page",
+  Authorize(["superAdmin"]),
+  async (req, res) => {
+    const page = req.params.page;
+    const searchQuery = req.query.search;
+    try {
+      let allIntroDataLength;
+      if (searchQuery) {
+        console.log('first')
+          let SecondArray = [];
+          const users = await User.find({ userName: {$regex: new RegExp(searchQuery, "i"),},}).exec();
+          SecondArray = SecondArray.concat(users);
+          allIntroDataLength = SecondArray.length;
+          const pageNumber = Math.ceil(allIntroDataLength / 10);
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+      } else {
+        console.log('second')
+        let introducerUser = await User.find({}).exec();
+        let introData = JSON.parse(JSON.stringify(introducerUser));
+        console.log('introData',introData.length)
+
+        const SecondArray = [];
+        const Limit = page * 10;
+        console.log("Limit", Limit);
+        
+        for (let j = Limit - 10; j < Limit; j++) {
+            SecondArray.push(introData[j]);
+            console.log('lenth',SecondArray.length)
+        }
+        allIntroDataLength = introData.length;
+
+        if (SecondArray.length === 0) {
+          return res.status(404).json({ message: "No data found for the selected criteria." });
+        }
+
+        const pageNumber = Math.ceil(allIntroDataLength / 10);
+        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: "Internal Server Error" });
+    }
+  }
+);
+
+app.post("/api/super-admin/login", async (req, res) => {
+  try {
+    const { userName, password, persist } = req.body;
+
+    if (!userName) {
+      throw { code: 400, message: "User Name is required" };
+    }
+
+    if (!password) {
+      throw { code: 400, message: "Password is required" };
+    }
+
+    const user = await Admin.findOne({ userName: userName });
+    console.log("user", user);
+    if (!user) {
+      throw { code: 404, message: "User not found" };
+    }
+
+    const accessToken = await AccountServices.generateAdminAccessToken(
+      userName,
+      password,
+      persist
+    );
+
+    if (!accessToken) {
+      throw { code: 500, message: "Failed to generate access token" };
+    }
+
+    res.status(200).send({
+      token: accessToken,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(e.code).send({ message: e.message });
+  }
+});
+
+app.post('/api/admin/delete/user/:userName', Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const user = req.params.userName;
+    console.log("userName",user);
+    await Transaction.deleteMany({ userName: user });
+    const deleteUser = await User.findOneAndDelete(user);
+    if (!deleteUser) {
+     return res.status(404).send({ message: 'User not found' });
+    }
+    res.status(200).send({ message: 'User and associated transactions deleted successfully' });
+  } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/admin/update/user/name/:userName', Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const user = req.params.userName;
+    const newUserName = req.body.newUserName;
+    const userToUpdate = await User.findOne({ userName: user });
+    if (!userToUpdate) {
+    return res.status(404).send({ message: 'User not found' });
+    }
+   userToUpdate.userName = newUserName;
+   await userToUpdate.save();
+   const transactions = await Transaction.find({ userName: user });
+   transactions.forEach((transaction) => {
+   transaction.userName = newUserName;
+   });
+  await Promise.all(transactions.map((transaction) => transaction.save()));
+  res.status(200).send({ message: 'User username and associated transactions updated successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: 'Internal server error' });
+  }
+});
 };
 
 
