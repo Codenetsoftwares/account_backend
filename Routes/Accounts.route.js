@@ -163,7 +163,7 @@ const AccountsRoute = (app) => {
     async (req, res) => {
       try {
         const superAdmin = await Admin.find(
-          { roles: "superAdmin" },
+          {  },
           "firstname"
         ).exec();
         res.status(200).send(superAdmin);
