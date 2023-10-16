@@ -11,7 +11,7 @@ const BankRoutes = (app) => {
 
   app.post(
     "/api/add-bank-name",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View" ]),
+    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
     async (req, res) => {
       try {
         const userName = req.user;
@@ -109,7 +109,7 @@ const BankRoutes = (app) => {
 
   app.get(
     "/api/get-bank-name",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction","Create-Deposit-Transaction","Create-Withdraw-Transaction"]),
+    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
     async (req, res) => {
       try {
         let dbBankData = await Bank.find().exec();
@@ -359,33 +359,64 @@ const BankRoutes = (app) => {
           filter.bankName = BankList;
         }
         const startDate = sdate ? new Date(sdate).toISOString() : null;
-      const endDate = edate ? new Date(edate).toISOString() : null;
+        const endDate = edate ? new Date(edate).toISOString() : null;
 
-      if (startDate && endDate) {
-        filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
-      } else if (startDate) {
-        filter.createdAt = { $gte: new Date(startDate) };
-      } else if (endDate) {
-        filter.createdAt = { $lte: new Date(endDate) };
-      }
+        if (startDate && endDate) {
+          filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        } else if (startDate) {
+          filter.createdAt = { $gte: new Date(startDate) };
+        } else if (endDate) {
+          filter.createdAt = { $lte: new Date(endDate) };
+        }
         console.log("date", sdate, edate)
-        const transaction = await Transaction.findOne({bankName: bankName}).exec();
+        const transaction = await Transaction.findOne({ bankName: bankName }).exec();
         let balances = 0;
         if (!transaction) {
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-          console.log('bankSummary',bankSummary)
+          console.log('bankSummary', bankSummary)
           let bankData = JSON.parse(JSON.stringify(bankSummary));
           bankData.slice(0).reverse().map((data) => {
-              if (data.depositAmount) {
-                balances += data.depositAmount;
-                data.balance = balances;
-              } else {
-                balances -= data.withdrawAmount;
-                data.balance = balances;
-              }
-            });
+            if (data.depositAmount) {
+              balances += data.depositAmount;
+              data.balance = balances;
+            } else {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            }
+          });
           if (bankData.length > 0) {
-            res.status(200).send(bankData);
+            const allIntroDataLength = bankData.length;
+            console.log("allIntroDataLength", allIntroDataLength);
+            let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+            const skip = (page - 1) * itemsPerPage;
+            const limit = parseInt(itemsPerPage);
+            const paginatedResults = bankData.slice(skip, skip + limit);
+            console.log('pagitren', paginatedResults.length)
+
+            if (paginatedResults.length !== 0) {
+              console.log('s')
+              console.log('pagin', paginatedResults.length)
+              return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+            }
+            else {
+              const itemsPerPage = 10; // Specify the number of items per page
+
+              const totalItems = alltrans.length;
+              const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+              let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+              page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+              const skip = (page - 1) * itemsPerPage;
+              const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+              const paginatedResults = alltrans.slice(skip, skip + limit);
+
+              const pageNumber = page;
+              const allIntroDataLength = totalItems;
+
+              return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+
+            }
           } else {
             return res.status(404).send({ message: "Account not found" });
           }
@@ -399,74 +430,74 @@ const BankRoutes = (app) => {
 
           let bankData = JSON.parse(JSON.stringify(bankSummary));
           bankData.slice(0).reverse().map((data) => {
-              if (data.depositAmount) {
-                console.log('353')
-                balances += data.depositAmount;
-                data.balance = balances;
-              } else {
-                console.log('357')
-                balances -= data.withdrawAmount;
-                data.balance = balances;
-              }
-            });
-          
+            if (data.depositAmount) {
+              console.log('353')
+              balances += data.depositAmount;
+              data.balance = balances;
+            } else {
+              console.log('357')
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            }
+          });
+
           let accountData = JSON.parse(JSON.stringify(accountSummary));
           accountData.slice(0).reverse().map((data) => {
-              if (data.transactionType === "Deposit") {
-                let totalamount = 0;
-                totalamount += data.amount;
-                balances += totalamount;
-                data.balance = balances;
-              } else {
-                const netAmount = balances - data.bankCharges - data.amount;
-                console.log("netAmount", netAmount);
-                balances = netAmount;
-                data.balance = balances;
-              }
-            });
-            const filteredTrans = [...accountData, ...bankData].filter((data) => {
-              // Your filtering conditions here
-              const dataCreatedAt = new Date(data.createdAt);
-              return (
-                (!filter.transactionType || data.transactionType === filter.transactionType) &&
-                (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
-                (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
-                (!filter.bankName || data.bankName === filter.bankName) &&
-                (!filter.createdAt ||
-                  (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
-          );
-            });
-            console.log("reurndate", filter.createdAt)
-            const allIntroDataLength = filteredTrans.length;
-            let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-            const skip = (page - 1) * itemsPerPage;
-            const limit = parseInt(itemsPerPage);
-            const paginatedResults = filteredTrans.slice(skip, skip + limit);
-      
-            if (paginatedResults.length !== 0) {
-              console.log('afe')
-              return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+            if (data.transactionType === "Deposit") {
+              let totalamount = 0;
+              totalamount += data.amount;
+              balances += totalamount;
+              data.balance = balances;
             } else {
-              console.log('ded',filteredTrans)
-              const itemsPerPage = 10; // Specify the number of items per page
-
-              const totalItems = filteredTrans.length;
-              const totalPages = Math.ceil(totalItems / itemsPerPage);
-    
-              let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-              page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-    
-              const skip = (page - 1) * itemsPerPage;
-              const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-              const paginatedResults = filteredTrans.slice(skip, skip + limit);
-    
-              const pageNumber = page;
-              const allIntroDataLength = totalItems;
-    
-              return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-    
+              const netAmount = balances - data.bankCharges - data.amount;
+              console.log("netAmount", netAmount);
+              balances = netAmount;
+              data.balance = balances;
             }
-          } 
+          });
+          const filteredTrans = [...accountData, ...bankData].filter((data) => {
+            // Your filtering conditions here
+            const dataCreatedAt = new Date(data.createdAt);
+            return (
+              (!filter.transactionType || data.transactionType === filter.transactionType) &&
+              (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
+              (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
+              (!filter.bankName || data.bankName === filter.bankName) &&
+              (!filter.createdAt ||
+                (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
+            );
+          });
+          console.log("reurndate", filter.createdAt)
+          const allIntroDataLength = filteredTrans.length;
+          let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+          const skip = (page - 1) * itemsPerPage;
+          const limit = parseInt(itemsPerPage);
+          const paginatedResults = filteredTrans.slice(skip, skip + limit);
+
+          if (paginatedResults.length !== 0) {
+            console.log('afe')
+            return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+          } else {
+            console.log('ded', filteredTrans)
+            const itemsPerPage = 10; // Specify the number of items per page
+
+            const totalItems = filteredTrans.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+            page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+            const skip = (page - 1) * itemsPerPage;
+            const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+            const paginatedResults = filteredTrans.slice(skip, skip + limit);
+
+            const pageNumber = page;
+            const allIntroDataLength = totalItems;
+
+            return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+
+          }
+        }
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
@@ -474,7 +505,7 @@ const BankRoutes = (app) => {
     }
   );
 
-  
+
   app.get(
     "/api/superadmin/view-bank-edit-requests",
     Authorize(["superAdmin"]),
