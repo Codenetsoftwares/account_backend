@@ -807,6 +807,18 @@ const AccountsRoute = (app) => {
       }
     }
   );
+
+  app.get("/api/single-user-profile/:id", Authorize(["superAdmin", "Profile-View", "User-Profile-View"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const userProfile = await User.find({ _id: id }).sort({ createdAt: 1 }).exec();
+      res.status(200).send(userProfile);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+  );
 };
 
 export default AccountsRoute;
