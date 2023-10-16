@@ -101,10 +101,11 @@ export const IntroducerRoutes = (app) => {
   }
   );
 
-  app.get("/api/list-introducer-user", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get("/api/list-introducer-user/:userName", AuthorizeRole(["introducer"]), async (req, res) => {
     try {
-      const introducerId = req.user.introducerId
-      const intoducerUser = await User.find({ introducersUserId: introducerId }).exec();
+      const introducerId = req.user.userName
+      const intoducerUser = await User.find({ introducersUserName: introducerId }).exec();
+      // console.log('intro',intoducerUser)
       res.send(intoducerUser);
     } catch (e) {
       console.error(e);
