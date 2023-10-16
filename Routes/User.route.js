@@ -4,6 +4,7 @@ import { Authorize } from "../middleware/Authorize.js";
 import { User } from "../models/user.model.js";
 import { userservice } from "../services/user.service.js";
 import { Transaction } from "../models/transaction.js";
+import { Admin } from "../models/admin_user.js";
 
 export const UserRoutes = (app) => {
 
