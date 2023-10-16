@@ -84,35 +84,35 @@ const AccountsRoute = (app) => {
         let allIntroDataLength;
         if (searchQuery) {
           console.log('first')
-            let SecondArray = [];
-            const users = await User.find({ userName: {$regex: new RegExp(searchQuery, "i"),},}).exec();
-            SecondArray = SecondArray.concat(users);
-            allIntroDataLength = SecondArray.length;
-            const pageNumber = Math.ceil(allIntroDataLength / 10);
-            res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+          let SecondArray = [];
+          const users = await User.find({ userName: { $regex: new RegExp(searchQuery, "i"), }, }).exec();
+          SecondArray = SecondArray.concat(users);
+          allIntroDataLength = SecondArray.length;
+          const pageNumber = Math.ceil(allIntroDataLength / 10);
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         } else {
           console.log('second')
           let introducerUser = await User.find({}).exec();
           let introData = JSON.parse(JSON.stringify(introducerUser));
-          console.log('introData',introData.length)
+          console.log('introData', introData.length)
 
           const SecondArray = [];
           const Limit = page * 10;
           console.log("Limit", Limit);
-          
+
           for (let j = Limit - 10; j < Limit; j++) {
-              SecondArray.push(introData[j]);
-              console.log('lenth',SecondArray.length)
+            SecondArray.push(introData[j]);
+            console.log('lenth', SecondArray.length)
           }
           allIntroDataLength = introData.length;
-  
+
           if (SecondArray.length === 0) {
             return res.status(404).json({ message: "No data found for the selected criteria." });
           }
 
           const pageNumber = Math.ceil(allIntroDataLength / 10);
           res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-          
+
         }
       } catch (e) {
         console.error(e);
@@ -120,9 +120,9 @@ const AccountsRoute = (app) => {
       }
     }
   );
-  
-  
-  
+
+
+
 
   // API To Edit User Profiles
 
@@ -300,54 +300,47 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View", "Create-Introducer"]),
     async (req, res) => {
       const page = req.params.page;
-      const  userName  = req.query.search;
-  
-      console.log('page', page);
-      console.log('userName', userName);
-  
+      const userName = req.query.search;
+
+
       try {
         let introducerUser = await IntroducerUser.find().exec();
         let introData = JSON.parse(JSON.stringify(introducerUser));
         if (userName) {
-          introData = introData.filter(user => user.userName === userName);
-        }
-  
-        for (let index = 0; index < introData.length; index++) {
-          introData[index].balance = await AccountServices.getIntroBalance(
-            introData[index]._id
+          introData = introData.filter((user) =>
+            user.userName.includes(userName)
           );
         }
-  
-        const allIntroDataLength = introData.length;
-        console.log("allIntroDataLength", allIntroDataLength);
-  
-        let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
-        console.log('pageNumber', pageNumber);
-  
-        let SecondArray = [];
-        const Limit = page * 10;
-        console.log("Limit", Limit);
-  
-        for (let j = Limit - 10; j < Limit; j++) {
-          console.log('all', [j]);
-          if (introData[j] !== undefined) {
-            SecondArray.push(introData[j]);
+          for (let index = 0; index < introData.length; index++) {
+            introData[index].balance = await AccountServices.getIntroBalance(
+              introData[index]._id
+            );
           }
+          const allIntroDataLength = introData.length;
+          let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
+          let SecondArray = [];
+          const Limit = page * 10;
+
+          for (let j = Limit - 10; j < Limit; j++) {
+            console.log('all', [j]);
+            if (introData[j] !== undefined) {
+              SecondArray.push(introData[j]);
+            }
+          }
+
+          if (SecondArray.length === 0) {
+            return res.status(404).json({ message: "No data found for the selected criteria." });
+          }
+
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        } catch (e) {
+          console.error(e);
+          res.status(500).send({ message: "Internal Server Error" });
         }
-  
-        if (SecondArray.length === 0) {
-          return res.status(404).json({ message: "No data found for the selected criteria." });
-        }
-  
-        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-      } catch (e) {
-        console.error(e);
-        res.status(500).send({ message: "Internal Server Error" });
       }
-    }
   );
-  
-  
+
+
 
   app.get(
     "/api/intoducer/client-data/:id",
@@ -456,36 +449,36 @@ const AccountsRoute = (app) => {
         let allIntroDataLength;
         if (searchQuery) {
           console.log('first')
-            let SecondArray = [];
-            const users = await Admin.find({ userName: {$regex: new RegExp(searchQuery, "i"),},}).exec();
-            SecondArray = SecondArray.concat(users);
-            allIntroDataLength = SecondArray.length;
-            const pageNumber = Math.ceil(allIntroDataLength / 10);
-            res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+          let SecondArray = [];
+          const users = await Admin.find({ userName: { $regex: new RegExp(searchQuery, "i"), }, }).exec();
+          SecondArray = SecondArray.concat(users);
+          allIntroDataLength = SecondArray.length;
+          const pageNumber = Math.ceil(allIntroDataLength / 10);
+          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
         } else {
           console.log('second')
           let introducerUser = await Admin.find({ roles: { $nin: ["superAdmin"] } }).exec();
           let introData = JSON.parse(JSON.stringify(introducerUser));
-          console.log('introData',introData.length)
+          console.log('introData', introData.length)
 
           const SecondArray = [];
           const Limit = page * 10;
           console.log("Limit", Limit);
-          
+
           for (let j = Limit - 10; j < Limit && j < introData.length; j++) {
             if (introData[j]) {
-                SecondArray.push(introData[j]);
+              SecondArray.push(introData[j]);
             }
-        }        
+          }
           allIntroDataLength = introData.length;
-  
+
           if (SecondArray.length === 0) {
             return res.status(404).json({ message: "No data found for the selected criteria." });
           }
 
           const pageNumber = Math.ceil(allIntroDataLength / 10);
           res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-          
+
         }
       } catch (e) {
         console.error(e);
@@ -493,8 +486,8 @@ const AccountsRoute = (app) => {
       }
     }
   );
-  
-  
+
+
 
   app.post(
     "/api/admin/single-sub-admin/:id",
@@ -710,29 +703,29 @@ const AccountsRoute = (app) => {
         } else if (edate) {
           filter.createdAt = { $lte: new Date(edate) };
         }
-        
+
         const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
         const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
         const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
 
-        
+
         const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
-        alltrans.sort((a, b) => b.createdAt - a.createdAt); 
+        alltrans.sort((a, b) => b.createdAt - a.createdAt);
         // console.log('all',alltrans.length)
         const allIntroDataLength = alltrans.length;
         // console.log("allIntroDataLength", allIntroDataLength);
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
-        const paginatedResults = alltrans.slice(skip,skip + limit);
+        const paginatedResults = alltrans.slice(skip, skip + limit);
         // console.log('pagitren',paginatedResults.length)
 
-        if(paginatedResults.length !== 0){
+        if (paginatedResults.length !== 0) {
           console.log('s')
-          console.log('pagin',paginatedResults.length)
-         return res.status(200).json({paginatedResults,pageNumber,allIntroDataLength});
+          console.log('pagin', paginatedResults.length)
+          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
         }
-        else{
+        else {
           const itemsPerPage = 10; // Specify the number of items per page
 
           const totalItems = alltrans.length;
@@ -750,7 +743,7 @@ const AccountsRoute = (app) => {
 
           return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
 
-       } 
+        }
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
