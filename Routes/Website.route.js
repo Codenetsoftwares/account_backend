@@ -21,7 +21,7 @@ const WebisteRoutes = (app) => {
       const newWebsiteName = new Website({
         websiteName: websiteName,
         subAdminId: userName.userName,
-        subAdminName : userName.firstname
+        subAdminName: userName.firstname
       });
       console.log("newWebsiteName", newWebsiteName)
       const id = await Website.find(req.params.id);
@@ -92,15 +92,15 @@ const WebisteRoutes = (app) => {
 
   // API To View Website Name
 
-  app.get("/api/get-website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Create-Transaction","Create-Deposit-Transaction","Create-Withdraw-Transaction","Website-View",
-  "Profile-View", "Bank-View"]),
+  app.get("/api/get-website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Website-View",
+    "Profile-View", "Bank-View"]),
     async (req, res) => {
       try {
         const dbWebiteData = await Website.find({}).exec();
         let websiteData = JSON.parse(JSON.stringify(dbWebiteData));
         for (var index = 0; index < websiteData.length; index++) {
-            websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
-          }
+          websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
+        }
         res.status(200).send(websiteData);
       } catch (e) {
         console.error(e);
@@ -112,7 +112,7 @@ const WebisteRoutes = (app) => {
   app.get("/api/get-single-webiste-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
     try {
       const id = req.params.id;
-      const dbWebsiteData = await Website.findOne({ _id: id }).exec();     
+      const dbWebsiteData = await Website.findOne({ _id: id }).exec();
       if (!dbWebsiteData) {
         return res.status(404).send({ message: 'Website not found' });
       }
@@ -125,7 +125,7 @@ const WebisteRoutes = (app) => {
         subAdminName: dbWebsiteData.subAdminName,
         balance: bankBalance,
       };
-  
+
       res.status(200).send(response);
     } catch (e) {
       console.error(e);
@@ -149,9 +149,9 @@ const WebisteRoutes = (app) => {
       }
       const website = await Website.findOne({ _id: id }).exec();
       if (!website) {
-          return res.status(404).send({ message: "Website  not found" });
-        }
-        console.log("website.id", website._id)
+        return res.status(404).send({ message: "Website  not found" });
+      }
+      console.log("website.id", website._id)
       const websiteTransaction = new WebsiteTransaction({
         websiteId: website._id,
         websiteName: website.websiteName,
@@ -260,7 +260,7 @@ const WebisteRoutes = (app) => {
     async (req, res) => {
       try {
         const websiteName = req.params.websiteName;
-        const {page,itemsPerPage} = req.query;
+        const { page, itemsPerPage } = req.query;
         const {
           transactionType,
           introducerList,
@@ -284,7 +284,7 @@ const WebisteRoutes = (app) => {
         }
         const startDate = sdate ? new Date(sdate).toISOString() : null;
         const endDate = edate ? new Date(edate).toISOString() : null;
-  
+
         if (startDate && endDate) {
           filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
         } else if (startDate) {
@@ -296,6 +296,7 @@ const WebisteRoutes = (app) => {
         // const page = req.params.page;
         const transaction = await Transaction.findOne({ websiteName }).exec();
         let balances = 0;
+        console.log('299')
         if (!transaction) {
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
           let websiteData = JSON.parse(JSON.stringify(websiteSummary));
@@ -309,11 +310,45 @@ const WebisteRoutes = (app) => {
             }
           });
           if (websiteData.length > 0) {
-            res.status(200).send(websiteData);
+            const allIntroDataLength = websiteData.length;
+            console.log("allIntroDataLength", allIntroDataLength);
+            let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+            const skip = (page - 1) * itemsPerPage;
+            const limit = parseInt(itemsPerPage);
+            const paginatedResults = websiteData.slice(skip, skip + limit);
+            console.log('pagitren', paginatedResults.length)
+
+            if (paginatedResults.length !== 0) {
+              console.log('s')
+              console.log('pagin', paginatedResults.length)
+              return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+            }
+            else {
+              const itemsPerPage = 10; // Specify the number of items per page
+
+              const totalItems = alltrans.length;
+              const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+              let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+              page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+              const skip = (page - 1) * itemsPerPage;
+              const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+              const paginatedResults = alltrans.slice(skip, skip + limit);
+
+              const pageNumber = page;
+              const allIntroDataLength = totalItems;
+
+              return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+
+            }
+
           } else {
             return res.status(404).send({ message: "Website Name not found" });
           }
+          console.log('317')
         } else {
+          console.log('319')
           const userId = transaction.userName;
           if (!userId) {
             return res.status(404).send({ message: "User Id not found" });
@@ -345,6 +380,7 @@ const WebisteRoutes = (app) => {
               data.balance = balances;
             }
           });
+          console.log('360')
           const filteredTrans = [...accountData, ...websiteData].filter((data) => {
             // Your filtering conditions here
             const dataCreatedAt = new Date(data.createdAt);
@@ -355,39 +391,40 @@ const WebisteRoutes = (app) => {
               (!filter.bankName || data.bankName === filter.bankName) &&
               (!filter.createdAt ||
                 (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
-        );
+            );
           });
-    
           const allIntroDataLength = filteredTrans.length;
           let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
           const skip = (page - 1) * itemsPerPage;
           const limit = parseInt(itemsPerPage);
           const paginatedResults = filteredTrans.slice(skip, skip + limit);
-    
+
           if (paginatedResults.length !== 0) {
             console.log('afe')
             return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
           } else {
-            console.log('ded',filteredTrans)
+            console.log('ded', filteredTrans)
             const itemsPerPage = 10; // Specify the number of items per page
 
             const totalItems = filteredTrans.length;
             const totalPages = Math.ceil(totalItems / itemsPerPage);
-  
+
             let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
             page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-  
+
             const skip = (page - 1) * itemsPerPage;
             const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
             const paginatedResults = filteredTrans.slice(skip, skip + limit);
-  
+
             const pageNumber = page;
             const allIntroDataLength = totalItems;
-  
+
             return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-  
+
           }
-      }
+        }
+        // return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+        console.log('391')
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
