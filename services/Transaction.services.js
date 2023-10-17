@@ -298,7 +298,7 @@ const TransactionService = {
       updatedTransactionData = {
         id: bankTransaction._id,
         bankId: existingBankTransaction.bankId,
-        bankName: existingBankTransaction.bankName,
+        bankName: data.bankName || existingBankTransaction.bankName,
         transactionType: data.transactionType || existingBankTransaction.transactionType,
         remarks: data.remarks || existingBankTransaction.remarks,
         depositAmount: data.depositAmount || existingBankTransaction.depositAmount,
@@ -324,7 +324,7 @@ const TransactionService = {
       updatedTransactionData = {
         id: bankTransaction._id,
         bankId: existingBankTransaction.bankId,
-        bankName: existingBankTransaction.bankName,
+        bankName: data.bankName || existingBankTransaction.bankName,
         transactionType: data.transactionType || existingBankTransaction.transactionType,
         remarks: data.remarks || existingBankTransaction.remarks,
         withdrawAmount: data.withdrawAmount || existingBankTransaction.withdrawAmount,
@@ -365,7 +365,7 @@ const TransactionService = {
         depositAmount: data.depositAmount || existingWebsiteTransaction.depositAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
-        websiteName: existingWebsiteTransaction.websiteName,
+        websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
       const editRequest = new EditRequest({
         ...updatedTransactionData,
@@ -392,7 +392,7 @@ const TransactionService = {
         withdrawAmount: data.withdrawAmount || existingWebsiteTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
-        websiteName: existingWebsiteTransaction.websiteName,
+        websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
       const editRequest = new EditRequest({
         ...updatedTransactionData,
