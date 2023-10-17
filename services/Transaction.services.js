@@ -230,16 +230,22 @@ const TransactionService = {
         remarks: data.remarks || existingTransaction.remarks,
         userName: data.userName || existingTransaction.userName
       };
-
+      
+      const originalTransactionData = { ...existingTransaction.toObject() };
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
         }
-      }
-
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
-        changedFields,
+        originalData: changedFields,
         isApproved: false,
         isSubmit: false,
         type: "Edit",
@@ -260,15 +266,21 @@ const TransactionService = {
         remark: data.remark || existingTransaction.remarks,
       };
 
+      const originalTransactionData = { ...existingTransaction.toObject() };
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
         }
-      }
-
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
-        changedFields,
+        originalData: changedFields,
         isApproved: false,
         isSubmit: false,
         type: "Edit",
@@ -289,12 +301,6 @@ const TransactionService = {
     let changedFields = {};
 
     if (existingBankTransaction.transactionType === "Manual-Bank-Deposit") {
-      for (const key in data) {
-        if (existingBankTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
-          updatedTransactionData[key] = data[key];
-        }
-      }
       updatedTransactionData = {
         id: bankTransaction._id,
         bankId: existingBankTransaction.bankId,
@@ -306,21 +312,26 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         accountNumber: existingBankTransaction.accountNumber,
       };
+      const originalTransactionData = { ...existingBankTransaction.toObject() };
+      for (const key in data) {
+        if (existingBankTransaction[key] !== data[key]) {
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
+        }
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
-        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
         message: "Manual-Bank-Deposit transaction is being edited.",
       });
       await editRequest.save();
     } else if (
       existingBankTransaction.transactionType === "Manual-Bank-Withdraw"
     ) {
-      for (const key in data) {
-        if (existingBankTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
-          updatedTransactionData[key] = data[key];
-        }
-      }
-
       updatedTransactionData = {
         id: bankTransaction._id,
         bankId: existingBankTransaction.bankId,
@@ -332,8 +343,20 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
         accountNumber: existingBankTransaction.accountNumber,
       };
+      const originalTransactionData = { ...existingBankTransaction.toObject() };
+      for (const key in data) {
+        if (existingBankTransaction[key] !== data[key]) {
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
+        }
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
-        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
         message: "Manual-Bank-Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -352,12 +375,6 @@ const TransactionService = {
     if (
       existingWebsiteTransaction.transactionType === "Manual-Website-Deposit"
     ) {
-      for (const key in data) {
-        if (existingWebsiteTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
-          updatedTransactionData[key] = data[key];
-        }
-      }
       updatedTransactionData = {
         id: websiteTransaction._id,
         transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
@@ -367,9 +384,21 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
         websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
+      const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
+      for (const key in data) {
+        if (existingWebsiteTransaction[key] !== data[key]) {
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
+        }
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
-        changedFields,
+        originalData: changedFields,
         isApproved: false,
         isSubmit: false,
         type: "Edit",
@@ -379,12 +408,6 @@ const TransactionService = {
     } else if (
       existingWebsiteTransaction.transactionType === "Manual-Website-Withdraw"
     ) {
-      for (const key in data) {
-        if (existingWebsiteTransaction[key] !== data[key]) {
-          changedFields[key] = data[key];
-          updatedTransactionData[key] = data[key];
-        }
-      }
       updatedTransactionData = {
         id: websiteTransaction._id,
         transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
@@ -394,9 +417,21 @@ const TransactionService = {
         subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
         websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
+      const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
+      for (const key in data) {
+        if (existingWebsiteTransaction[key] !== data[key]) {
+            changedFields[key] = {
+                oldValue: originalTransactionData[key],
+                newValue: data[key]
+            };
+        }
+    }
+    if (Object.keys(changedFields).length === 0) {
+      throw { code: 400, message: "No changes were made to the transaction." };
+  }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
-        changedFields,
+        originalData: changedFields,
         isApproved: false,
         isSubmit: false,
         type: "Edit",
