@@ -248,6 +248,7 @@ const TransactionRoutes = (app) => {
       }
       if (!editRequest.isApproved) {
         const updatedTransaction = await BankTransaction.updateOne({ _id: editRequest.id }, {
+          bankName: editRequest.bankName,
           transactionType: editRequest.transactionType,
           remarks: editRequest.remarks,
           withdrawAmount: editRequest.withdrawAmount,
@@ -296,6 +297,7 @@ const TransactionRoutes = (app) => {
       }
       if (!editRequest.isApproved) {
         const updatedTransaction = await WebsiteTransaction.updateOne({ _id: editRequest.id }, {
+          websiteName: editRequest.websiteName,
           transactionType: editRequest.transactionType,
           remarks: editRequest.remarks,
           withdrawAmount: editRequest.withdrawAmount,
