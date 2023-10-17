@@ -29,6 +29,7 @@ export const EditRequest = mongoose.model(
     message: { type: String },
     type: { type: String },
     changedFields: {},
+    originalData : { type: Object },
     isSubmit: { type: Boolean, default: false },
     isApproved: { type: Boolean, default: false, required: true },
   }),
