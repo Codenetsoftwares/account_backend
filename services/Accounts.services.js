@@ -366,10 +366,7 @@ const AccountServices = {
 
     transaction.forEach((transactions) => {
       if (transactions.transactionType === "Deposit") {
-        balance =
-          Number(balance) -
-          Number(transactions.bonus) -
-          Number(transactions.amount);
+        balance = Number(balance) - Number(transactions.bonus) - Number(transactions.amount);
       } else {
         balance += transactions?.amount;
       }

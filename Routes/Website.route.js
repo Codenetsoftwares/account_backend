@@ -292,11 +292,8 @@ const WebisteRoutes = (app) => {
         } else if (endDate) {
           filter.createdAt = { $lte: new Date(endDate) };
         }
-        // const websiteName = req.params.websiteName;
-        // const page = req.params.page;
         const transaction = await Transaction.findOne({ websiteName }).exec();
         let balances = 0;
-        console.log('299')
         if (!transaction) {
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
           let websiteData = JSON.parse(JSON.stringify(websiteSummary));
@@ -319,14 +316,12 @@ const WebisteRoutes = (app) => {
             console.log('pagitren', paginatedResults.length)
 
             if (paginatedResults.length !== 0) {
-              console.log('s')
-              console.log('pagin', paginatedResults.length)
               return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
             }
             else {
               const itemsPerPage = 10; // Specify the number of items per page
 
-              const totalItems = alltrans.length;
+              const totalItems = websiteData.length;
               const totalPages = Math.ceil(totalItems / itemsPerPage);
 
               let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
@@ -334,7 +329,7 @@ const WebisteRoutes = (app) => {
 
               const skip = (page - 1) * itemsPerPage;
               const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-              const paginatedResults = alltrans.slice(skip, skip + limit);
+              const paginatedResults = websiteData.slice(skip, skip + limit);
 
               const pageNumber = page;
               const allIntroDataLength = totalItems;
@@ -355,35 +350,8 @@ const WebisteRoutes = (app) => {
           }
           const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-
-          let websiteData = JSON.parse(JSON.stringify(websiteSummary));
-          websiteData.slice(0).reverse().map((data) => {
-            if (data.withdrawAmount) {
-              balances -= data.withdrawAmount;
-              data.balance = balances;
-            } else {
-              balances += data.depositAmount;
-              data.balance = balances;
-            }
-          });
-          let accountData = JSON.parse(JSON.stringify(accountSummary));
-          accountData.slice(0).reverse().map((data) => {
-            if (data.transactionType === "Deposit") {
-              const netAmount = balances - data.bonus - data.amount;
-              console.log("netAmount", netAmount);
-              balances = netAmount;
-              data.balance = balances;
-            } else {
-              let totalamount = 0;
-              totalamount += data.amount;
-              balances += totalamount;
-              data.balance = balances;
-            }
-          });
-          console.log('360')
-          const filteredTrans = [...accountData, ...websiteData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
+          const filteredTrans = [...accountSummary, ...websiteSummary].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
           .filter((data) => {
-            // Your filtering conditions here
             const dataCreatedAt = new Date(data.createdAt);
             return (
               (!filter.transactionType || data.transactionType === filter.transactionType) &&
@@ -398,8 +366,29 @@ const WebisteRoutes = (app) => {
           let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
           const skip = (page - 1) * itemsPerPage;
           const limit = parseInt(itemsPerPage);
-          const paginatedResults = filteredTrans.slice(skip, skip + limit);
-
+          const websitepagination = filteredTrans.slice(skip, skip + limit);
+          let paginatedResults = JSON.parse(JSON.stringify(websitepagination));
+          paginatedResults.slice(0).reverse().map((data) => {
+            if (data.transactionType === "Manual-Website-Deposit") {
+              balances += data.depositAmount;
+              data.balance = balances;
+            }
+            if (data.transactionType === "Manual-Website-Withdraw") {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+            }
+            if (data.transactionType === "Deposit"){
+              const netAmount = balances - data.bonus - data.amount;
+              balances = netAmount;
+              data.balance = balances;
+            }
+            if (data.transactionType === "Withdraw"){
+              let totalamount = 0;
+              totalamount += data.amount;
+              balances += totalamount;
+              data.balance = balances;
+            }
+          });
           if (paginatedResults.length !== 0) {
             console.log('afe')
             return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
