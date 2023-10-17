@@ -369,7 +369,7 @@ const BankRoutes = (app) => {
           filter.createdAt = { $lte: new Date(endDate) };
         }
         console.log("date", sdate, edate)
-        const transaction = await Transaction.findOne({ bankName: bankName }).exec();
+        const transaction = await Transaction.findOne({ bankName: bankName }).sort({ createdAt: -1 }).exec();
         let balances = 0;
         if (!transaction) {
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
@@ -455,7 +455,8 @@ const BankRoutes = (app) => {
               data.balance = balances;
             }
           });
-          const filteredTrans = [...accountData, ...bankData].filter((data) => {
+          const filteredTrans = [...accountData, ...bankData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
+          .filter((data) => {
             // Your filtering conditions here
             const dataCreatedAt = new Date(data.createdAt);
             return (

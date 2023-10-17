@@ -381,7 +381,8 @@ const WebisteRoutes = (app) => {
             }
           });
           console.log('360')
-          const filteredTrans = [...accountData, ...websiteData].filter((data) => {
+          const filteredTrans = [...accountData, ...websiteData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
+          .filter((data) => {
             // Your filtering conditions here
             const dataCreatedAt = new Date(data.createdAt);
             return (
