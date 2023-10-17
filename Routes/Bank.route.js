@@ -373,7 +373,6 @@ const BankRoutes = (app) => {
         let balances = 0;
         if (!transaction) {
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-          console.log('bankSummary', bankSummary)
           let bankData = JSON.parse(JSON.stringify(bankSummary));
           bankData.slice(0).reverse().map((data) => {
             if (data.depositAmount) {
@@ -394,14 +393,12 @@ const BankRoutes = (app) => {
             console.log('pagitren', paginatedResults.length)
 
             if (paginatedResults.length !== 0) {
-              console.log('s')
-              console.log('pagin', paginatedResults.length)
               return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
             }
             else {
               const itemsPerPage = 10; // Specify the number of items per page
 
-              const totalItems = alltrans.length;
+              const totalItems = bankData.length;
               const totalPages = Math.ceil(totalItems / itemsPerPage);
 
               let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
@@ -409,7 +406,7 @@ const BankRoutes = (app) => {
 
               const skip = (page - 1) * itemsPerPage;
               const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-              const paginatedResults = alltrans.slice(skip, skip + limit);
+              const paginatedResults = bankData.slice(skip, skip + limit);
 
               const pageNumber = page;
               const allIntroDataLength = totalItems;
@@ -427,35 +424,7 @@ const BankRoutes = (app) => {
           }
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
           const accountSummary = await Transaction.find({ bankName, userId }).sort({ createdAt: -1 }).exec();
-
-          let bankData = JSON.parse(JSON.stringify(bankSummary));
-          bankData.slice(0).reverse().map((data) => {
-            if (data.depositAmount) {
-              console.log('353')
-              balances += data.depositAmount;
-              data.balance = balances;
-            } else {
-              console.log('357')
-              balances -= data.withdrawAmount;
-              data.balance = balances;
-            }
-          });
-
-          let accountData = JSON.parse(JSON.stringify(accountSummary));
-          accountData.slice(0).reverse().map((data) => {
-            if (data.transactionType === "Deposit") {
-              let totalamount = 0;
-              totalamount += data.amount;
-              balances += totalamount;
-              data.balance = balances;
-            } else {
-              const netAmount = balances - data.bankCharges - data.amount;
-              console.log("netAmount", netAmount);
-              balances = netAmount;
-              data.balance = balances;
-            }
-          });
-          const filteredTrans = [...accountData, ...bankData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
+          const filteredTrans = [...accountSummary, ...bankSummary].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
           .filter((data) => {
             // Your filtering conditions here
             const dataCreatedAt = new Date(data.createdAt);
@@ -468,13 +437,39 @@ const BankRoutes = (app) => {
                 (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
             );
           });
-          console.log("reurndate", filter.createdAt)
           const allIntroDataLength = filteredTrans.length;
           let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
           const skip = (page - 1) * itemsPerPage;
           const limit = parseInt(itemsPerPage);
-          const paginatedResults = filteredTrans.slice(skip, skip + limit);
+          const bankpagination = filteredTrans.slice(skip, skip + limit);
+          let paginatedResults = JSON.parse(JSON.stringify(bankpagination));
+          paginatedResults.slice(0).reverse().map((data) => {
+            if (data.transactionType === "Manual-Bank-Deposit") {
+              balances += data.depositAmount;
+              data.balance = balances;
+              console.log("balances", balances)
+            }
+            if (data.transactionType === "Manual-Bank-Withdraw") {
+              balances -= data.withdrawAmount;
+              data.balance = balances;
+              console.log("balances2", balances)
 
+            }
+            if (data.transactionType === "Deposit"){
+              let totalamount = 0;
+              totalamount += data.amount;
+              balances += totalamount;
+              data.balance = balances;
+              console.log("balances3", balances)
+            }
+            if (data.transactionType === "Withdraw"){
+              const netAmount = balances - data.bankCharges - data.amount;
+              console.log("netAmount", netAmount);
+              balances = netAmount;
+              data.balance = balances;
+              console.log("balances4", balances)
+            }
+          });
           if (paginatedResults.length !== 0) {
             console.log('afe')
             return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
