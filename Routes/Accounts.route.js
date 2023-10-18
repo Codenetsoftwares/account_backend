@@ -752,10 +752,21 @@ const AccountsRoute = (app) => {
   );
 
 
-  app.post('/api/admin/create/introducer/transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
+  app.post('/api/admin/create/introducer/deposit-transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const subAdminName = req.user;
-      await TransactionServices.createIntroducerTransaction(req, res, subAdminName);
+      await TransactionServices.createIntroducerDepositTransaction(req, res, subAdminName);
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
+    }
+  }
+  );
+
+  app.post('/api/admin/create/introducer/withdraw-transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
+    try {
+      const subAdminName = req.user;
+      await TransactionServices.createIntroducerWithdrawTransaction(req, res, subAdminName);
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });

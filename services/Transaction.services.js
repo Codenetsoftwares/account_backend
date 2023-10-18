@@ -137,13 +137,12 @@ const TransactionService = {
     }
   },
 
-  createIntroducerTransaction: async (req, res, subAdminName) => {
+  createIntroducerDepositTransaction: async (req, res, subAdminName) => {
     try {
       const { amount, transactionType, remarks, subAdminId, subAdminName, introducerUserName } = req.body;
 
       const introId = await IntroducerUser.findOne({ userName: introducerUserName }).exec();
       if (transactionType === "Deposit") {
-
         const NewIntroducerTransaction = new IntroducerTransaction({
           introUserId: introId._id,
           amount: amount,
@@ -156,6 +155,19 @@ const TransactionService = {
         });
         await NewIntroducerTransaction.save();
       }
+      return res.status(200).json({ status: true, message: "Transaction created successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  },
+  
+
+  createIntroducerWithdrawTransaction: async (req, res, subAdminName) => {
+    try {
+      const { amount, transactionType, remarks, subAdminId, subAdminName, introducerUserName } = req.body;
+
+      const introId = await IntroducerUser.findOne({ userName: introducerUserName }).exec();
       if (transactionType === "Withdraw") {
 
         const NewIntroducerTransaction = new IntroducerTransaction({
@@ -176,6 +188,7 @@ const TransactionService = {
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   },
+
 
   withdrawView: async (req, res) => {
     try {
