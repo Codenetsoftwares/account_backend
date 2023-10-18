@@ -10,9 +10,11 @@ export const Bank = mongoose.model(
     upiId: { type: String },
     upiAppName: { type: String },
     upiNumber: { type: String },
-    subAdminId: { type: String },
+    // subAdminId: { type: String },
+    subAdminId: [],
     subAdminName: { type: String },
     createdAt: { type: Date },
+    isActive: {type: Boolean, default: false, required: true}
   }),
   "Bank"
 );

@@ -23,6 +23,8 @@ const BankRoutes = (app) => {
           upiId,
           upiAppName,
           upiNumber,
+          isActive
+
         } = req.body;
         if (!bankName) {
           throw { code: 400, message: "Please provide a bank name to add" };
@@ -37,6 +39,7 @@ const BankRoutes = (app) => {
           upiNumber: upiNumber,
           subAdminId: userName.userName,
           subAdminName: userName.firstname,
+          isActive: isActive
         });
         const id = await Bank.find(req.params.id);
         id.map((data) => {
@@ -425,18 +428,18 @@ const BankRoutes = (app) => {
           const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
           const accountSummary = await Transaction.find({ bankName, userId }).sort({ createdAt: -1 }).exec();
           const filteredTrans = [...accountSummary, ...bankSummary].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
-          .filter((data) => {
-            // Your filtering conditions here
-            const dataCreatedAt = new Date(data.createdAt);
-            return (
-              (!filter.transactionType || data.transactionType === filter.transactionType) &&
-              (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
-              (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
-              (!filter.bankName || data.bankName === filter.bankName) &&
-              (!filter.createdAt ||
-                (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
-            );
-          });
+            .filter((data) => {
+              // Your filtering conditions here
+              const dataCreatedAt = new Date(data.createdAt);
+              return (
+                (!filter.transactionType || data.transactionType === filter.transactionType) &&
+                (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
+                (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
+                (!filter.bankName || data.bankName === filter.bankName) &&
+                (!filter.createdAt ||
+                  (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
+              );
+            });
           const allIntroDataLength = filteredTrans.length;
           let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
           const skip = (page - 1) * itemsPerPage;
@@ -455,14 +458,14 @@ const BankRoutes = (app) => {
               console.log("balances2", balances)
 
             }
-            if (data.transactionType === "Deposit"){
+            if (data.transactionType === "Deposit") {
               let totalamount = 0;
               totalamount += data.amount;
               balances += totalamount;
               data.balance = balances;
               console.log("balances3", balances)
             }
-            if (data.transactionType === "Withdraw"){
+            if (data.transactionType === "Withdraw") {
               const netAmount = balances - data.bankCharges - data.amount;
               console.log("netAmount", netAmount);
               balances = netAmount;
@@ -515,6 +518,59 @@ const BankRoutes = (app) => {
       }
     }
   );
+
+  app.post("/api/admin/bank/isactive/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+    try {
+      console.log('req', req.params.bankId)
+      const bankId =  req.params.bankId;
+      const activeRequest = await Bank.findById(bankId);
+      console.log('act', activeRequest)
+      const { isActive } = req.body;
+      if (typeof isActive !== "boolean") {
+        return res.status(400).send({ message: "isApproved field must be a boolean value" });
+      }
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+      // Check if the user has permission to access this bank based on their role
+       // You can implement your own logic here, including checking the subAdminId if needed
+
+      // Update the isActive field
+      bank.isActive = isActive;
+
+      await bank.save();
+
+      res.status(200).send({ message: "Bank status updated successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+    try {
+      const bankId = req.params.bankId;
+      const { subAdminId } = req.body;
+  
+      // First, check if the bank with the given ID exists
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+  
+      bank.subAdminId.push(subAdminId);
+      bank.isActive = true; // Set isActive to true for the assigned subadmin
+      await bank.save();
+  
+      res.status(200).send({ message: "Subadmin assigned successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+  
+
 };
 
 export default BankRoutes;
