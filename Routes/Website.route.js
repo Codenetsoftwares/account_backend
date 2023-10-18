@@ -190,9 +190,9 @@ const WebisteRoutes = (app) => {
       if (!website) {
         return res.status(404).send({ message: "Websitet not found" });
       }
-      if (website.balance < Number(amount)) {
+      if ((await AccountServices.getBankBalance(id)) < Number(amount)) {
         return res.status(400).send({ message: "Insufficient Balance " });
-      };
+      }
       const websiteTransaction = new WebsiteTransaction({
         websiteId: website._id,
         websiteName: website.websiteName,
