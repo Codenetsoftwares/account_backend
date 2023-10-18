@@ -329,9 +329,50 @@ const BankRoutes = (app) => {
       }
     }
   );
-
+ 
+  app.post(
+    "/api/admin/manual-user-bank-account-summary/:accountNumber",
+    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
+    async (req, res) => {
+      try {
+        let balances = 0;
+        const bankName = req.params.accountNumber;
+        const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
+        const accountSummary = await Transaction.find({ bankName }).sort({ createdAt: -1 }).exec();
+        let bankData = JSON.parse(JSON.stringify(bankSummary));
+          bankData.slice(0).reverse().map((data) => {
+              if (data.withdrawAmount) {
+                balances -= data.withdrawAmount;
+                data.balance = balances;
+              } else {
+                balances += data.depositAmount;
+                data.balance = balances;
+              }
+            });
+          
+          let accountData = JSON.parse(JSON.stringify(accountSummary));
+          accountData.slice(0).reverse().map((data) => {
+              if (data.transactionType === "Deposit") {
+                let totalamount = 0;
+                totalamount += data.amount;
+                balances += totalamount;
+                data.balance = balances;
+              } else {
+                const netAmount = balances - data.bankCharges - data.amount;
+                console.log("netAmount", netAmount);
+                balances = netAmount;
+                data.balance = balances;
+              }
+            });
+        const allTransactions = [...accountData, ...bankData]
+        return res.status(200).send(allTransactions);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message });
+      }
+    }
+  );
   
-
   app.get(
     "/api/superadmin/view-bank-edit-requests",
     Authorize(["superAdmin"]),
