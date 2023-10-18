@@ -23,6 +23,8 @@ const BankRoutes = (app) => {
           upiId,
           upiAppName,
           upiNumber,
+          isActive
+
         } = req.body;
         if (!bankName) {
           throw { code: 400, message: "Please provide a bank name to add" };
@@ -37,6 +39,7 @@ const BankRoutes = (app) => {
           upiNumber: upiNumber,
           subAdminId: userName.userName,
           subAdminName: userName.firstname,
+          isActive: isActive
         });
         const id = await Bank.find(req.params.id);
         id.map((data) => {
@@ -327,52 +330,7 @@ const BankRoutes = (app) => {
     }
   );
 
-  app.post(
-    "/api/admin/manual-user-bank-account-summary/:accountNumber",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
-    async (req, res) => {
-      try {
-        let balances = 0;
-        const bankName = req.params.accountNumber;
-        const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-        const accountSummary = await Transaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-        let bankData = JSON.parse(JSON.stringify(bankSummary));
-          bankData.slice(0).reverse().map((data) => {
-              if (data.withdrawAmount) {
-                balances -= data.withdrawAmount;
-                data.balance = balances;
-              } else {
-                balances += data.depositAmount;
-                data.balance = balances;
-              }
-            });
-          
-          let accountData = JSON.parse(JSON.stringify(accountSummary));
-          accountData.slice(0).reverse().map((data) => {
-              if (data.transactionType === "Deposit") {
-                let totalamount = 0;
-                totalamount += data.amount;
-                balances += totalamount;
-                data.balance = balances;
-              } else {
-                const netAmount = balances - data.bankCharges - data.amount;
-                console.log("netAmount", netAmount);
-                balances = netAmount;
-                data.balance = balances;
-              }
-            });
-        const allTransactions = [...accountData, ...bankData]
-        return res.status(200).send(allTransactions);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
-      }
-    }
-  );
   
-  
-  
-
 
   app.get(
     "/api/superadmin/view-bank-edit-requests",
@@ -387,6 +345,59 @@ const BankRoutes = (app) => {
       }
     }
   );
+
+  app.post("/api/admin/bank/isactive/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+    try {
+      console.log('req', req.params.bankId)
+      const bankId =  req.params.bankId;
+      const activeRequest = await Bank.findById(bankId);
+      console.log('act', activeRequest)
+      const { isActive } = req.body;
+      if (typeof isActive !== "boolean") {
+        return res.status(400).send({ message: "isApproved field must be a boolean value" });
+      }
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+      // Check if the user has permission to access this bank based on their role
+       // You can implement your own logic here, including checking the subAdminId if needed
+
+      // Update the isActive field
+      bank.isActive = isActive;
+
+      await bank.save();
+
+      res.status(200).send({ message: "Bank status updated successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+    try {
+      const bankId = req.params.bankId;
+      const { subAdminId } = req.body;
+  
+      // First, check if the bank with the given ID exists
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        return res.status(404).send({ message: "Bank not found" });
+      }
+  
+      bank.subAdminId.push(subAdminId);
+      bank.isActive = true; // Set isActive to true for the assigned subadmin
+      await bank.save();
+  
+      res.status(200).send({ message: "Subadmin assigned successfully" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+  
+
 };
 
 export default BankRoutes;
