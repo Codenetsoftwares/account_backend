@@ -261,8 +261,7 @@ const WebisteRoutes = (app) => {
       try {
         const websiteName = req.params.websiteName;
         let balances = 0;
-    
-          const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
+          const accountSummary = await Transaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
           const allTransactions = [...accountSummary, ...websiteSummary]
           allTransactions.sort((a, b) => {
@@ -272,30 +271,24 @@ const WebisteRoutes = (app) => {
           });
           let allData = JSON.parse(JSON.stringify(allTransactions));
           allData.slice(0).reverse().map((data) => {
-            if (data.transactionType === "Manual-Bank-Deposit") {
+            if (data.transactionType === "Manual-Website-Deposit") {
               balances += data.depositAmount;
               data.balance = balances;
-              console.log("balances", balances)
             }
-            if (data.transactionType === "Manual-Bank-Withdraw") {
+            if (data.transactionType === "Manual-Website-Withdraw") {
               balances -= data.withdrawAmount;
               data.balance = balances;
-              console.log("balances2", balances)
-  
             }
             if (data.transactionType === "Deposit") {
+              const netAmount = balances - data.bonus - data.amount;
+              balances = netAmount;
+              data.balance = balances;
+            }
+            if (data.transactionType === "Withdraw") {
               let totalamount = 0;
               totalamount += data.amount;
               balances += totalamount;
               data.balance = balances;
-              console.log("balances3", balances)
-            }
-            if (data.transactionType === "Withdraw") {
-              const netAmount = balances - data.bankCharges - data.amount;
-              console.log("netAmount", netAmount);
-              balances = netAmount;
-              data.balance = balances;
-              console.log("balances4", balances)
             }
           });
           return res.status(200).send(allData);
