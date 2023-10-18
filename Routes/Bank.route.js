@@ -123,7 +123,7 @@ const BankRoutes = (app) => {
             bankData[index]._id
           );
         }
-
+        console.log('bankd', bankData)
         res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
@@ -329,7 +329,7 @@ const BankRoutes = (app) => {
       }
     }
   );
- 
+
   app.post(
     "/api/admin/manual-user-bank-account-summary/:accountNumber",
     Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
@@ -339,40 +339,49 @@ const BankRoutes = (app) => {
         const bankName = req.params.accountNumber;
         const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
         const accountSummary = await Transaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-        let bankData = JSON.parse(JSON.stringify(bankSummary));
-          bankData.slice(0).reverse().map((data) => {
-              if (data.withdrawAmount) {
-                balances -= data.withdrawAmount;
-                data.balance = balances;
-              } else {
-                balances += data.depositAmount;
-                data.balance = balances;
-              }
-            });
-          
-          let accountData = JSON.parse(JSON.stringify(accountSummary));
-          accountData.slice(0).reverse().map((data) => {
-              if (data.transactionType === "Deposit") {
-                let totalamount = 0;
-                totalamount += data.amount;
-                balances += totalamount;
-                data.balance = balances;
-              } else {
-                const netAmount = balances - data.bankCharges - data.amount;
-                console.log("netAmount", netAmount);
-                balances = netAmount;
-                data.balance = balances;
-              }
-            });
-        const allTransactions = [...accountData, ...bankData]
-        return res.status(200).send(allTransactions);
+
+        const allTransactions = [...accountSummary, ...bankSummary];
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB - dateA;
+        });
+        let allData = JSON.parse(JSON.stringify(allTransactions));
+        allData.slice(0).reverse().map((data) => {
+          if (data.transactionType === "Manual-Bank-Deposit") {
+            balances += data.depositAmount;
+            data.balance = balances;
+            console.log("balances", balances)
+          }
+          if (data.transactionType === "Manual-Bank-Withdraw") {
+            balances -= data.withdrawAmount;
+            data.balance = balances;
+            console.log("balances2", balances)
+
+          }
+          if (data.transactionType === "Deposit") {
+            let totalamount = 0;
+            totalamount += data.amount;
+            balances += totalamount;
+            data.balance = balances;
+            console.log("balances3", balances)
+          }
+          if (data.transactionType === "Withdraw") {
+            const netAmount = balances - data.bankCharges - data.amount;
+            console.log("netAmount", netAmount);
+            balances = netAmount;
+            data.balance = balances;
+            console.log("balances4", balances)
+          }
+        });
+        return res.status(200).send(allData);
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
       }
     }
   );
-  
+
   app.get(
     "/api/superadmin/view-bank-edit-requests",
     Authorize(["superAdmin"]),
@@ -390,7 +399,7 @@ const BankRoutes = (app) => {
   app.post("/api/admin/bank/isactive/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       console.log('req', req.params.bankId)
-      const bankId =  req.params.bankId;
+      const bankId = req.params.bankId;
       const activeRequest = await Bank.findById(bankId);
       console.log('act', activeRequest)
       const { isActive } = req.body;
@@ -402,7 +411,7 @@ const BankRoutes = (app) => {
         return res.status(404).send({ message: "Bank not found" });
       }
       // Check if the user has permission to access this bank based on their role
-       // You can implement your own logic here, including checking the subAdminId if needed
+      // You can implement your own logic here, including checking the subAdminId if needed
 
       // Update the isActive field
       bank.isActive = isActive;
@@ -420,24 +429,24 @@ const BankRoutes = (app) => {
     try {
       const bankId = req.params.bankId;
       const { subAdminId } = req.body;
-  
+
       // First, check if the bank with the given ID exists
       const bank = await Bank.findById(bankId);
       if (!bank) {
         return res.status(404).send({ message: "Bank not found" });
       }
-  
+
       bank.subAdminId.push(subAdminId);
       bank.isActive = true; // Set isActive to true for the assigned subadmin
       await bank.save();
-  
+
       res.status(200).send({ message: "Subadmin assigned successfully" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
-  
+
 
 };
 

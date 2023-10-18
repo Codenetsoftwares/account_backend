@@ -328,7 +328,9 @@ const AccountServices = {
     const bankTransactions = await BankTransaction.find({
       bankId: bankId,
     }).exec();
+    console.log('get',getBankBalance)
     const transactions = await Transaction.find({ bankId: bankId }).exec();
+    console.log('transactions',transactions)
     let balance = 0;
 
     bankTransactions.forEach((transaction) => {

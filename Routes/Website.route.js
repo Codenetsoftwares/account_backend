@@ -260,161 +260,46 @@ const WebisteRoutes = (app) => {
     async (req, res) => {
       try {
         const websiteName = req.params.websiteName;
-        const { page, itemsPerPage } = req.query;
-        const {
-          transactionType,
-          introducerList,
-          subAdminList,
-          websiteList,
-          sdate,
-          edate,
-        } = req.body;
-        const filter = {};
-        if (transactionType) {
-          filter.transactionType = transactionType;
-        }
-        if (introducerList) {
-          filter.introducerUserName = introducerList;
-        }
-        if (subAdminList) {
-          filter.subAdminName = subAdminList;
-        }
-        if (websiteList) {
-          filter.websiteName = websiteList;
-        }
-        const startDate = sdate ? new Date(sdate).toISOString() : null;
-        const endDate = edate ? new Date(edate).toISOString() : null;
-
-        if (startDate && endDate) {
-          filter.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
-        } else if (startDate) {
-          filter.createdAt = { $gte: new Date(startDate) };
-        } else if (endDate) {
-          filter.createdAt = { $lte: new Date(endDate) };
-        }
-        const transaction = await Transaction.findOne({ websiteName }).exec();
         let balances = 0;
-        if (!transaction) {
-          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          let websiteData = JSON.parse(JSON.stringify(websiteSummary));
-          websiteData.slice(0).reverse().map((data) => {
-            if (data.withdrawAmount) {
-              balances -= data.withdrawAmount;
-              data.balance = balances;
-            } else {
-              balances += data.depositAmount;
-              data.balance = balances;
-            }
-          });
-          if (websiteData.length > 0) {
-            const allIntroDataLength = websiteData.length;
-            console.log("allIntroDataLength", allIntroDataLength);
-            let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-            const skip = (page - 1) * itemsPerPage;
-            const limit = parseInt(itemsPerPage);
-            const paginatedResults = websiteData.slice(skip, skip + limit);
-            console.log('pagitren', paginatedResults.length)
-
-            if (paginatedResults.length !== 0) {
-              return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-            }
-            else {
-              const itemsPerPage = 10; // Specify the number of items per page
-
-              const totalItems = websiteData.length;
-              const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-              let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-              page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-
-              const skip = (page - 1) * itemsPerPage;
-              const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-              const paginatedResults = websiteData.slice(skip, skip + limit);
-
-              const pageNumber = page;
-              const allIntroDataLength = totalItems;
-
-              return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
-            }
-
-          } else {
-            return res.status(404).send({ message: "Website Name not found" });
-          }
-          console.log('317')
-        } else {
-          console.log('319')
-          const userId = transaction.userName;
-          if (!userId) {
-            return res.status(404).send({ message: "User Id not found" });
-          }
+    
           const accountSummary = await Transaction.find({ websiteName, userId, }).sort({ createdAt: -1 }).exec();
           const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          const filteredTrans = [...accountSummary, ...websiteSummary].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort data by createdAt property in descending order
-          .filter((data) => {
-            const dataCreatedAt = new Date(data.createdAt);
-            return (
-              (!filter.transactionType || data.transactionType === filter.transactionType) &&
-              (!filter.introducerUserName || data.introducerUserName === filter.introducerUserName) &&
-              (!filter.subAdminName || data.subAdminName === filter.subAdminName) &&
-              (!filter.bankName || data.bankName === filter.bankName) &&
-              (!filter.createdAt ||
-                (dataCreatedAt >= new Date(filter.createdAt.$gte) && dataCreatedAt <= new Date(filter.createdAt.$lte)))
-            );
+          const allTransactions = [...accountSummary, ...websiteSummary]
+          allTransactions.sort((a, b) => {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+            return dateB - dateA;
           });
-          const allIntroDataLength = filteredTrans.length;
-          let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-          const skip = (page - 1) * itemsPerPage;
-          const limit = parseInt(itemsPerPage);
-          const websitepagination = filteredTrans.slice(skip, skip + limit);
-          let paginatedResults = JSON.parse(JSON.stringify(websitepagination));
-          paginatedResults.slice(0).reverse().map((data) => {
-            if (data.transactionType === "Manual-Website-Deposit") {
+          let allData = JSON.parse(JSON.stringify(allTransactions));
+          allData.slice(0).reverse().map((data) => {
+            if (data.transactionType === "Manual-Bank-Deposit") {
               balances += data.depositAmount;
               data.balance = balances;
+              console.log("balances", balances)
             }
-            if (data.transactionType === "Manual-Website-Withdraw") {
+            if (data.transactionType === "Manual-Bank-Withdraw") {
               balances -= data.withdrawAmount;
               data.balance = balances;
+              console.log("balances2", balances)
+  
             }
-            if (data.transactionType === "Deposit"){
-              const netAmount = balances - data.bonus - data.amount;
-              balances = netAmount;
-              data.balance = balances;
-            }
-            if (data.transactionType === "Withdraw"){
+            if (data.transactionType === "Deposit") {
               let totalamount = 0;
               totalamount += data.amount;
               balances += totalamount;
               data.balance = balances;
+              console.log("balances3", balances)
+            }
+            if (data.transactionType === "Withdraw") {
+              const netAmount = balances - data.bankCharges - data.amount;
+              console.log("netAmount", netAmount);
+              balances = netAmount;
+              data.balance = balances;
+              console.log("balances4", balances)
             }
           });
-          if (paginatedResults.length !== 0) {
-            console.log('afe')
-            return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-          } else {
-            console.log('ded', filteredTrans)
-            const itemsPerPage = 10; // Specify the number of items per page
-
-            const totalItems = filteredTrans.length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-            let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-            page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-
-            const skip = (page - 1) * itemsPerPage;
-            const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-            const paginatedResults = filteredTrans.slice(skip, skip + limit);
-
-            const pageNumber = page;
-            const allIntroDataLength = totalItems;
-
-            return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
-          }
-        }
-        // return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-        console.log('391')
+          return res.status(200).send(allData);
+        
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
