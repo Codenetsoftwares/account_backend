@@ -828,18 +828,17 @@ const AccountsRoute = (app) => {
     try {
       const userId = req.params.subadminId;
       console.log('userId', userId)
-      const transaction = await Transaction.findOne({ subAdminUserName: userId }).exec();
-      const bankTransaction = await BankTransaction.findOne({ subAdminName: userId }).exec();
-      const webisteTransaction = await WebsiteTransaction.findOne({ subAdminName: userId }).exec();
-      console.log('transaction', transaction)
-      console.log('bankTransaction', bankTransaction)
-      console.log('webisteTransaction', webisteTransaction)
+      const transaction = await Transaction.find({ subAdminId: userId }).exec();
+      const bankTransaction = await BankTransaction.find({ subAdminId: userId }).exec();
+      const webisteTransaction = await WebsiteTransaction.find({ subAdminId: userId }).exec();
+      // console.log('transaction', transaction)
+      // console.log('bankTransaction', bankTransaction)
+      // console.log('webisteTransaction', webisteTransaction)
       if (!transaction && !bankTransaction && !webisteTransaction) {
         return res.status(404).send({ message: "No transaction found" });
       }
-
-      let statement = [transaction,bankTransaction,webisteTransaction]
-      res.status(200).send(statement);
+      const allTransactions = [...transaction,...bankTransaction,...webisteTransaction]
+      res.status(200).send(allTransactions);
     } catch (e) {
       console.error(e);
       res.status(500).send({ message: "Internal server error" });
