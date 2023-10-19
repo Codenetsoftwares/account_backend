@@ -663,7 +663,8 @@ const AccountsRoute = (app) => {
       "Transaction-Edit-Request",
       "Transaction-Delete-Request",
       "Website-View",
-      "Bank-View"
+      "Bank-View",
+      "report-all-txn"
     ]),
     async (req, res) => {
       try {
@@ -824,7 +825,7 @@ const AccountsRoute = (app) => {
   }
   );
 
-  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin","report-my-txn"]), async (req, res) => {
     try {
       const userId = req.params.subadminId;
       console.log('userId', userId)

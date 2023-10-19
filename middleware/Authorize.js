@@ -151,6 +151,24 @@ export const Authorize = (roles) => {
           });
         }
       }
+      if (roles.includes("report-all-txn")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
+      if (roles.includes("report-my-txn")) {
+        existingUser = await Admin.findById(user.id).exec();
+        if (!existingUser) {
+          return res.status(401).send({
+            code: 401,
+            message: "Invalid login attempt for admin (4)",
+          });
+        }
+      }
 
       if (roles.includes("Create-Transaction")) {
         existingUser = await Admin.findById(user.id).exec();
