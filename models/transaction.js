@@ -5,11 +5,11 @@ export const Transaction = mongoose.model(
   new mongoose.Schema({
     bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
     websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
-    subAdminUserName: { type: String },
+    subAdminId: { type: String },
     subAdminName: { type: String},
     transactionID: { type: String },
     transactionType: { type: String },
-    amount: { type: Number},
+    amount: { type: Number},  
     paymentMethod: { type: String },
     userName: { type: String },
     introducerUserName : { type: String },
