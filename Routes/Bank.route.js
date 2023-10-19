@@ -123,7 +123,7 @@ const BankRoutes = (app) => {
             bankData[index]._id
           );
         }
-        console.log('bankd', bankData)
+        // console.log('bankd', bankData)
         res.status(200).send(bankData);
       } catch (e) {
         console.error(e);

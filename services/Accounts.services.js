@@ -325,34 +325,50 @@ const AccountServices = {
   },
 
   getBankBalance: async (bankId) => {
-    const bankTransactions = await BankTransaction.find({
-      bankId: bankId,
-    }).exec();
-    const transactions = await Transaction.find({ bankId: bankId }).exec();
-    console.log('transactions',transactions)
-    let balance = 0;
-
-    bankTransactions.forEach((transaction) => {
-      if (transaction.depositAmount) {
-        balance += transaction.depositAmount;
-      }
-      if (transaction.withdrawAmount) {
-        balance -= transaction.withdrawAmount;
-      }
-    });
-
-    transactions.forEach((transaction) => {
-      if (transaction.transactionType === "Deposit") {
-        balance += transaction.amount;
-      } else {
-        const totalBalance =
-          balance - transaction.bankCharges - transaction.amount;
-        balance = totalBalance;
-      }
-    });
-
-    return balance;
+    try {
+      const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
+      const transactions = await Transaction.find({ bankId: bankId }).exec();
+      const editTransaction = await EditRequest.find({ bankId: bankId }).exec();
+      let balance = 0;
+      bankTransactions.forEach((transaction) => {
+        if (transaction.depositAmount) {
+          balance += transaction.depositAmount;
+        }
+        if (transaction.withdrawAmount) {
+          balance -= transaction.withdrawAmount;
+        }
+      });
+      transactions.forEach((transaction) => {
+        if (transaction.transactionType === "Deposit") {
+          balance += transaction.amount;
+        } else {
+          const totalBalance = balance - transaction.bankCharges - transaction.amount;
+          balance = totalBalance;
+        }
+      });
+      editTransaction.forEach((data) => {
+        if (data.transactionType === "Manual-Bank-Deposit") {
+          balance += data.depositAmount;
+        }
+        if (data.transactionType === "Manual-Bank-Withdraw") {
+          balance -= data.withdrawAmount;
+        }
+        if (data.transactionType === "Deposit") {
+          balance += data.amount;
+        }
+        if (data.transactionType === "Withdraw") {
+          const netAmount = balance - data.bankCharges - data.amount;
+          balance = netAmount;
+        }
+      });
+  
+      return balance;
+    } catch (error) {
+      console.error("Error in getBankBalance:", error);
+      throw error;
+    }
   },
+  
 
   getWebsiteBalance: async (websiteId) => {
     const websiteTransactions = await WebsiteTransaction.find({
