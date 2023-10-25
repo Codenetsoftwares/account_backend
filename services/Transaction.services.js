@@ -220,7 +220,7 @@ const TransactionService = {
     }
   },
 
-  updateTransaction: async (trans, data) => {
+  updateTransaction: async (trans, data,user) => {
     const existingTransaction = await Transaction.findById(trans);
 
     const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit", });
@@ -262,6 +262,7 @@ const TransactionService = {
         isApproved: false,
         isSubmit: false,
         type: "Edit",
+        requesteduserName: user.firstname,
         message: "Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -297,6 +298,7 @@ const TransactionService = {
         isApproved: false,
         isSubmit: false,
         type: "Edit",
+        requesteduserName: user.firstname,
         message: "Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -304,7 +306,7 @@ const TransactionService = {
     return changedFields;
   },
 
-  updateBankTransaction: async (bankTransaction, data) => {
+  updateBankTransaction: async (bankTransaction, data,user) => {
     const existingBankTransaction = await BankTransaction.findById(bankTransaction);
 
     const existingEditRequest = await EditRequest.findOne({ id: bankTransaction, type: "Edit", });
@@ -339,6 +341,7 @@ const TransactionService = {
   }
       const editRequest = new EditRequest({
         ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
+        requesteduserName: user.firstname,
         message: "Manual-Bank-Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -370,6 +373,7 @@ const TransactionService = {
   }
       const editRequest = new EditRequest({
         ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
+        requesteduserName: user.firstname,
         message: "Manual-Bank-Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -377,7 +381,7 @@ const TransactionService = {
     return changedFields;
   },
 
-  updateWebsiteTransaction: async (websiteTransaction, data) => {
+  updateWebsiteTransaction: async (websiteTransaction, data,user) => {
     const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
 
     const existingEditRequest = await EditRequest.findOne({ id: websiteTransaction, type: "Edit", });
@@ -414,6 +418,7 @@ const TransactionService = {
         originalData: changedFields,
         isApproved: false,
         isSubmit: false,
+        requesteduserName: user.firstname,
         type: "Edit",
         message: "Manual-Website-Deposit transaction is being edited.",
       });
@@ -448,6 +453,7 @@ const TransactionService = {
         isApproved: false,
         isSubmit: false,
         type: "Edit",
+        requesteduserName: user.firstname,
         message: "Manual-Website-Withdraw transaction is being edited.",
       });
       await editRequest.save();
@@ -456,7 +462,7 @@ const TransactionService = {
   },
 
 
-  updateIntroTransaction: async (trans, data) => {
+  updateIntroTransaction: async (trans, data,user) => {
     const existingTransaction = await IntroducerTransaction.findById(trans);
 
     const existingEditRequest = await IntroducerEditRequest.findOne({ id: trans, type: "Edit", });
@@ -483,6 +489,7 @@ const TransactionService = {
       }
 
       const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+      requesteduserName: user.firstname,
         message: "Introducer Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -504,6 +511,7 @@ const TransactionService = {
       }
 
       const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+      requesteduserName: user.firstname,
         message: "Introducer Withdraw transaction is being edited.",
       });
       await editRequest.save();

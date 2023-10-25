@@ -64,8 +64,9 @@ const TransactionRoutes = (app) => {
     Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
+        const user = req.user;
         const trans = await Transaction.findById(req.params.id);
-        const updateResult = await TransactionServices.updateTransaction(trans, req.body);
+        const updateResult = await TransactionServices.updateTransaction(trans, req.body, user);
         if (updateResult) {
           res.status(201).send("Transaction update request send to Super Admin");
         }
@@ -81,9 +82,10 @@ const TransactionRoutes = (app) => {
     Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
+        const user = req.user;
         const bankTransaction = await BankTransaction.findById(req.params.id);
         console.log("id", req.params.id)
-        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body);
+        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body,user);
         console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Bank Transaction update request send to Super Admin");
@@ -100,9 +102,10 @@ const TransactionRoutes = (app) => {
     Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
+        const user = req.user;
         const websiteTransaction = await WebsiteTransaction.findById(req.params.id);
         console.log("id", req.params.id)
-        const updateResult = await TransactionServices.updateWebsiteTransaction(websiteTransaction, req.body);
+        const updateResult = await TransactionServices.updateWebsiteTransaction(websiteTransaction, req.body,user);
         console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Website Transaction update request send to Super Admin");
@@ -119,8 +122,9 @@ const TransactionRoutes = (app) => {
     Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
     async (req, res) => {
       try {
+        const user = req.user;
         const trans = await IntroducerTransaction.findById(req.params.id);
-        const updateResult = await TransactionServices.updateIntroTransaction(trans, req.body);
+        const updateResult = await TransactionServices.updateIntroTransaction(trans, req.body,user);
         if (updateResult) {
           res.status(201).send("Transaction update request send to Super Admin");
         }
