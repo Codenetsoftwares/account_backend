@@ -10,6 +10,7 @@ export const EditRequest = mongoose.model(
     amount: { type: Number },
     paymentMethod: { type: String },
     userId: { type: String },
+    userName: { type: String },
     requesteduserName: { type: String },
     subAdminId: { type: String },
     subAdminName: { type: String },
