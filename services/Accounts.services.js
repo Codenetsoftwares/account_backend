@@ -559,6 +559,7 @@ const AccountServices = {
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
+        requesteduserName: user.firstname,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -601,6 +602,7 @@ const AccountServices = {
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
+        requesteduserName: user.firstname,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -646,6 +648,7 @@ const AccountServices = {
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
+        requesteduserName: user.firstname,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -682,6 +685,7 @@ const AccountServices = {
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
+        requesteduserName: user.firstname,
         type: "Delete",
       });
       await backupTransaction.save();

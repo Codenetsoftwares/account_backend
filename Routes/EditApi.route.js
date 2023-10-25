@@ -19,13 +19,14 @@ const EditApiRoute = (app) => {
   app.post("/api/admin/save-bank-transaction-request", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
+      const user = req.user;
       console.log(requestId);
       const transaction = await BankTransaction.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Bank Transaction not found");
       }
       console.log("Transaction found", transaction);
-      const updateResult = await AccountServices.deleteBankTransaction(transaction, req.body);
+      const updateResult = await AccountServices.deleteBankTransaction(transaction, req.body,user);
       console.log(updateResult);
       if (updateResult) {
         res.status(201).send("Bank Transaction delete request sent to Super Admin");
@@ -64,12 +65,13 @@ const EditApiRoute = (app) => {
     try {
       const { requestId } = req.body;
       console.log(requestId);
+      const user = req.user;
       const transaction = await WebsiteTransaction.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Website Transaction not found");
       }
       console.log("Transaction found", transaction);
-      const updateResult = await AccountServices.deleteWebsiteTransaction(transaction, req.body);
+      const updateResult = await AccountServices.deleteWebsiteTransaction(transaction, req.body,user);
       console.log(updateResult);
       if (updateResult) {
         res.status(201).send("Website Transaction delete request sent to Super Admin");
@@ -106,12 +108,13 @@ const EditApiRoute = (app) => {
     try {
       const { requestId } = req.body;
       console.log(requestId);
+      const user = req.user;
       const transaction = await Transaction.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Transaction not found");
       }
       console.log("Transaction found", transaction);
-      const updateResult = await AccountServices.deleteTransaction(transaction, req.body);
+      const updateResult = await AccountServices.deleteTransaction(transaction, req.body,user);
       console.log(updateResult);
       if (updateResult) {
         res.status(201).send("Transaction delete request sent to Super Admin");
@@ -151,12 +154,13 @@ const EditApiRoute = (app) => {
     try {
       const { requestId } = req.body;
       console.log(requestId);
+      const user = req.user;
       const transaction = await IntroducerTransaction.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Transaction not found");
       }
       console.log("Transaction found", transaction);
-      const updateResult = await AccountServices.deleteIntroducerTransaction(transaction, req.body);
+      const updateResult = await AccountServices.deleteIntroducerTransaction(transaction, req.body,user);
       console.log(updateResult);
       if (updateResult) {
         res.status(201).send("Transaction delete request sent to Super Admin");
