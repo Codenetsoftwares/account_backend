@@ -526,13 +526,13 @@ const AccountServices = {
   //   return true;
   // },
 
-  deleteBankTransaction: async (id,user) => {
-    const existingTransaction = await BankTransaction.findById(id);
+  deleteBankTransaction: async (transaction,user) => {
+    const existingTransaction = await BankTransaction.findById(transaction);
     if (!existingTransaction) {
-      throw { code: 404, message: `Transaction not found with id: ${id}` };
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const existingEditRequest = await EditRequest.findOne({
-      id: id,
+      id: transaction,
       type: "Delete",
     });
     if (existingEditRequest) {
@@ -540,26 +540,27 @@ const AccountServices = {
     }
 
     const updatedTransactionData = {
-      id: id._id,
-      transactionType: id.transactionType,
-      remarks: id.remarks,
-      withdrawAmount: id.withdrawAmount,
-      depositAmount: id.depositAmount,
-      subAdminId: id.subAdminId,
-      subAdminName: id.subAdminName,
-      accountHolderName: id.accountHolderName,
-      bankName: id.bankName,
-      accountNumber: id.accountNumber,
-      ifscCode: id.ifscCode,
+      id: transaction._id,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      withdrawAmount: transaction.withdrawAmount,
+      depositAmount: transaction.depositAmount,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      accountHolderName: transaction.accountHolderName,
+      bankName: transaction.bankName,
+      accountNumber: transaction.accountNumber,
+      ifscCode: transaction.ifscCode,
     };
+    const name = user.firstname;
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
-    await createEditRequest(updatedTransactionData, editMessage);
-    async function createEditRequest(updatedTransactionData, editMessage) {
+    await createEditRequest(updatedTransactionData, editMessage, name);
+    async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new EditRequest({
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
-        requesteduserName: user.firstname,
+        requesteduserName: name,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -567,16 +568,16 @@ const AccountServices = {
     return true;
   },
 
-  deleteWebsiteTransaction: async (id,user) => {
-    const existingTransaction = await WebsiteTransaction.findById(id);
+  deleteWebsiteTransaction: async (transaction,user) => {
+    const existingTransaction = await WebsiteTransaction.findById(transaction);
     if (!existingTransaction) {
       throw {
         code: 404,
-        message: `Website Transaction not found with id: ${id}`,
+        message: `Website Transaction not found with id: ${transaction}`,
       };
     }
     const existingEditRequest = await EditRequest.findOne({
-      id: id,
+      id: transaction,
       type: "Delete",
     });
     if (existingEditRequest) {
@@ -586,23 +587,24 @@ const AccountServices = {
       };
     }
     const updatedTransactionData = {
-      id: id._id,
-      transactionType: id.transactionType,
-      remarks: id.remarks,
-      withdrawAmount: id.withdrawAmount,
-      depositAmount: id.depositAmount,
-      subAdminId: id.subAdminId,
-      subAdminName: id.subAdminName,
-      websiteName: id.websiteName,
+      id: transaction._id,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      withdrawAmount: transaction.withdrawAmount,
+      depositAmount: transaction.depositAmount,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      websiteName: transaction.websiteName,
     };
+    const name = user.firstname;
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
-    await createEditRequest(updatedTransactionData, editMessage);
-    async function createEditRequest(updatedTransactionData, editMessage) {
+    await createEditRequest(updatedTransactionData, editMessage,name);
+    async function createEditRequest(updatedTransactionData, editMessage,name) {
       const backupTransaction = new EditRequest({
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
-        requesteduserName: user.firstname,
+        requesteduserName: name,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -611,13 +613,13 @@ const AccountServices = {
     return true;
   },
 
-  deleteTransaction: async (id,user) => {
-    const existingTransaction = await Transaction.findById(id);
+  deleteTransaction: async (transaction,user) => {
+    const existingTransaction = await Transaction.findById(transaction);
     if (!existingTransaction) {
-      throw { code: 404, message: `Transaction not found with id: ${id}` };
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const existingEditRequest = await EditRequest.findOne({
-      id: id,
+      id: transaction,
       type: "Delete",
     });
     if (existingEditRequest) {
@@ -627,28 +629,30 @@ const AccountServices = {
       };
     }
     const updatedTransactionData = {
-      id: id._id,
-      transactionID: id.transactionID,
-      transactionType: id.transactionType,
-      remarks: id.remarks,
-      amount: id.amount,
-      subAdminId: id.subAdminId,
-      userId: id.userId,
-      paymentMethod: id.paymentMethod,
-      websiteName: id.websiteName,
-      bankName: id.bankName,
-      amount: id.amount,
-      bonus: id.bonus,
-      bankCharges: id.bankCharges,
+      id: transaction._id,
+      transactionID: transaction.transactionID,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      amount: transaction.amount,
+      subAdminId: transaction.subAdminId,
+      userId: transaction.userId,
+      paymentMethod: transaction.paymentMethod,
+      websiteName: transaction.websiteName,
+      bankName: transaction.bankName,
+      amount: transaction.amount,
+      bonus: transaction.bonus,
+      bankCharges: transaction.bankCharges,
     };
+    const name = user.firstname;
+    console.log("user",user)
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
-    await createEditRequest(updatedTransactionData, editMessage);
-    async function createEditRequest(updatedTransactionData, editMessage) {
+    await createEditRequest(updatedTransactionData, editMessage, name);
+    async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new EditRequest({
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
-        requesteduserName: user.firstname,
+        requesteduserName: name,
         type: "Delete",
       });
       await backupTransaction.save();
@@ -656,13 +660,13 @@ const AccountServices = {
     return true;
   },
 
-  deleteIntroducerTransaction: async (id,user) => {
-    const existingTransaction = await IntroducerTransaction.findById(id);
+  deleteIntroducerTransaction: async (transaction,user) => {
+    const existingTransaction = await IntroducerTransaction.findById(transaction);
     if (!existingTransaction) {
-      throw { code: 404, message: `Transaction not found with id: ${id}` };
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const existingEditRequest = await IntroducerEditRequest.findOne({
-      id: id,
+      id: transaction,
       type: "Delete",
     });
     if (existingEditRequest) {
@@ -670,22 +674,23 @@ const AccountServices = {
     }
 
     const updatedTransactionData = {
-      id: id._id,
-      transactionType: id.transactionType,
-      remarks: id.remarks,
-      subAdminId: id.subAdminId,
-      subAdminName: id.subAdminName,
-      amount: id.amount,
-      introducerUserName: id.introducerUserName
+      id: transaction._id,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      amount: transaction.amount,
+      introducerUserName: transaction.introducerUserName
     };
+    const name = user.firstname;
     const editMessage = `Introducer ${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
-    await createEditRequest(updatedTransactionData, editMessage);
-    async function createEditRequest(updatedTransactionData, editMessage) {
+    await createEditRequest(updatedTransactionData, editMessage, name);
+    async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new IntroducerEditRequest({
         ...updatedTransactionData,
         isApproved: false,
         message: editMessage,
-        requesteduserName: user.firstname,
+        requesteduserName: name,
         type: "Delete",
       });
       await backupTransaction.save();

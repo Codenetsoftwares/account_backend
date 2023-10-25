@@ -5,6 +5,7 @@ export const IntroducerEditRequest = mongoose.model(
   new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
     amount: { type: Number},
+    requesteduserName: { type: String },
     transactionType: { type: String },
     remarks: { type: String },
     subAdminId: { type: String },
