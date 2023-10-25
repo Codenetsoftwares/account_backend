@@ -526,7 +526,7 @@ const AccountServices = {
   //   return true;
   // },
 
-  deleteBankTransaction: async (id) => {
+  deleteBankTransaction: async (id,user) => {
     const existingTransaction = await BankTransaction.findById(id);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
@@ -567,7 +567,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteWebsiteTransaction: async (id) => {
+  deleteWebsiteTransaction: async (id,user) => {
     const existingTransaction = await WebsiteTransaction.findById(id);
     if (!existingTransaction) {
       throw {
@@ -611,7 +611,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteTransaction: async (id) => {
+  deleteTransaction: async (id,user) => {
     const existingTransaction = await Transaction.findById(id);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
@@ -656,7 +656,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteIntroducerTransaction: async (id) => {
+  deleteIntroducerTransaction: async (id,user) => {
     const existingTransaction = await IntroducerTransaction.findById(id);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${id}` };
