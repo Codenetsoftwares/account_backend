@@ -636,6 +636,7 @@ const AccountServices = {
       amount: transaction.amount,
       subAdminId: transaction.subAdminId,
       userId: transaction.userId,
+      userName: transaction.userName,
       paymentMethod: transaction.paymentMethod,
       websiteName: transaction.websiteName,
       bankName: transaction.bankName,
