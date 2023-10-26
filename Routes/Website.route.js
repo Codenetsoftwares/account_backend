@@ -5,6 +5,7 @@ import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import lodash from "lodash";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
+import { WebsiteRequest } from "../models/WebsiteRequest.model.js"
 
 const WebisteRoutes = (app) => {
 
@@ -18,13 +19,15 @@ const WebisteRoutes = (app) => {
       if (!websiteName) {
         throw { code: 400, message: "Please give a website name to add" };
       }
-      const newWebsiteName = new Website({
+      const newWebsiteName = new WebsiteRequest({
         websiteName: websiteName,
         subAdminId: userName.userName,
-        subAdminName: userName.firstname
+        subAdminName: userName.firstname,
+        isApproved: false,
+        isActive: false
       });
       console.log("newWebsiteName", newWebsiteName)
-      const id = await Website.find(req.params.id);
+      const id = await WebsiteRequest.find(req.params.id);
       id.map((data) => {
         console.log(data.websiteName)
         if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {
@@ -39,6 +42,70 @@ const WebisteRoutes = (app) => {
     }
   }
   );
+
+  app.post("/api/approve-website/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+        const { isApproved } = req.body;
+        const bankId = req.params.id;
+        const approvedWebisteRequest = await WebsiteRequest.findById(bankId);
+        
+        if (!approvedBankRequest) {
+            throw { code: 404, message: "Website not found in the approval requests!" };
+        }
+        
+        if (isApproved) { // Check if isApproved is true
+            const approvedWebsite = new Website({
+              websiteName: approvedWebisteRequest.websiteName,
+              subAdminId: approvedWebisteRequest.subAdminId,
+              subAdminName: approvedWebisteRequest.subAdminName,
+              isActive: false,
+            });
+            
+            // Save the approved Website details
+            await approvedWebsite.save();
+            
+            // Delete the Website details from WebisteRequest
+            await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
+        } else {
+            throw { code: 400, message: "Website approval was not granted." };
+        }
+        
+        res.status(200).send({ message: "Website approved successfully!" });
+    } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    }
+});
+
+app.get(
+  "/api/superadmin/view-website-requests",
+  Authorize(["superAdmin"]),
+  async (req, res) => {
+    try {
+      const resultArray = await WebsiteRequest.find().exec();
+      res.status(200).send(resultArray);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal Server error");
+    }
+  }
+);
+
+app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await WebsiteRequest.deleteOne({ _id: id });
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: e.message });
+  }
+});
+
 
   // API To Edit Website Name
 
