@@ -300,7 +300,7 @@ const AccountsRoute = (app) => {
     Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View", "Create-Introducer"]),
     async (req, res) => {
       const page = req.params.page;
-      const searchQuery = req.query.search;
+      const userName = req.query.search;
 
       try {
         let introducerUser = await IntroducerUser.find().exec();
@@ -328,7 +328,7 @@ const AccountsRoute = (app) => {
         }
 
         if (SecondArray.length === 0) {
-          return res.status(404).json({ message: "No data found for the selected criteria." });
+          return res.status(404).json({ message: "No data" });
         }
 
         res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
