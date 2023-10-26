@@ -654,7 +654,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.post(
+  app.get(
     "/api/admin/filter-data",
     Authorize([
       "superAdmin",
@@ -668,85 +668,86 @@ const AccountsRoute = (app) => {
     ]),
     async (req, res) => {
       try {
-        const {
-          page,
-          itemsPerPage
-        } = req.query;
-        const {
-          transactionType,
-          introducerList,
-          subAdminList,
-          BankList,
-          WebsiteList,
-          sdate,
-          edate,
-        } = req.body;
+        // const {
+        //   page,
+        //   itemsPerPage
+        // } = req.query;
+        // const {
+        //   transactionType,
+        //   introducerList,
+        //   subAdminList,
+        //   BankList,
+        //   WebsiteList,
+        //   sdate,
+        //   edate,
+        // } = req.body;
 
-        const filter = {};
+        // const filter = {};
 
-        if (transactionType) {
-          filter.transactionType = transactionType;
-        }
-        if (introducerList) {
-          filter.introducerUserName = introducerList;
-        }
-        if (subAdminList) {
-          filter.subAdminName = subAdminList;
-        }
-        if (BankList) {
-          filter.bankName = BankList;
-        }
-        if (WebsiteList) {
-          filter.websiteName = WebsiteList;
-        }
-        if (sdate && edate) {
-          filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
-        } else if (sdate) {
-          filter.createdAt = { $gte: new Date(sdate) };
-        } else if (edate) {
-          filter.createdAt = { $lte: new Date(edate) };
-        }
+        // if (transactionType) {
+        //   filter.transactionType = transactionType;
+        // }
+        // if (introducerList) {
+        //   filter.introducerUserName = introducerList;
+        // }
+        // if (subAdminList) {
+        //   filter.subAdminName = subAdminList;
+        // }
+        // if (BankList) {
+        //   filter.bankName = BankList;
+        // }
+        // if (WebsiteList) {
+        //   filter.websiteName = WebsiteList;
+        // }
+        // if (sdate && edate) {
+        //   filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+        // } else if (sdate) {
+        //   filter.createdAt = { $gte: new Date(sdate) };
+        // } else if (edate) {
+        //   filter.createdAt = { $lte: new Date(edate) };
+        // }
 
-        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
-        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
-        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
+        const transactions = await Transaction.find().sort({ createdAt: -1 }).exec();
+        const websiteTransactions = await WebsiteTransaction.find().sort({ createdAt: -1 }).exec();
+        const bankTransactions = await BankTransaction.find().sort({ createdAt: -1 }).exec();
 
 
         const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
         alltrans.sort((a, b) => b.createdAt - a.createdAt);
         // console.log('all',alltrans.length)
-        const allIntroDataLength = alltrans.length;
-        // console.log("allIntroDataLength", allIntroDataLength);
-        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-        const skip = (page - 1) * itemsPerPage;
-        const limit = parseInt(itemsPerPage);
-        const paginatedResults = alltrans.slice(skip, skip + limit);
-        // console.log('pagitren',paginatedResults.length)
+        // const allIntroDataLength = alltrans.length;
+        // // console.log("allIntroDataLength", allIntroDataLength);
+        // let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        // const skip = (page - 1) * itemsPerPage;
+        // const limit = parseInt(itemsPerPage);
+        // const paginatedResults = alltrans.slice(skip, skip + limit);
+        // // console.log('pagitren',paginatedResults.length)
 
-        if (paginatedResults.length !== 0) {
-          console.log('s')
-          console.log('pagin', paginatedResults.length)
-          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-        }
-        else {
-          const itemsPerPage = 10; // Specify the number of items per page
+        // if (paginatedResults.length !== 0) {
+        //   console.log('s')
+        //   console.log('pagin', paginatedResults.length)
+        //   return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+        // }
+        // else {
+        //   const itemsPerPage = 10; // Specify the number of items per page
 
-          const totalItems = alltrans.length;
-          const totalPages = Math.ceil(totalItems / itemsPerPage);
+        //   const totalItems = alltrans.length;
+        //   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+        //   let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+        //   page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
 
-          const skip = (page - 1) * itemsPerPage;
-          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-          const paginatedResults = alltrans.slice(skip, skip + limit);
+        //   const skip = (page - 1) * itemsPerPage;
+        //   const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+        //   const paginatedResults = alltrans.slice(skip, skip + limit);
 
-          const pageNumber = page;
-          const allIntroDataLength = totalItems;
+        //   const pageNumber = page;
+        //   const allIntroDataLength = totalItems;
 
-          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
-        }
+        //   return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+        
+        // }
+          return res.status(200).json(alltrans);
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
