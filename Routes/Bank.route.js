@@ -4,6 +4,7 @@ import { Bank } from "../models/bank.model.js";
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
+import { BankRequest } from "../models/BankRequest.model.js";
 import lodash from "lodash";
 
 const BankRoutes = (app) => {
@@ -24,12 +25,11 @@ const BankRoutes = (app) => {
           upiAppName,
           upiNumber,
           isActive
-
         } = req.body;
         if (!bankName) {
           throw { code: 400, message: "Please provide a bank name to add" };
         }
-        const newBankName = new Bank({
+        const newBankName = new BankRequest({
           accountHolderName: accountHolderName,
           bankName: bankName,
           accountNumber: accountNumber,
@@ -39,9 +39,10 @@ const BankRoutes = (app) => {
           upiNumber: upiNumber,
           subAdminId: userName.userName,
           subAdminName: userName.firstname,
-          isActive: isActive
+          isActive: isActive,
+          isApproved: false
         });
-        const id = await Bank.find(req.params.id);
+        const id = await BankRequest.find(req.params.id);
         id.map((data) => {
           console.log(data.bankName);
           if (
@@ -52,13 +53,82 @@ const BankRoutes = (app) => {
           }
         });
         await newBankName.save();
-        res.status(200).send({ message: "Bank name registered successfully!" });
+        res.status(200).send({ message: "Bank name sent for approval!" });
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
       }
     }
   );
+
+  app.post("/api/approve-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+        const { isApproved } = req.body;
+        const bankId = req.params.id;
+        const approvedBankRequest = await BankRequest.findById(bankId);
+        
+        if (!approvedBankRequest) {
+            throw { code: 404, message: "Bank not found in the approval requests!" };
+        }
+        
+        if (isApproved) { // Check if isApproved is true
+            const approvedBank = new Bank({
+                accountHolderName: approvedBankRequest.accountHolderName,
+                bankName: approvedBankRequest.bankName,
+                accountNumber: approvedBankRequest.accountNumber,
+                ifscCode: approvedBankRequest.ifscCode,
+                upiId: approvedBankRequest.upiId,
+                upiAppName: approvedBankRequest.upiAppName,
+                upiNumber: approvedBankRequest.upiNumber,
+                subAdminId: approvedBankRequest.subAdminId,
+                subAdminName: approvedBankRequest.subAdminName,
+                isActive: false,
+            });
+            
+            // Save the approved bank details
+            await approvedBank.save();
+            
+            // Delete the bank details from BankRequest
+            await BankRequest.deleteOne({ _id: approvedBankRequest._id });
+        } else {
+            throw { code: 400, message: "Bank approval was not granted." };
+        }
+        
+        res.status(200).send({ message: "Bank approved successfully!" });
+    } catch (e) {
+        console.error(e);
+        res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    }
+});
+
+app.get(
+  "/api/superadmin/view-bank-requests",
+  Authorize(["superAdmin"]),
+  async (req, res) => {
+    try {
+      const resultArray = await BankRequest.find().exec();
+      res.status(200).send(resultArray);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal Server error");
+    }
+  }
+);
+
+app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await BankRequest.deleteOne({ _id: id });
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send({ message: e.message });
+  }
+});
 
   // API To Edit Bank Details
 
