@@ -163,7 +163,7 @@ const AccountsRoute = (app) => {
     async (req, res) => {
       try {
         const superAdmin = await Admin.find(
-          {  },
+          {},
           "firstname"
         ).exec();
         res.status(200).send(superAdmin);
@@ -311,33 +311,33 @@ const AccountsRoute = (app) => {
             user.userName.includes(userName)
           );
         }
-          for (let index = 0; index < introData.length; index++) {
-            introData[index].balance = await AccountServices.getIntroBalance(
-              introData[index]._id
-            );
-          }
-          const allIntroDataLength = introData.length;
-          let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
-          let SecondArray = [];
-          const Limit = page * 10;
-
-          for (let j = Limit - 10; j < Limit; j++) {
-            console.log('all', [j]);
-            if (introData[j] !== undefined) {
-              SecondArray.push(introData[j]);
-            }
-          }
-
-          if (SecondArray.length === 0) {
-            return res.status(404).json({ message: "No data found for the selected criteria." });
-          }
-
-          res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-        } catch (e) {
-          console.error(e);
-          res.status(500).send({ message: "Internal Server Error" });
+        for (let index = 0; index < introData.length; index++) {
+          introData[index].balance = await AccountServices.getIntroBalance(
+            introData[index]._id
+          );
         }
+        const allIntroDataLength = introData.length;
+        let pageNumber = Math.floor(allIntroDataLength / 10) + 1;
+        let SecondArray = [];
+        const Limit = page * 10;
+
+        for (let j = Limit - 10; j < Limit; j++) {
+          console.log('all', [j]);
+          if (introData[j] !== undefined) {
+            SecondArray.push(introData[j]);
+          }
+        }
+
+        if (SecondArray.length === 0) {
+          return res.status(404).json({ message: "No data found for the selected criteria." });
+        }
+
+        res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+      } catch (e) {
+        console.error(e);
+        res.status(500).send({ message: "Internal Server Error" });
       }
+    }
   );
 
 
@@ -654,7 +654,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get(
+  app.post(
     "/api/admin/filter-data",
     Authorize([
       "superAdmin",
@@ -668,84 +668,85 @@ const AccountsRoute = (app) => {
     ]),
     async (req, res) => {
       try {
-        // const {
-        //   page,
-        //   itemsPerPage
-        // } = req.query;
-        // const {
-        //   transactionType,
-        //   introducerList,
-        //   subAdminList,
-        //   BankList,
-        //   WebsiteList,
-        //   sdate,
-        //   edate,
-        // } = req.body;
-        // const filter = {};
-        // if (transactionType) {
-        //   filter.transactionType = transactionType;
-        // }
-        // if (introducerList) {
-        //   filter.introducerUserName = introducerList;
-        // }
-        // if (subAdminList) {
-        //   filter.subAdminName = subAdminList;
-        // }
-        // if (BankList) {
-        //   filter.bankName = BankList;
-        // }
-        // if (WebsiteList) {
-        //   filter.websiteName = WebsiteList;
-        // }
-        // if (sdate && edate) {
-        //   filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
-        // } else if (sdate) {
-        //   filter.createdAt = { $gte: new Date(sdate) };
-        // } else if (edate) {
-        //   filter.createdAt = { $lte: new Date(edate) };
-        // }
+        const {
+          page,
+          itemsPerPage
+        } = req.query;
+        const {
+          transactionType,
+          introducerList,
+          subAdminList,
+          BankList,
+          WebsiteList,
+          sdate,
+          edate,
+        } = req.body;
 
-        const transactions = await Transaction.find().sort({ createdAt: -1 }).exec();
-        const websiteTransactions = await WebsiteTransaction.find().sort({ createdAt: -1 }).exec();
-        const bankTransactions = await BankTransaction.find().sort({ createdAt: -1 }).exec();
+        const filter = {};
+
+        if (transactionType) {
+          filter.transactionType = transactionType;
+        }
+        if (introducerList) {
+          filter.introducerUserName = introducerList;
+        }
+        if (subAdminList) {
+          filter.subAdminName = subAdminList;
+        }
+        if (BankList) {
+          filter.bankName = BankList;
+        }
+        if (WebsiteList) {
+          filter.websiteName = WebsiteList;
+        }
+        if (sdate && edate) {
+          filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+        } else if (sdate) {
+          filter.createdAt = { $gte: new Date(sdate) };
+        } else if (edate) {
+          filter.createdAt = { $lte: new Date(edate) };
+        }
+
+        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
+        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
 
 
         const alltrans = [...transactions, ...websiteTransactions, ...bankTransactions];
         alltrans.sort((a, b) => b.createdAt - a.createdAt);
         // console.log('all',alltrans.length)
-        // const allIntroDataLength = alltrans.length;
-        // // console.log("allIntroDataLength", allIntroDataLength);
-        // let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
-        // const skip = (page - 1) * itemsPerPage;
-        // const limit = parseInt(itemsPerPage);
-        // const paginatedResults = alltrans.slice(skip, skip + limit);
-        // // console.log('pagitren',paginatedResults.length)
+        const allIntroDataLength = alltrans.length;
+        // console.log("allIntroDataLength", allIntroDataLength);
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        const skip = (page - 1) * itemsPerPage;
+        const limit = parseInt(itemsPerPage);
+        const paginatedResults = alltrans.slice(skip, skip + limit);
+        // console.log('pagitren',paginatedResults.length)
 
-        // if (paginatedResults.length !== 0) {
-        //   console.log('s')
-        //   console.log('pagin', paginatedResults.length)
-        //   return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-        // }
-        // else {
-        //   const itemsPerPage = 10; // Specify the number of items per page
+        if (paginatedResults.length !== 0) {
+          console.log('s')
+          console.log('pagin', paginatedResults.length)
+          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+        }
+        else {
+          const itemsPerPage = 10; // Specify the number of items per page
 
-        //   const totalItems = alltrans.length;
-        //   const totalPages = Math.ceil(totalItems / itemsPerPage);
+          const totalItems = alltrans.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        //   let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-        //   page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
 
-        //   const skip = (page - 1) * itemsPerPage;
-        //   const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-        //   const paginatedResults = alltrans.slice(skip, skip + limit);
+          const skip = (page - 1) * itemsPerPage;
+          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+          const paginatedResults = alltrans.slice(skip, skip + limit);
 
-        //   const pageNumber = page;
-        //   const allIntroDataLength = totalItems;
+          const pageNumber = page;
+          const allIntroDataLength = totalItems;
 
-        //   return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-        
-        // }
-          return res.status(200).json(alltrans );
+          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+
+        }
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });
@@ -826,20 +827,21 @@ const AccountsRoute = (app) => {
   }
   );
 
-  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin","report-my-txn"]), async (req, res) => {
+  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin", "report-my-txn"]), async (req, res) => {
     try {
       const userId = req.params.subadminId;
       console.log('userId', userId)
-      const transaction = await Transaction.find({ subAdminId: userId }).exec();
-      const bankTransaction = await BankTransaction.find({ subAdminId: userId }).exec();
-      const webisteTransaction = await WebsiteTransaction.find({ subAdminId: userId }).exec();
+      const transaction = await Transaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
+      const bankTransaction = await BankTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
+      const webisteTransaction = await WebsiteTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
       // console.log('transaction', transaction)
       // console.log('bankTransaction', bankTransaction)
       // console.log('webisteTransaction', webisteTransaction)
       if (!transaction && !bankTransaction && !webisteTransaction) {
         return res.status(404).send({ message: "No transaction found" });
       }
-      const allTransactions = [...transaction,...bankTransaction,...webisteTransaction]
+      const allTransactions = [...transaction, ...bankTransaction, ...webisteTransaction]
+      allTransactions.sort((a, b) => b.createdAt - a.createdAt);
       res.status(200).send(allTransactions);
     } catch (e) {
       console.error(e);
