@@ -538,9 +538,16 @@ const BankRoutes = (app) => {
       }
 
       let dbBankData = await Bank.find().exec();
+      let bankData = JSON.parse(JSON.stringify(dbBankData));
 
-      dbBankData = dbBankData.filter(bank => bank.isActive === true);
-      dbBankData.map((data) => {
+      for (var index = 0; index < bankData.length; index++) {
+        bankData[index].balance = await AccountServices.getBankBalance(
+          bankData[index]._id
+        );
+      }
+
+      bankData = bankData.filter(bank => bank.isActive === true);
+      bankData.map((data) => {
         if (data.subAdminId) {
           for (let i = 0; i < data.subAdminId.length; i++) {
             if (data.subAdminId[i] === subadminId) {
@@ -563,6 +570,7 @@ const BankRoutes = (app) => {
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
+
 
 
 
