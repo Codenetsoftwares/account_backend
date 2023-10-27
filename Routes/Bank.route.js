@@ -114,7 +114,9 @@ const BankRoutes = (app) => {
         res.status(500).send("Internal Server error");
       }
     }
-  );
+  }
+);
+
 
   app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -128,6 +130,7 @@ const BankRoutes = (app) => {
     } catch (e) {
       console.error(e);
       res.status(500).send({ message: e.message });
+
     }
   });
 
