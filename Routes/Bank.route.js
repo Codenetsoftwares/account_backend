@@ -6,6 +6,7 @@ import { Transaction } from "../models/transaction.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { BankRequest } from "../models/BankRequest.model.js";
 import lodash from "lodash";
+import BankServices from "../services/Bank.services.js";
 
 const BankRoutes = (app) => {
   // API To Add Bank Name
@@ -63,72 +64,75 @@ const BankRoutes = (app) => {
 
   app.post("/api/approve-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
-        const { isApproved } = req.body;
-        const bankId = req.params.id;
-        const approvedBankRequest = await BankRequest.findById(bankId);
-        
-        if (!approvedBankRequest) {
-            throw { code: 404, message: "Bank not found in the approval requests!" };
-        }
-        
-        if (isApproved) { // Check if isApproved is true
-            const approvedBank = new Bank({
-                accountHolderName: approvedBankRequest.accountHolderName,
-                bankName: approvedBankRequest.bankName,
-                accountNumber: approvedBankRequest.accountNumber,
-                ifscCode: approvedBankRequest.ifscCode,
-                upiId: approvedBankRequest.upiId,
-                upiAppName: approvedBankRequest.upiAppName,
-                upiNumber: approvedBankRequest.upiNumber,
-                subAdminId: approvedBankRequest.subAdminId,
-                subAdminName: approvedBankRequest.subAdminName,
-                isActive: false,
-            });
-            
-            // Save the approved bank details
-            await approvedBank.save();
-            
-            // Delete the bank details from BankRequest
-            await BankRequest.deleteOne({ _id: approvedBankRequest._id });
-        } else {
-            throw { code: 400, message: "Bank approval was not granted." };
-        }
-        
-        res.status(200).send({ message: "Bank approved successfully!" });
-    } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
-    }
-});
+      const { isApproved } = req.body;
+      const bankId = req.params.id;
+      const approvedBankRequest = await BankRequest.findById(bankId);
 
-app.get(
-  "/api/superadmin/view-bank-requests",
-  Authorize(["superAdmin"]),
-  async (req, res) => {
-    try {
-      const resultArray = await BankRequest.find().exec();
-      res.status(200).send(resultArray);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal Server error");
+      if (!approvedBankRequest) {
+        throw { code: 404, message: "Bank not found in the approval requests!" };
+      }
+
+      if (isApproved) { // Check if isApproved is true
+        const approvedBank = new Bank({
+          accountHolderName: approvedBankRequest.accountHolderName,
+          bankName: approvedBankRequest.bankName,
+          accountNumber: approvedBankRequest.accountNumber,
+          ifscCode: approvedBankRequest.ifscCode,
+          upiId: approvedBankRequest.upiId,
+          upiAppName: approvedBankRequest.upiAppName,
+          upiNumber: approvedBankRequest.upiNumber,
+          subAdminId: approvedBankRequest.subAdminId,
+          subAdminName: approvedBankRequest.subAdminName,
+          isActive: false,
+        });
+
+        // Save the approved bank details
+        await approvedBank.save();
+
+        // Delete the bank details from BankRequest
+        await BankRequest.deleteOne({ _id: approvedBankRequest._id });
+      } else {
+        throw { code: 400, message: "Bank approval was not granted." };
+      }
+
+      res.status(200).send({ message: "Bank approved successfully!" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    }
+  });
+
+  app.get(
+    "/api/superadmin/view-bank-requests",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const resultArray = await BankRequest.find().exec();
+        res.status(200).send(resultArray);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server error");
+      }
     }
   }
 );
 
-app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await BankRequest.deleteOne({ _id: id });
-    if (result.deletedCount === 1) {
-      res.status(200).send({ message: "Data deleted successfully" });
-    } else {
-      res.status(404).send({ message: "Data not found" });
+
+  app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const result = await BankRequest.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        res.status(200).send({ message: "Data deleted successfully" });
+      } else {
+        res.status(404).send({ message: "Data not found" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+
     }
-  } catch (e) {
-    console.error(e);
-    res.status(500).send({ message: e.message });
-  }
-});
+  });
 
   // API To Edit Bank Details
 
@@ -193,7 +197,10 @@ app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) =
             bankData[index]._id
           );
         }
-        // console.log('bankd', bankData)
+
+        bankData = bankData.filter(bank => bank.isActive === true);
+        console.log('bankd', bankData)
+
         res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
@@ -498,7 +505,7 @@ app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) =
   app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const bankId = req.params.bankId;
-      const { subAdminId } = req.body;
+      const { subAdminIds } = req.body; // Use subAdminIds as an array in the request body
 
       // First, check if the bank with the given ID exists
       const bank = await Bank.findById(bankId);
@@ -506,16 +513,68 @@ app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) =
         return res.status(404).send({ message: "Bank not found" });
       }
 
-      bank.subAdminId.push(subAdminId);
-      bank.isActive = true; // Set isActive to true for the assigned subadmin
+      // Iterate through the array of subAdminIds and add them to the bank's subAdminId array
+      for (const subAdminId of subAdminIds) {
+        bank.subAdminId.push(subAdminId);
+      }
+
+      bank.isActive = true; // Set isActive to true for the assigned subadmins
       await bank.save();
 
-      res.status(200).send({ message: "Subadmin assigned successfully" });
+      res.status(200).send({ message: "Subadmins assigned successfully" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
+
+
+
+  app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+    try {
+      const subadminId = req.params.subadminId;
+      // console.log('subadminId', subadminId)
+      let ans = []
+      const accessSubadmin = BankServices.userHasAccessToSubAdmin(req.user, subadminId)
+      if (!accessSubadmin) {
+        return res.status(403).send({ message: "You don't have access to view data for this subadmin" });
+      }
+
+      let dbBankData = await Bank.find().exec();
+      let bankData = JSON.parse(JSON.stringify(dbBankData));
+
+      for (var index = 0; index < bankData.length; index++) {
+        bankData[index].balance = await AccountServices.getBankBalance(
+          bankData[index]._id
+        );
+      }
+
+      bankData = bankData.filter(bank => bank.isActive === true);
+      bankData.map((data) => {
+        if (data.subAdminId) {
+          for (let i = 0; i < data.subAdminId.length; i++) {
+            if (data.subAdminId[i] === subadminId) {
+              ans.push(data)
+            }
+          }
+        }
+      })
+
+      if (ans.length === 0) {
+        return res.status(404).send({ message: "No bank found" });
+      }
+
+      console.log('bankd', ans)
+
+      res.status(200).send(ans);
+
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+    }
+  });
+
+
 
 
 };
