@@ -827,7 +827,7 @@ const AccountsRoute = (app) => {
   app.get("/api/admin/introducer-account-summary/:id", Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
     try {
       const id = req.params.id;
-      const introSummary = await IntroducerTransaction.find({ introUserId: id }).sort({ createdAt: 1 }).exec();
+      const introSummary = await IntroducerTransaction.find({ introUserId: id }).sort({ createdAt: -1 }).exec();
       let balances = 0;
       let accountData = JSON.parse(JSON.stringify(introSummary));
       accountData.slice(0).reverse().map((data) => {
