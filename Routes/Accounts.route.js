@@ -162,10 +162,8 @@ const AccountsRoute = (app) => {
     ]),
     async (req, res) => {
       try {
-        const superAdmin = await Admin.find(
-          {},
-          "firstname"
-        ).exec();
+        const superAdmin = await Admin.find({},"userName").exec();
+        console.log('superAdmin',superAdmin)
         res.status(200).send(superAdmin);
       } catch (e) {
         console.error(e);
