@@ -115,7 +115,7 @@ app.get(
   }
 );
 
-app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const result = await BankRequest.deleteOne({ _id: id });

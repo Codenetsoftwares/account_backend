@@ -91,10 +91,11 @@ app.get(
   }
 );
 
-app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+app.delete("/api/website/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
   try {
     const id = req.params.id;
     const result = await WebsiteRequest.deleteOne({ _id: id });
+    console.log("result", result);
     if (result.deletedCount === 1) {
       res.status(200).send({ message: "Data deleted successfully" });
     } else {
