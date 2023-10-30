@@ -66,12 +66,12 @@ const BankRoutes = (app) => {
     try {
       const { isApproved, subAdmins } = req.body;
       const bankId = req.params.id;
-  
+
       const approvedBankRequest = await BankRequest.findById(bankId);
       if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found in the approval requests!" };
       }
-  
+
       if (isApproved) { // Check if isApproved is true
         const approvedBank = new Bank({
           accountHolderName: approvedBankRequest.accountHolderName,
@@ -84,21 +84,21 @@ const BankRoutes = (app) => {
           subAdmins: subAdmins, // Assign the subAdmins array
           isActive: true, // Set isActive to true for the approved bank
         });
-  
+
         await approvedBank.save();
         await BankRequest.deleteOne({ _id: approvedBankRequest._id });
       } else {
         throw { code: 400, message: "Bank approval was not granted." };
       }
-  
+
       res.status(200).send({ message: "Bank approved successfully! & Subadmin Assigned" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
     }
   });
-  
-  
+
+
 
   app.get(
     "/api/superadmin/view-bank-requests",
@@ -183,6 +183,11 @@ const BankRoutes = (app) => {
     "/api/get-bank-name",
     Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
     async (req, res) => {
+      const {
+        page,
+        itemsPerPage
+      } = req.query;
+
       try {
         let dbBankData = await Bank.find().exec();
         let bankData = JSON.parse(JSON.stringify(dbBankData));
@@ -193,10 +198,41 @@ const BankRoutes = (app) => {
           );
         }
 
-        bankData = bankData.filter(bank => bank.isActive === true);
-        console.log('bankd', bankData)
+        bankData.sort((a, b) => b.createdAt - a.createdAt);
+        const allIntroDataLength = bankData.length;
+        let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+        const skip = (page - 1) * itemsPerPage;
+        const limit = parseInt(itemsPerPage);
+        const paginatedResults = bankData.slice(skip, skip + limit);
 
-        res.status(200).send(bankData);
+        if (paginatedResults.length !== 0) {
+          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+        }
+        else {
+          const itemsPerPage = 10; // Specify the number of items per page
+
+          const totalItems = bankData.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+          const skip = (page - 1) * itemsPerPage;
+          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+          const paginatedResults = bankData.slice(skip, skip + limit);
+
+          const pageNumber = page;
+          const allIntroDataLength = totalItems;
+
+          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+
+        }
+
+
+        // bankData = bankData.filter(bank => bank.isActive === true);
+        // console.log('bankd', bankData)
+
+        // return res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -512,7 +548,7 @@ const BankRoutes = (app) => {
         bank.subAdminId.push(subAdminId);
       }
 
-      bank.isActive = true; 
+      bank.isActive = true;
       await bank.save();
 
       res.status(200).send({ message: "Subadmins assigned successfully" });
@@ -524,7 +560,7 @@ const BankRoutes = (app) => {
 
 
 
-  
+
   app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const subadminId = req.params.subadminId;
