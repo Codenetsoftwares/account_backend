@@ -64,14 +64,14 @@ const BankRoutes = (app) => {
 
   app.post("/api/approve-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const { isApproved } = req.body;
+      const { isApproved, subAdmins } = req.body;
       const bankId = req.params.id;
+  
       const approvedBankRequest = await BankRequest.findById(bankId);
-
       if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found in the approval requests!" };
       }
-
+  
       if (isApproved) { // Check if isApproved is true
         const approvedBank = new Bank({
           accountHolderName: approvedBankRequest.accountHolderName,
@@ -81,26 +81,24 @@ const BankRoutes = (app) => {
           upiId: approvedBankRequest.upiId,
           upiAppName: approvedBankRequest.upiAppName,
           upiNumber: approvedBankRequest.upiNumber,
-          subAdminId: approvedBankRequest.subAdminId,
-          subAdminName: approvedBankRequest.subAdminName,
-          isActive: false,
+          subAdmins: subAdmins, // Assign the subAdmins array
+          isActive: true, // Set isActive to true for the approved bank
         });
-
-        // Save the approved bank details
+  
         await approvedBank.save();
-
-        // Delete the bank details from BankRequest
         await BankRequest.deleteOne({ _id: approvedBankRequest._id });
       } else {
         throw { code: 400, message: "Bank approval was not granted." };
       }
-
-      res.status(200).send({ message: "Bank approved successfully!" });
+  
+      res.status(200).send({ message: "Bank approved successfully! & Subadmin Assigned" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
     }
   });
+  
+  
 
   app.get(
     "/api/superadmin/view-bank-requests",
@@ -510,12 +508,11 @@ const BankRoutes = (app) => {
         return res.status(404).send({ message: "Bank not found" });
       }
 
-      // Iterate through the array of subAdminIds and add them to the bank's subAdminId array
       for (const subAdminId of subAdminIds) {
         bank.subAdminId.push(subAdminId);
       }
 
-      bank.isActive = true; // Set isActive to true for the assigned subadmins
+      bank.isActive = true; 
       await bank.save();
 
       res.status(200).send({ message: "Subadmins assigned successfully" });
@@ -527,6 +524,7 @@ const BankRoutes = (app) => {
 
 
 
+  
   app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const subadminId = req.params.subadminId;
