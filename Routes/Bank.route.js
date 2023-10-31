@@ -183,6 +183,7 @@ const BankRoutes = (app) => {
     "/api/get-bank-name",
     Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
     async (req, res) => {
+      console.log('req', req.user.roles)
       const {
         page,
         itemsPerPage
@@ -197,7 +198,7 @@ const BankRoutes = (app) => {
             bankData[index]._id
           );
         }
-
+        bankData = bankData.filter(bank => bank.isActive === true);
         bankData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = bankData.length;
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
@@ -229,7 +230,6 @@ const BankRoutes = (app) => {
         }
 
 
-        // bankData = bankData.filter(bank => bank.isActive === true);
         // console.log('bankd', bankData)
 
         // return res.status(200).send(bankData);
@@ -533,39 +533,54 @@ const BankRoutes = (app) => {
     }
   });
 
-  app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
-    try {
-      const bankId = req.params.bankId;
-      const { subAdminIds } = req.body; // Use subAdminIds as an array in the request body
+  // app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+  //   try {
+  //     const bankId = req.params.bankId;
+  //     const { subAdminIds } = req.body; // Use subAdminIds as an array in the request body
 
-      // First, check if the bank with the given ID exists
-      const bank = await Bank.findById(bankId);
-      if (!bank) {
-        return res.status(404).send({ message: "Bank not found" });
-      }
+  //     // First, check if the bank with the given ID exists
+  //     const bank = await Bank.findById(bankId);
+  //     if (!bank) {
+  //       return res.status(404).send({ message: "Bank not found" });
+  //     }
 
-      for (const subAdminId of subAdminIds) {
-        bank.subAdminId.push(subAdminId);
-      }
+  //     for (const subAdminId of subAdminIds) {
+  //       bank.subAdminId.push(subAdminId);
+  //     }
 
-      bank.isActive = true;
-      await bank.save();
+  //     bank.isActive = true;
+  //     await bank.save();
 
-      res.status(200).send({ message: "Subadmins assigned successfully" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
-    }
-  });
-
-
+  //     res.status(200).send({ message: "Subadmins assigned successfully" });
+  //   } catch (e) {
+  //     console.error(e);
+  //     res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  //   }
+  // });
 
 
   app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
+      // console.log('req',req.user.roles)
       const subadminId = req.params.subadminId;
       // console.log('subadminId', subadminId)
-      let ans = []
+      let ans = [];
+
+      if (req.user.roles.includes("superAdmin")) {
+        console.log('first')
+        let dbBankData = await Bank.find().exec();
+        let bankData = JSON.parse(JSON.stringify(dbBankData));
+
+        for (var index = 0; index < bankData.length; index++) {
+          bankData[index].balance = await AccountServices.getBankBalance(
+            bankData[index]._id
+          );
+        }
+
+        // bankData = bankData.filter(bank => bank.isActive === true);
+        return res.status(200).send(bankData);
+      }
+
       const accessSubadmin = BankServices.userHasAccessToSubAdmin(req.user, subadminId)
       if (!accessSubadmin) {
         return res.status(403).send({ message: "You don't have access to view data for this subadmin" });
@@ -594,9 +609,7 @@ const BankRoutes = (app) => {
       if (ans.length === 0) {
         return res.status(404).send({ message: "No bank found" });
       }
-
-      console.log('bankd', ans)
-
+      // console.log('bankd', ans)
       res.status(200).send(ans);
 
     } catch (e) {
