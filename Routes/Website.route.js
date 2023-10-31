@@ -45,66 +45,67 @@ const WebisteRoutes = (app) => {
 
   app.post("/api/approve-website/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
-        const { isApproved } = req.body;
-        const bankId = req.params.id;
-        const approvedWebisteRequest = await WebsiteRequest.findById(bankId);
-        
-        if (!approvedBankRequest) {
-            throw { code: 404, message: "Website not found in the approval requests!" };
-        }
-        
-        if (isApproved) { // Check if isApproved is true
-            const approvedWebsite = new Website({
-              websiteName: approvedWebisteRequest.websiteName,
-              subAdminId: approvedWebisteRequest.subAdminId,
-              subAdminName: approvedWebisteRequest.subAdminName,
-              isActive: false,
-            });
-            
-            // Save the approved Website details
-            await approvedWebsite.save();
-            
-            // Delete the Website details from WebisteRequest
-            await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
-        } else {
-            throw { code: 400, message: "Website approval was not granted." };
-        }
-        
-        res.status(200).send({ message: "Website approved successfully!" });
+      const { isApproved, subAdmins } = req.body;
+      const bankId = req.params.id;
+      const approvedWebisteRequest = await WebsiteRequest.findById(bankId);
+
+      if (!approvedBankRequest) {
+        throw { code: 404, message: "Website not found in the approval requests!" };
+      }
+
+      if (isApproved) { // Check if isApproved is true
+        const approvedWebsite = new Website({
+          websiteName: approvedWebisteRequest.websiteName,
+          subAdminId: approvedWebisteRequest.subAdminId,
+          subAdmins: subAdmins, // Assign the subAdmins array
+          subAdminName: approvedWebisteRequest.subAdminName,
+          isActive: false,
+        });
+
+        // Save the approved Website details
+        await approvedWebsite.save();
+
+        // Delete the Website details from WebisteRequest
+        await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
+      } else {
+        throw { code: 400, message: "Website approval was not granted." };
+      }
+
+      res.status(200).send({ message: "Website approved successfully & Subadmin Assigned" });
     } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
     }
-});
+  });
 
-app.get(
-  "/api/superadmin/view-website-requests",
-  Authorize(["superAdmin"]),
-  async (req, res) => {
+  app.get(
+    "/api/superadmin/view-website-requests",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const resultArray = await WebsiteRequest.find().exec();
+        res.status(200).send(resultArray);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server error");
+      }
+    }
+  );
+
+  app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const resultArray = await WebsiteRequest.find().exec();
-      res.status(200).send(resultArray);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal Server error");
+      const id = req.params.id;
+      const result = await WebsiteRequest.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        res.status(200).send({ message: "Data deleted successfully" });
+      } else {
+        res.status(404).send({ message: "Data not found" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
     }
-  }
-);
-
-app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await WebsiteRequest.deleteOne({ _id: id });
-    if (result.deletedCount === 1) {
-      res.status(200).send({ message: "Data deleted successfully" });
-    } else {
-      res.status(404).send({ message: "Data not found" });
-    }
-  } catch (e) {
-    console.error(e);
-    res.status(500).send({ message: e.message });
-  }
-});
+  });
 
 
   // API To Edit Website Name
@@ -169,9 +170,9 @@ app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
         }
         websiteData = websiteData.filter(website => website.isActive === true);
-        if(websiteData.length === 0){
+        if (websiteData.length === 0) {
           return res.status(404).send({ message: 'No Website Active' });
-        } 
+        }
 
         res.status(200).send(websiteData);
       } catch (e) {
@@ -333,38 +334,38 @@ app.delete("/api/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
       try {
         const websiteName = req.params.websiteName;
         let balances = 0;
-          const accountSummary = await Transaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-          const allTransactions = [...accountSummary, ...websiteSummary]
-          allTransactions.sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
-            return dateB - dateA;
-          });
-          let allData = JSON.parse(JSON.stringify(allTransactions));
-          allData.slice(0).reverse().map((data) => {
-            if (data.transactionType === "Manual-Website-Deposit") {
-              balances += data.depositAmount;
-              data.balance = balances;
-            }
-            if (data.transactionType === "Manual-Website-Withdraw") {
-              balances -= data.withdrawAmount;
-              data.balance = balances;
-            }
-            if (data.transactionType === "Deposit") {
-              const netAmount = balances - data.bonus - data.amount;
-              balances = netAmount;
-              data.balance = balances;
-            }
-            if (data.transactionType === "Withdraw") {
-              let totalamount = 0;
-              totalamount += data.amount;
-              balances += totalamount;
-              data.balance = balances;
-            }
-          });
-          return res.status(200).send(allData);
-        
+        const accountSummary = await Transaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        const allTransactions = [...accountSummary, ...websiteSummary]
+        allTransactions.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB - dateA;
+        });
+        let allData = JSON.parse(JSON.stringify(allTransactions));
+        allData.slice(0).reverse().map((data) => {
+          if (data.transactionType === "Manual-Website-Deposit") {
+            balances += data.depositAmount;
+            data.balance = balances;
+          }
+          if (data.transactionType === "Manual-Website-Withdraw") {
+            balances -= data.withdrawAmount;
+            data.balance = balances;
+          }
+          if (data.transactionType === "Deposit") {
+            const netAmount = balances - data.bonus - data.amount;
+            balances = netAmount;
+            data.balance = balances;
+          }
+          if (data.transactionType === "Withdraw") {
+            let totalamount = 0;
+            totalamount += data.amount;
+            balances += totalamount;
+            data.balance = balances;
+          }
+        });
+        return res.status(200).send(allData);
+
       } catch (e) {
         console.error(e);
         res.status(e.code || 500).send({ message: e.message });

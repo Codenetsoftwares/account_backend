@@ -91,7 +91,7 @@ const BankRoutes = (app) => {
         throw { code: 400, message: "Bank approval was not granted." };
       }
 
-      res.status(200).send({ message: "Bank approved successfully! & Subadmin Assigned" });
+      res.status(200).send({ message: "Bank approved successfully & Subadmin Assigned" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
