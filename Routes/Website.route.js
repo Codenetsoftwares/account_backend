@@ -104,6 +104,18 @@ const WebisteRoutes = (app) => {
     } catch (e) {
       console.error(e);
       res.status(500).send({ message: e.message });
+  }
+);
+
+app.delete("/api/website/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await WebsiteRequest.deleteOne({ _id: id });
+    console.log("result", result);
+    if (result.deletedCount === 1) {
+      res.status(200).send({ message: "Data deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Data not found" });
     }
   });
 
