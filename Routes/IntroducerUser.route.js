@@ -176,6 +176,43 @@ export const IntroducerRoutes = (app) => {
       }
     }
   );
+
+  // app.get("/api/introducer/data/:id",AuthorizeRole(["introducer"]),
+  //   async (req, res) => {
+  //     try {
+        
+  //       const {  
+  //         sdate,
+  //         edate
+  //       } = req.body;
+  //       const filter = {};
+  //       if (sdate && edate) {
+  //         filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+  //       } else if (sdate) {
+  //         filter.createdAt = { $gte: new Date(sdate) };
+  //       } else if (edate) {
+  //         filter.createdAt = { $lte: new Date(edate) };
+  //       }
+  //       const id = req.params.id; 
+  //       console.log('id', id)
+  //       const introducerUser = await IntroducerUser.findOne({ _id: id }, "userName").exec();
+  //       console.log('introducerUser', introducerUser)
+  //       if (!introducerUser) {
+  //         return res.status(404).send({ message: "IntroducerUser not found" });
+  //       }
+  //       const users = await User.find({
+  //         introducersUserName: introducerUser.userName,
+  //       }).exec();
+  //       console.log('first')
+        
+  //       res.send(users);
+
+  //     } catch (e) {
+  //       console.error(e);
+  //       res.status(e.code).send({ message: e.message });
+  //     }
+  //   })
+
 };
 
 
