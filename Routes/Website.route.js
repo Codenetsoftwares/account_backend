@@ -49,7 +49,7 @@ const WebisteRoutes = (app) => {
       const bankId = req.params.id;
       const approvedWebisteRequest = await WebsiteRequest.findById(bankId);
 
-      if (!approvedBankRequest) {
+      if (!approvedWebisteRequest) {
         throw { code: 404, message: "Website not found in the approval requests!" };
       }
 
