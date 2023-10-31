@@ -210,7 +210,7 @@ const BankRoutes = (app) => {
           return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
         }
         else {
-          const itemsPerPage = 10; // Specify the number of items per page
+          const itemsPerPage = 4; // Specify the number of items per page
 
           const totalItems = bankData.length;
           const totalPages = Math.ceil(totalItems / itemsPerPage);
