@@ -72,7 +72,7 @@ const BankRoutes = (app) => {
         throw { code: 404, message: "Bank not found in the approval requests!" };
       }
 
-      if (isApproved) { // Check if isApproved is true
+      if (isApproved) {
         const approvedBank = new Bank({
           accountHolderName: approvedBankRequest.accountHolderName,
           bankName: approvedBankRequest.bankName,
@@ -199,10 +199,9 @@ const BankRoutes = (app) => {
             bankData[index]._id
           );
         }
-        bankData = bankData.filter(bank => bank.isActive === true);
         bankData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = bankData.length;
-        let pageNumber = Math.floor(allIntroDataLength / 4 + 1);
+        let pageNumber = Math.floor(allIntroDataLength / 4);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = bankData.slice(skip, skip + limit);
@@ -519,10 +518,7 @@ const BankRoutes = (app) => {
       if (!bank) {
         return res.status(404).send({ message: "Bank not found" });
       }
-      // Check if the user has permission to access this bank based on their role
-      // You can implement your own logic here, including checking the subAdminId if needed
-
-      // Update the isActive field
+    
       bank.isActive = isActive;
 
       await bank.save();
@@ -562,32 +558,13 @@ const BankRoutes = (app) => {
 
   app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
-      // console.log('req',req.user.roles)
       const subadminId = req.params.subadminId;
-      // console.log('subadminId', subadminId)
-      let ans = [];
-
-      if (req.user.roles.includes("superAdmin")) {
-        console.log('first')
-        let dbBankData = await Bank.find().exec();
-        let bankData = JSON.parse(JSON.stringify(dbBankData));
-
-        for (var index = 0; index < bankData.length; index++) {
-          bankData[index].balance = await AccountServices.getBankBalance(
-            bankData[index]._id
-          );
-        }
-
-        // bankData = bankData.filter(bank => bank.isActive === true);
-        return res.status(200).send(bankData);
-      }
-
-      const accessSubadmin = BankServices.userHasAccessToSubAdmin(req.user, subadminId)
+      const accessSubadmin = BankServices.userHasAccessToSubAdmin(req.user, subadminId);
       if (!accessSubadmin) {
         return res.status(403).send({ message: "You don't have access to view data for this subadmin" });
       }
 
-      let dbBankData = await Bank.find().exec();
+      const dbBankData = await Bank.find({ 'subAdmins.subAdminId': subadminId }).exec();
       let bankData = JSON.parse(JSON.stringify(dbBankData));
 
       for (var index = 0; index < bankData.length; index++) {
@@ -597,27 +574,20 @@ const BankRoutes = (app) => {
       }
 
       bankData = bankData.filter(bank => bank.isActive === true);
-      bankData.map((data) => {
-        if (data.subAdminId) {
-          for (let i = 0; i < data.subAdminId.length; i++) {
-            if (data.subAdminId[i] === subadminId) {
-              ans.push(data)
-            }
-          }
-        }
-      })
+      console.log('bankdata',bankData)
 
-      if (ans.length === 0) {
+      if (bankData.length === 0) {
         return res.status(404).send({ message: "No bank found" });
       }
-      // console.log('bankd', ans)
-      res.status(200).send(ans);
+
+      res.status(200).send(bankData);
 
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
+
 
 
 
