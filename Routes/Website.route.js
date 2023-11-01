@@ -194,7 +194,7 @@ const WebisteRoutes = (app) => {
         // websiteData = websiteData.filter(bank => bank.isActive === true);
         websiteData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = websiteData.length;
-        let pageNumber = Math.floor(allIntroDataLength / 4 + 1);
+        let pageNumber = Math.ceil(allIntroDataLength / 4 );
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = websiteData.slice(skip, skip + limit);
