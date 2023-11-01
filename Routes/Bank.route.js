@@ -184,7 +184,7 @@ const BankRoutes = (app) => {
     "/api/get-bank-name",
     Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
     async (req, res) => {
-      console.log('req', req.user.roles)
+      console.log('req', req.user)
       const {
         page,
         itemsPerPage
@@ -198,7 +198,20 @@ const BankRoutes = (app) => {
           bankData[index].balance = await AccountServices.getBankBalance(
             bankData[index]._id
           );
+          const subAdmins = bankData[index].subAdmins;
+          const user = req.user.userName; // Assuming the username of the current user is available in req.user
+
+          // Find the subAdmin that matches the current user's username
+          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+          if (userSubAdmin) {
+            // Set the isDeposit and isWithdraw properties based on the current user's subAdmin data
+            bankData[index].isDeposit = userSubAdmin.isDeposit;
+            bankData[index].isWithdraw = userSubAdmin.isWithdraw;
+          }
+
         }
+
         bankData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = bankData.length;
         let pageNumber = Math.floor(allIntroDataLength / 4);
@@ -518,7 +531,7 @@ const BankRoutes = (app) => {
       if (!bank) {
         return res.status(404).send({ message: "Bank not found" });
       }
-    
+
       bank.isActive = isActive;
 
       await bank.save();
@@ -574,7 +587,7 @@ const BankRoutes = (app) => {
       }
 
       bankData = bankData.filter(bank => bank.isActive === true);
-      console.log('bankdata',bankData)
+      console.log('bankdata', bankData)
 
       if (bankData.length === 0) {
         return res.status(404).send({ message: "No bank found" });
