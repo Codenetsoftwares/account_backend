@@ -215,21 +215,20 @@ export const IntroducerRoutes = (app) => {
 
   app.get("/api/introducer-user/accountsummary/:introducerUsername", AuthorizeRole(["introducer"]), async (req, res) => {
     try {
-      const id = req.params.introducerUsername;
-      const introSummary = await User.find({ introducersUserName: id }).sort({ createdAt: 1 }).exec();
-      const formattedIntroSummary = introSummary.map(user => ({
-        userName: user.userName, // Replace 'userName' with the actual field name for username
-        transaction: user.transactionDetail // You can populate 'transaction' here if it's available in the user object
-      }));
+        const id = req.params.introducerUsername;
+        const introSummary = await User.find({ introducersUserName: id }).sort({ createdAt: 1 }).exec();
+        
+        const formattedIntroSummary = {
+            transaction: introSummary.flatMap(user => user.transactionDetail)
+        };
 
-
-      res.status(200).send(formattedIntroSummary);
+        res.status(200).send(formattedIntroSummary);
     } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
     }
-  }
-  );
+});
+
 
 };
 
