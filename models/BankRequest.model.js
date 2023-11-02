@@ -10,7 +10,14 @@ export const BankRequest = mongoose.model(
     upiId: { type: String },
     upiAppName: { type: String },
     upiNumber: { type: String },
-    subAdminId: [],
+    // subAdminId: [],
+    subAdmins: [
+      {
+        subAdminId: { type: String },
+        isDeposit: { type: Boolean, default: false },
+        isWithdraw: { type: Boolean, default: false },
+      }
+    ],
     subAdminName: { type: String },
     createdAt: { type: Date },
     isApproved: { type: Boolean, default: false },

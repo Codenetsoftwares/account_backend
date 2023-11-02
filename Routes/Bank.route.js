@@ -602,7 +602,37 @@ const BankRoutes = (app) => {
   });
 
 
+  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
 
+    try {
+      const { subAdminId, isDeposit, isWithdraw } = req.body;
+      const bankId = req.params.id;
+  
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        throw { code: 404, message: "Bank not found!" };
+      }
+  
+      // Find the subAdmin in the subAdmins array by subAdminId
+      const subAdmin = bank.subAdmins.find(sa => sa.subAdminId === subAdminId);
+  
+      if (!subAdmin) {
+        throw { code: 404, message: "SubAdmin not found for the given subAdminId!" };
+      }
+  
+      subAdmin.isDeposit = isDeposit;
+      subAdmin.isWithdraw = isWithdraw;
+  
+      await bank.save();
+  
+      res.status(200).send({ message: "SubAdmin updated successfully" });
+    } 
+    catch (e) {
+      console.log(e)
+      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+
+    }
+  })
 
 
 };
