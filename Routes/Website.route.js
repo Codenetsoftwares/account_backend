@@ -444,14 +444,15 @@ const WebisteRoutes = (app) => {
   app.post("/api/admin/website/isactive/:websiteId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       // console.log('req', req.params.bankId)
-      const websiteId = req.params.bankId;
+      const websiteId = req.params.websiteId;
       const { isActive } = req.body;
       if (typeof isActive !== "boolean") {
         return res.status(400).send({ message: "isApproved field must be a boolean value" });
       }
       const website = await Website.findById(websiteId);
+      console.log('website',website)
       if (!website) {
-        return res.status(404).send({ message: "Bank not found" });
+        return res.status(404).send({ message: "Website not found" });
       }
 
       website.isActive = isActive;
