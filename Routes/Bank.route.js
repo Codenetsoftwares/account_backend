@@ -214,7 +214,7 @@ const BankRoutes = (app) => {
 
         bankData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = bankData.length;
-        let pageNumber = Math.floor(allIntroDataLength / 4);
+        let pageNumber = Math.ceil(allIntroDataLength / 4);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = bankData.slice(skip, skip + limit);
