@@ -48,7 +48,7 @@ const TransactionService = {
         },
       }).exec();
       if (existingTransaction) {
-        return res.status(400).json({ status: false, message: "Transaction ID is already in use" });
+        return res.status(400).json({ status: false, message: "Transaction ID is already in use. Please try again after 48 hours." });
       }
 
 
