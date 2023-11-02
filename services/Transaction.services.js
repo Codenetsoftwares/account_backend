@@ -40,6 +40,7 @@ const TransactionService = {
         throw { code: 400, message: "Payment Method is required" };
       }
 
+
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
         createdAt: {
@@ -49,6 +50,7 @@ const TransactionService = {
       if (existingTransaction) {
         return res.status(400).json({ status: false, message: "Transaction ID is already in use" });
       }
+
 
       // Website
       const dbWebsiteData = await Website.findOne({ websiteName: websiteName }).exec();

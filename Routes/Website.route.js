@@ -35,7 +35,7 @@ const WebisteRoutes = (app) => {
         }
       })
       await newWebsiteName.save();
-      res.status(200).send({ message: "Website registered successfully!" });
+      res.status(200).send({ message: "Bank name sent for approval!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
@@ -59,13 +59,11 @@ const WebisteRoutes = (app) => {
           subAdminId: approvedWebisteRequest.subAdminId,
           subAdmins: subAdmins, // Assign the subAdmins array
           subAdminName: approvedWebisteRequest.subAdminName,
-          isActive: false,
+          isActive: true,
         });
 
-        // Save the approved Website details
         await approvedWebsite.save();
 
-        // Delete the Website details from WebisteRequest
         await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
       } else {
         throw { code: 400, message: "Website approval was not granted." };
@@ -190,11 +188,20 @@ const WebisteRoutes = (app) => {
         let websiteData = JSON.parse(JSON.stringify(dbWebiteData));
         for (var index = 0; index < websiteData.length; index++) {
           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
+          const subAdmins = websiteData[index].subAdmins;
+          const user = req.user.userName; // Assuming the username of the current user is available in req.user
+
+          // Find the subAdmin that matches the current user's username
+          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+          if (userSubAdmin) {
+            websiteData[index].isDeposit = userSubAdmin.isDeposit;
+            websiteData[index].isWithdraw = userSubAdmin.isWithdraw;
+          }
         }
-        // websiteData = websiteData.filter(bank => bank.isActive === true);
         websiteData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = websiteData.length;
-        let pageNumber = Math.ceil(allIntroDataLength / 4 );
+        let pageNumber = Math.ceil(allIntroDataLength / 4);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = websiteData.slice(skip, skip + limit);
@@ -437,23 +444,19 @@ const WebisteRoutes = (app) => {
   app.post("/api/admin/website/isactive/:websiteId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       // console.log('req', req.params.bankId)
-      const websiteId = req.params.bankId;
+      const websiteId = req.params.websiteId;
       const { isActive } = req.body;
       if (typeof isActive !== "boolean") {
         return res.status(400).send({ message: "isApproved field must be a boolean value" });
       }
       const website = await Website.findById(websiteId);
+      console.log('website',website)
       if (!website) {
-        return res.status(404).send({ message: "Bank not found" });
+        return res.status(404).send({ message: "Website not found" });
       }
-      // Check if the user has permission to access this bank based on their role
-      // You can implement your own logic here, including checking the subAdminId if needed
 
-      // Update the isActive field
       website.isActive = isActive;
-
       await website.save();
-
       res.status(200).send({ message: "Bank status updated successfully" });
     } catch (e) {
       console.error(e);
@@ -461,27 +464,27 @@ const WebisteRoutes = (app) => {
     }
   });
 
-  app.post("/api/admin/website/assign-subadmin/:websiteId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
-    try {
-      const websiteId = req.params.bankId;
-      const { subAdminId } = req.body;
+  // app.post("/api/admin/website/assign-subadmin/:websiteId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
+  //   try {
+  //     const websiteId = req.params.bankId;
+  //     const { subAdminId } = req.body;
 
-      // First, check if the bank with the given ID exists
-      const website = await Website.findById(websiteId);
-      if (!website) {
-        return res.status(404).send({ message: "Bank not found" });
-      }
+  //     // First, check if the bank with the given ID exists
+  //     const website = await Website.findById(websiteId);
+  //     if (!website) {
+  //       return res.status(404).send({ message: "Bank not found" });
+  //     }
 
-      website.subAdminId.push(subAdminId);
-      website.isActive = true; // Set isActive to true for the assigned subadmin
-      await website.save();
+  //     website.subAdminId.push(subAdminId);
+  //     website.isActive = true; // Set isActive to true for the assigned subadmin
+  //     await website.save();
 
-      res.status(200).send({ message: "Subadmin assigned successfully" });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
-    }
-  });
+  //     res.status(200).send({ message: "Subadmin assigned successfully" });
+  //   } catch (e) {
+  //     console.error(e);
+  //     res.status(e.code || 500).send({ message: e.message || "Internal server error" });
+  //   }
+  // });
 
   app.get("/api/admin/website/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
