@@ -35,7 +35,7 @@ const WebisteRoutes = (app) => {
         }
       })
       await newWebsiteName.save();
-      res.status(200).send({ message: "Website registered successfully!" });
+      res.status(200).send({ message: "Bank name sent for approval!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
@@ -59,13 +59,11 @@ const WebisteRoutes = (app) => {
           subAdminId: approvedWebisteRequest.subAdminId,
           subAdmins: subAdmins, // Assign the subAdmins array
           subAdminName: approvedWebisteRequest.subAdminName,
-          isActive: false,
+          isActive: true,
         });
 
-        // Save the approved Website details
         await approvedWebsite.save();
 
-        // Delete the Website details from WebisteRequest
         await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
       } else {
         throw { code: 400, message: "Website approval was not granted." };
@@ -194,7 +192,9 @@ const WebisteRoutes = (app) => {
         // websiteData = websiteData.filter(bank => bank.isActive === true);
         websiteData.sort((a, b) => b.createdAt - a.createdAt);
         const allIntroDataLength = websiteData.length;
-        let pageNumber = Math.ceil(allIntroDataLength / 4 );
+
+        let pageNumber = Math.ceil(allIntroDataLength / 4);
+
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = websiteData.slice(skip, skip + limit);
