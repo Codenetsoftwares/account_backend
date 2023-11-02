@@ -40,9 +40,17 @@ const TransactionService = {
         throw { code: 400, message: "Payment Method is required" };
       }
 
-      const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
-      console.log('existingTransaction',existingTransaction )
-      if (existingTransaction) { return res.status(400).json({ status: false, message: "Transaction already exists" }); }
+
+      const existingTransaction = await Transaction.findOne({
+        transactionID: transactionID,
+        createdAt: {
+          $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        },
+      }).exec();
+      if (existingTransaction) {
+        return res.status(400).json({ status: false, message: "Transaction ID is already in use" });
+      }
+
 
       // Website
       const dbWebsiteData = await Website.findOne({ websiteName: websiteName }).exec();
