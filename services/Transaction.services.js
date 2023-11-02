@@ -41,6 +41,7 @@ const TransactionService = {
       }
 
       const existingTransaction = await Transaction.findOne({ transactionID: transactionID }).exec();
+      console.log('existingTransaction',existingTransaction )
       if (existingTransaction) { return res.status(400).json({ status: false, message: "Transaction already exists" }); }
 
       // Website
