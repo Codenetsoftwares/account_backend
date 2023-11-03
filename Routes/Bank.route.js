@@ -211,41 +211,9 @@ const BankRoutes = (app) => {
           }
 
         }
+        bankData.sort((a, b) => b.createdAt - a.createdAt)
 
-        bankData.sort((a, b) => b.createdAt - a.createdAt);
-        const allIntroDataLength = bankData.length;
-        let pageNumber = Math.ceil(allIntroDataLength / 4);
-        const skip = (page - 1) * itemsPerPage;
-        const limit = parseInt(itemsPerPage);
-        const paginatedResults = bankData.slice(skip, skip + limit);
-
-        if (paginatedResults.length !== 0) {
-          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-        }
-        else {
-          const itemsPerPage = 4; // Specify the number of items per page
-
-          const totalItems = bankData.length;
-          const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-
-          const skip = (page - 1) * itemsPerPage;
-          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-          const paginatedResults = bankData.slice(skip, skip + limit);
-
-          const pageNumber = page;
-          const allIntroDataLength = totalItems;
-
-          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
-        }
-
-
-        // console.log('bankd', bankData)
-
-        // return res.status(200).send(bankData);
+        return res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });

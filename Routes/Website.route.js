@@ -178,13 +178,12 @@ const WebisteRoutes = (app) => {
   app.get("/api/get-website-name", Authorize(["superAdmin", "Dashboard-View", "Transaction-View", "Transaction-Edit-Request", "Transaction-Delete-Request", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Website-View",
     "Profile-View", "Bank-View"]),
     async (req, res) => {
-      const {
-        page,
-        itemsPerPage
-      } = req.query;
 
       try {
         const dbWebiteData = await Website.find({}).exec();
+        if (dbWebiteData.length === 0) {
+          return res.status(404).send({ message: 'No Website Active' });
+        }
         let websiteData = JSON.parse(JSON.stringify(dbWebiteData));
         for (var index = 0; index < websiteData.length; index++) {
           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
@@ -200,37 +199,7 @@ const WebisteRoutes = (app) => {
           }
         }
         websiteData.sort((a, b) => b.createdAt - a.createdAt);
-        const allIntroDataLength = websiteData.length;
-        let pageNumber = Math.ceil(allIntroDataLength / 4);
-        const skip = (page - 1) * itemsPerPage;
-        const limit = parseInt(itemsPerPage);
-        const paginatedResults = websiteData.slice(skip, skip + limit);
 
-        if (paginatedResults.length !== 0) {
-          return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-        }
-        else {
-          const itemsPerPage = 4; // Specify the number of items per page
-
-          const totalItems = websiteData.length;
-          const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-          let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
-          page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-
-          const skip = (page - 1) * itemsPerPage;
-          const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
-          const paginatedResults = websiteData.slice(skip, skip + limit);
-
-          const pageNumber = page;
-          const allIntroDataLength = totalItems;
-
-          return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
-        }
-        if (websiteData.length === 0) {
-          return res.status(404).send({ message: 'No Website Active' });
-        }
 
         res.status(200).send(websiteData);
       } catch (e) {
@@ -450,7 +419,7 @@ const WebisteRoutes = (app) => {
         return res.status(400).send({ message: "isApproved field must be a boolean value" });
       }
       const website = await Website.findById(websiteId);
-      console.log('website',website)
+      console.log('website', website)
       if (!website) {
         return res.status(404).send({ message: "Website not found" });
       }
