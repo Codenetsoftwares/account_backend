@@ -6,7 +6,6 @@ import { Transaction } from "../models/transaction.js";
 import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { BankRequest } from "../models/BankRequest.model.js";
 import lodash from "lodash";
-import BankServices from "../services/Bank.services.js";
 import { Website } from "../models/website.model.js";
 
 const BankRoutes = (app) => {
@@ -541,11 +540,6 @@ const BankRoutes = (app) => {
   app.get("/api/admin/bank/view-subadmin/:subadminId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const subadminId = req.params.subadminId;
-      const accessSubadmin = BankServices.userHasAccessToSubAdmin(req.user, subadminId);
-      if (!accessSubadmin) {
-        return res.status(403).send({ message: "You don't have access to view data for this subadmin" });
-      }
-
       const dbBankData = await Bank.find({ 'subAdmins.subAdminId': subadminId }).exec();
       let bankData = JSON.parse(JSON.stringify(dbBankData));
 

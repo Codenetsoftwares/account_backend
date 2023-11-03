@@ -459,13 +459,9 @@ const WebisteRoutes = (app) => {
     try {
       const subadminId = req.params.subadminId;
       // console.log('subadminId', subadminId)
-      let ans = []
-      const accessSubadmin = userHasAccessToSubAdmin(req.user, subadminId)
-      if (!accessSubadmin) {
-        return res.status(403).send({ message: "You don't have access to view data for this subadmin" });
-      }
-
-      let dbWebsiteData = await Website.find().exec();
+      
+      let dbWebsiteData = await Website.find({ 'subAdmins.subAdminId': subadminId }).exec();
+      console.log('dweb', dbWebsiteData)
       let webisteData = JSON.parse(JSON.stringify(dbWebsiteData));
 
       for (var index = 0; index < webisteData.length; index++) {
@@ -474,58 +470,20 @@ const WebisteRoutes = (app) => {
         );
       }
 
-      webisteData = webisteData.filter(bank => bank.isActive === true);
-      webisteData.map((data) => {
-        if (data.subAdminId) {
-          for (let i = 0; i < data.subAdminId.length; i++) {
-            if (data.subAdminId[i] === subadminId) {
-              ans.push(data)
-            }
-          }
-        }
-      })
+      webisteData = webisteData.filter(website => website.isActive === true);
+      console.log('bankdata', webisteData)
 
-      if (ans.length === 0) {
-        return res.status(404).send({ message: "No website found" });
+      if (webisteData.length === 0) {
+        return res.status(404).send({ message: "No bank found" });
       }
 
-      console.log('bankd', ans)
-
-      res.status(200).send(ans);
+      res.status(200).send(webisteData);
 
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   });
-
-  function userHasAccessToSubAdmin(user, subAdminId) {
-    if (user.roles.includes("superAdmin")) {
-
-      return true;
-    } else if (user.roles.includes("RequestAdmin")) {
-      const authorizedSubadmins = getAuthorizedSubadminsForRequestAdmin(user);
-      return authorizedSubadmins.includes(subAdminId);
-    }
-
-    return false;
-  }
-
-  async function getAuthorizedSubadminsForRequestAdmin(user) {
-
-    try {
-      let dbBankData = await Bank.find().exec();
-
-      dbBankData = dbBankData.filter(bank => bank.isActive === true);
-      console.log('bankd', dbBankData)
-
-      res.status(200).send(dbBankData.subAdminId);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  }
-
 
   app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
 
@@ -538,7 +496,6 @@ const WebisteRoutes = (app) => {
         throw { code: 404, message: "Bank not found!" };
       }
 
-      // Find the subAdmin in the subAdmins array by subAdminId
       const subAdmin = webiste.subAdmins.find(sa => sa.subAdminId === subAdminId);
 
       if (!subAdmin) {
