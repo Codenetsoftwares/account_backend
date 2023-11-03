@@ -7,6 +7,7 @@ import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { BankRequest } from "../models/BankRequest.model.js";
 import lodash from "lodash";
 import BankServices from "../services/Bank.services.js";
+import { Website } from "../models/website.model.js";
 
 const BankRoutes = (app) => {
   // API To Add Bank Name
@@ -607,12 +608,19 @@ const BankRoutes = (app) => {
 
     try {
       let getBank = await Bank.find({isActive : true}).exec();
+      let getWebsite = await Website.find({isActive : true}).exec();
+      console.log('web',getWebsite)
       if(getBank.length === 0){
         return res.status(404).send({ message: "No bank found" });
       }
-
+      if(getWebsite.length === 0){
+        return res.status(404).send({ message: "No bank found" });
+      }
+      
       const bankNames = getBank.map(bank => bank.bankName);
-      return res.send(bankNames)
+      const websiteNames = getWebsite.map(website => website.websiteName);
+      console.log('web',websiteNames)
+      return res.send({bank: bankNames,website: websiteNames})
     }
     catch (err) {
       console.error(err)
