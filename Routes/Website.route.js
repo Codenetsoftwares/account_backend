@@ -485,52 +485,22 @@ const WebisteRoutes = (app) => {
     }
   });
 
-  app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
-
-    try {
-      const { subAdminId, isDeposit, isWithdraw } = req.body;
-      const bankId = req.params.id;
-
-      const webiste = await Website.findById(bankId);
-      if (!webiste) {
-        throw { code: 404, message: "Bank not found!" };
-      }
-
-      const subAdmin = webiste.subAdmins.find(sa => sa.subAdminId === subAdminId);
-
-      if (!subAdmin) {
-        throw { code: 404, message: "SubAdmin not found for the given subAdminId!" };
-      }
-
-      subAdmin.isDeposit = isDeposit;
-      subAdmin.isWithdraw = isWithdraw;
-
-      await webiste.save();
-
-      res.status(200).send({ message: "SubAdmin updated successfully" });
-    }
-    catch (e) {
-      console.log(e)
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
-
-    }
-  });
 
 
   app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
     try {
       const { subAdmins } = req.body;
-      const websiteID = req.params.id;
+      const bankId = req.params.id;
   
-      const approvedWebsiteRequest = await Website.findById(websiteID);
+      const approvedBankRequest = await Website.findById(bankId);
   
-      if (!approvedWebsiteRequest) {
+      if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found!" };
       }
   
       for (const subAdminData of subAdmins) {
         const { subAdminId, isDeposit, isWithdraw } = subAdminData;
-        const subAdmin = approvedWebsiteRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
+        const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
   
         if (subAdmin) {
           // If subAdmin exists, update its properties
@@ -538,7 +508,7 @@ const WebisteRoutes = (app) => {
           subAdmin.isWithdraw = isWithdraw;
         } else {
           // If subAdmin doesn't exist, add a new one
-          approvedWebsiteRequest.subAdmins.push({
+          approvedBankRequest.subAdmins.push({
             subAdminId,
             isDeposit,
             isWithdraw,
@@ -546,7 +516,7 @@ const WebisteRoutes = (app) => {
         }
       }
   
-      await approvedWebsiteRequest.save();
+      await approvedBankRequest.save();
   
       res.status(200).send({ message: "Updated successfully" });
     } catch (error) {
