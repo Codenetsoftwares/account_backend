@@ -633,7 +633,7 @@ const BankRoutes = (app) => {
   
       await approvedBankRequest.save();
   
-      res.status(200).send({ message: "SubAdmin(s) updated/added successfully" });
+      res.status(200).send({ message: "Updated successfully" });
     } catch (error) {
       res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }

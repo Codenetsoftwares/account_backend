@@ -514,7 +514,45 @@ const WebisteRoutes = (app) => {
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
 
     }
-  })
+  });
+
+
+  app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
+    try {
+      const { subAdmins } = req.body;
+      const websiteID = req.params.id;
+  
+      const approvedWebsiteRequest = await Website.findById(websiteID);
+  
+      if (!approvedWebsiteRequest) {
+        throw { code: 404, message: "Bank not found!" };
+      }
+  
+      for (const subAdminData of subAdmins) {
+        const { subAdminId, isDeposit, isWithdraw } = subAdminData;
+        const subAdmin = approvedWebsiteRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
+  
+        if (subAdmin) {
+          // If subAdmin exists, update its properties
+          subAdmin.isDeposit = isDeposit;
+          subAdmin.isWithdraw = isWithdraw;
+        } else {
+          // If subAdmin doesn't exist, add a new one
+          approvedWebsiteRequest.subAdmins.push({
+            subAdminId,
+            isDeposit,
+            isWithdraw,
+          });
+        }
+      }
+  
+      await approvedWebsiteRequest.save();
+  
+      res.status(200).send({ message: "Updated successfully" });
+    } catch (error) {
+      res.status(error.code || 500).send({ message: error.message || "An error occurred" });
+    }
+  });
 
 };
 
