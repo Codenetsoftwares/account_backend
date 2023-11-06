@@ -81,8 +81,8 @@ const BankRoutes = (app) => {
           upiId: approvedBankRequest.upiId,
           upiAppName: approvedBankRequest.upiAppName,
           upiNumber: approvedBankRequest.upiNumber,
-          subAdmins: subAdmins, // Assign the subAdmins array
-          isActive: true, // Set isActive to true for the approved bank
+          subAdmins: subAdmins,
+          isActive: true,
         });
 
         await approvedBank.save();
@@ -90,6 +90,43 @@ const BankRoutes = (app) => {
       } else {
         throw { code: 400, message: "Bank approval was not granted." };
       }
+
+      res.status(200).send({ message: "Bank approved successfully & Subadmin Assigned" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    }
+  });
+
+  app.post("/api/improve-bank/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      // console.log('req',subAdminId)
+      const { subAdmins } = req.body;
+      console.log('first',subAdmins)
+      const bankId = req.params.id;
+
+      const approvedBankRequest = await Bank.findById(bankId);
+      console.log('first', approvedBankRequest)
+      if (!approvedBankRequest) {
+        throw { code: 404, message: "Bank not found in the approval requests!" };
+      }
+
+
+      const approvedBank = new Bank({
+        accountHolderName: approvedBankRequest.accountHolderName,
+        bankName: approvedBankRequest.bankName,
+        accountNumber: approvedBankRequest.accountNumber,
+        ifscCode: approvedBankRequest.ifscCode,
+        upiId: approvedBankRequest.upiId,
+        upiAppName: approvedBankRequest.upiAppName,
+        upiNumber: approvedBankRequest.upiNumber,
+        subAdmins: subAdmins,
+        isActive: true,
+      });
+
+      await approvedBank.save();
+      // await BankRequest.deleteOne({ _id: approvedBankRequest._id });
+
 
       res.status(200).send({ message: "Bank approved successfully & Subadmin Assigned" });
     } catch (e) {
@@ -566,55 +603,62 @@ const BankRoutes = (app) => {
 
 
   app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
-
     try {
-      const { subAdminId, isDeposit, isWithdraw } = req.body;
+      const { subAdmins } = req.body;
       const bankId = req.params.id;
-
-      const bank = await Bank.findById(bankId);
-      if (!bank) {
+  
+      const approvedBankRequest = await Bank.findById(bankId);
+  
+      if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found!" };
       }
-
-      // Find the subAdmin in the subAdmins array by subAdminId
-      const subAdmin = bank.subAdmins.find(sa => sa.subAdminId === subAdminId);
-
-      if (!subAdmin) {
-        throw { code: 404, message: "SubAdmin not found for the given subAdminId!" };
+  
+      for (const subAdminData of subAdmins) {
+        const { subAdminId, isDeposit, isWithdraw } = subAdminData;
+        const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
+  
+        if (subAdmin) {
+          // If subAdmin exists, update its properties
+          subAdmin.isDeposit = isDeposit;
+          subAdmin.isWithdraw = isWithdraw;
+        } else {
+          // If subAdmin doesn't exist, add a new one
+          approvedBankRequest.subAdmins.push({
+            subAdminId,
+            isDeposit,
+            isWithdraw,
+          });
+        }
       }
-
-      subAdmin.isDeposit = isDeposit;
-      subAdmin.isWithdraw = isWithdraw;
-
-      await bank.save();
-
-      res.status(200).send({ message: "SubAdmin updated successfully" });
+  
+      await approvedBankRequest.save();
+  
+      res.status(200).send({ message: "SubAdmin(s) updated/added successfully" });
+    } catch (error) {
+      res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }
-    catch (e) {
-      console.log(e)
-      res.status(e.code || 500).send({ message: e.message || "Internal server error" });
-
-    }
-  })
+  });
+  
+  
 
 
   app.get("/api/active-visible-bank", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
 
     try {
-      let getBank = await Bank.find({isActive : true}).exec();
-      let getWebsite = await Website.find({isActive : true}).exec();
-      console.log('web',getWebsite)
-      if(getBank.length === 0){
+      let getBank = await Bank.find({ isActive: true }).exec();
+      let getWebsite = await Website.find({ isActive: true }).exec();
+      console.log('web', getWebsite)
+      if (getBank.length === 0) {
         return res.status(404).send({ message: "No bank found" });
       }
-      if(getWebsite.length === 0){
-        return res.status(404).send({ message: "No bank found" });
+      if (getWebsite.length === 0) {
+        return res.status(404).send({ message: "No Website found" });
       }
-      
+
       const bankNames = getBank.map(bank => bank.bankName);
       const websiteNames = getWebsite.map(website => website.websiteName);
-      console.log('web',websiteNames)
-      return res.send({bank: bankNames,website: websiteNames})
+      console.log('web', websiteNames)
+      return res.send({ bank: bankNames, website: websiteNames })
     }
     catch (err) {
       console.error(err)

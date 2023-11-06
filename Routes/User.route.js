@@ -344,8 +344,6 @@ export const UserRoutes = (app) => {
     }
   });
 
- 
-
 };
 
 
