@@ -27,7 +27,7 @@ const WebisteRoutes = (app) => {
         isActive: false
       });
       console.log("newWebsiteName", newWebsiteName)
-      const id = await WebsiteRequest.find(req.params.id);
+      const id = await WebsiteRequest.find({websiteName});
       id.map((data) => {
         console.log(data.websiteName)
         if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {

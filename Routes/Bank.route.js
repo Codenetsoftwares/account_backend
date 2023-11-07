@@ -43,7 +43,7 @@ const BankRoutes = (app) => {
           isActive: isActive,
           isApproved: false
         });
-        const id = await BankRequest.find(req.params.id);
+        const id = await BankRequest.find({bankName});
         id.map((data) => {
           console.log(data.bankName);
           if (
