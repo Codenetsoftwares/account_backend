@@ -35,7 +35,7 @@ const WebisteRoutes = (app) => {
         }
       })
       await newWebsiteName.save();
-      res.status(200).send({ message: "Bank name sent for approval!" });
+      res.status(200).send({ message: "Website name sent for approval!" });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
