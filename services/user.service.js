@@ -4,9 +4,7 @@ import crypto from "node:crypto";
 import nodemailer from "nodemailer";
 import { User } from "../models/user.model.js";
 import { IntroducerUser } from "../models/introducer.model.js"
-
 import dotenv from "dotenv";
-import AccountServices from "./Accounts.services.js";
 import { Admin } from "../models/admin_user.js";
 dotenv.config();
 
@@ -47,6 +45,10 @@ export const userservice = {
       contactNumber: data.contactNumber,
       introducerPercentage : data.introducerPercentage,
       introducersUserName : data.introducersUserName,
+      introducerPercentage1 : data.introducerPercentage1,
+      introducersUserName1 : data.introducersUserName1,
+      introducerPercentage2 : data.introducerPercentage2,
+      introducersUserName2 : data.introducersUserName2,
       password: encryptedPassword,
       wallet: 0,
     });
