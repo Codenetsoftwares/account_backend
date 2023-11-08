@@ -460,6 +460,10 @@ const AccountServices = {
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
     existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
     existingUser.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
+    existingUser.introducerPercentage1 = data.introducerPercentage1 || existingUser.introducerPercentage1;
+    existingUser.introducersUserName1 = data.introducersUserName1 || existingUser.introducersUserName1;
+    existingUser.introducerPercentage2 = data.introducerPercentage2 || existingUser.introducerPercentage2;
+    existingUser.introducersUserName2 = data.introducersUserName2 || existingUser.introducersUserName2;
     existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
 
     await existingUser.save().catch((err) => {
@@ -707,10 +711,8 @@ const AccountServices = {
         message: `Existing Introducer User not found with id : ${id}`,
       };
     }
-
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
-
     await existingUser.save().catch((err) => {
       console.error(err);
       throw {

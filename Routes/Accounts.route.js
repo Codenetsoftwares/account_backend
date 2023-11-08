@@ -612,26 +612,6 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.put(
-    "/api/admin/subAdmin-profile-edit/:id",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
-      try {
-        const id = await Admin.findById(req.params.id);
-        const updateResult = await AccountServices.updateSubAdminProfile(
-          id,
-          req.body
-        );
-        console.log(updateResult);
-        if (updateResult) {
-          res.status(201).send("Profile updated");
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
 
   app.get(
     "/api/admin/user/introducersUserName/:userId",
@@ -870,6 +850,27 @@ const AccountsRoute = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   }
+  );
+
+  app.put(
+    "/api/admin/subAdmin-profile-edit/:id",
+    Authorize(["superAdmin"]),
+    async (req, res) => {
+      try {
+        const id = await Admin.findById(req.params.id);
+        const updateResult = await AccountServices.updateSubAdminProfile(
+          id,
+          req.body
+        );
+        console.log(updateResult);
+        if (updateResult) {
+          res.status(201).send("Profile updated");
+        }
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
   );
 
   app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin", "report-my-txn"]), async (req, res) => {
