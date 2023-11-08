@@ -550,9 +550,16 @@ const AccountsRoute = (app) => {
         if (!introducerUser) {
           return res.status(404).send({ message: "IntroducerUser not found" });
         }
+  
+        // Fetch users with introducer names matching any of the three fields
         const users = await User.find({
-          introducersUserName: introducerUser.userName,
+          $or: [
+            { introducersUserName: introducerUser.userName },
+            { introducersUserName1: introducerUser.userName },
+            { introducersUserName2: introducerUser.userName }
+          ]
         }).exec();
+  
         res.send(users);
       } catch (e) {
         console.error(e);
@@ -560,6 +567,7 @@ const AccountsRoute = (app) => {
       }
     }
   );
+  
 
   app.post(
     "/api/admin/reset-password",
