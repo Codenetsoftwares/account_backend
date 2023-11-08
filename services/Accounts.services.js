@@ -450,32 +450,48 @@ const AccountServices = {
   updateUserProfile: async (id, data) => {
     const existingUser = await User.findById(id);
     if (!existingUser) {
-      throw { code: 404, message: `Existing User not found with id : ${id}` };
+      throw { code: 404, message: `Existing User not found with id: ${id}` };
     }
-
+  
+    // Validate introducerPercentage, introducerPercentage1, and introducerPercentage2
+    const introducerPercentage = parseFloat(data.introducerPercentage) || 0;
+    const introducerPercentage1 = parseFloat(data.introducerPercentage1) || 0;
+    const introducerPercentage2 = parseFloat(data.introducerPercentage2) || 0;
+  
+    if (isNaN(introducerPercentage) || isNaN(introducerPercentage1) || isNaN(introducerPercentage2)) {
+      throw { code: 400, message: 'Introducer percentages must be valid numbers.' };
+    }
+  
+    const totalIntroducerPercentage = introducerPercentage + introducerPercentage1 + introducerPercentage2;
+  
+    if (totalIntroducerPercentage < 0 || totalIntroducerPercentage > 100) {
+      throw { code: 400, message: 'The sum of introducer percentages must be between 0 and 100.' };
+    }
+  
     existingUser.firstname = data.firstname || existingUser.firstname;
     existingUser.lastname = data.lastname || existingUser.lastname;
     existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
     existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
     existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.introducerPercentage = data.introducerPercentage || existingUser.introducerPercentage;
+    existingUser.introducerPercentage = introducerPercentage;
     existingUser.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
-    existingUser.introducerPercentage1 = data.introducerPercentage1 || existingUser.introducerPercentage1;
+    existingUser.introducerPercentage1 = introducerPercentage1;
     existingUser.introducersUserName1 = data.introducersUserName1 || existingUser.introducersUserName1;
-    existingUser.introducerPercentage2 = data.introducerPercentage2 || existingUser.introducerPercentage2;
+    existingUser.introducerPercentage2 = introducerPercentage2;
     existingUser.introducersUserName2 = data.introducersUserName2 || existingUser.introducersUserName2;
     existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
-
+  
     await existingUser.save().catch((err) => {
       console.error(err);
       throw {
         code: 500,
-        message: `Failed to update User Profile with id : ${id}`,
+        message: `Failed to update User Profile with id: ${id}`,
       };
     });
-
+  
     return true;
   },
+  
 
   // updateBankTransaction: async (id, data) => {
   //   const existingTransaction = await BankTransaction.findById(id);
