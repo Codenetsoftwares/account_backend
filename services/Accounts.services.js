@@ -468,20 +468,27 @@ const AccountServices = {
       throw { code: 400, message: 'The sum of introducer percentages must be between 0 and 100.' };
     }
   
-    existingUser.firstname = data.firstname || existingUser.firstname;
-    existingUser.lastname = data.lastname || existingUser.lastname;
-    existingUser.contactNumber = data.contactNumber || existingUser.contactNumber;
-    existingUser.bankDetail = data.bankDetail || existingUser.bankDetail;
-    existingUser.upiDetail = data.upiDetail || existingUser.upiDetail;
-    existingUser.introducerPercentage = introducerPercentage;
-    existingUser.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
-    existingUser.introducerPercentage1 = introducerPercentage1;
-    existingUser.introducersUserName1 = data.introducersUserName1 || existingUser.introducersUserName1;
-    existingUser.introducerPercentage2 = introducerPercentage2;
-    existingUser.introducersUserName2 = data.introducersUserName2 || existingUser.introducersUserName2;
-    existingUser.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+    // Create a new object to store the updated user data
+    const updatedUserData = {
+      ...existingUser.toObject(), // Convert existing user object to plain JavaScript object
+      introducersUserName1: data.introducersUserName1 || existingUser.introducersUserName1,
+      introducerPercentage1: introducerPercentage1,
+      introducersUserName2: data.introducersUserName2 || existingUser.introducersUserName2,
+      introducerPercentage2: introducerPercentage2,
+    };
   
-    await existingUser.save().catch((err) => {
+    // Update the remaining fields
+    updatedUserData.firstname = data.firstname || existingUser.firstname;
+    updatedUserData.lastname = data.lastname || existingUser.lastname;
+    updatedUserData.contactNumber = data.contactNumber || existingUser.contactNumber;
+    updatedUserData.bankDetail = data.bankDetail || existingUser.bankDetail;
+    updatedUserData.upiDetail = data.upiDetail || existingUser.upiDetail;
+    updatedUserData.introducerPercentage = introducerPercentage;
+    updatedUserData.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
+    updatedUserData.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
+  
+    // Save the updated user data
+    await existingUser.set(updatedUserData).save().catch((err) => {
       console.error(err);
       throw {
         code: 500,
@@ -491,6 +498,7 @@ const AccountServices = {
   
     return true;
   },
+  
   
 
   // updateBankTransaction: async (id, data) => {
