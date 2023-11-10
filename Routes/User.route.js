@@ -195,7 +195,7 @@ export const UserRoutes = (app) => {
   app.get("/api/user-profile-data/:userId", AuthorizeRole(["user"]), async (req, res) => {
     try {
       const userId = req.params.userId;
-      const userData = await User.findById(userId).exec();
+      const userData = await User.findById(userId).sort({ createdAt: 1 }).exec();
       if (!userData) {
         return res.status(404).send({ message: "User not found" });
       }
