@@ -454,9 +454,9 @@ const AccountServices = {
     }
   
     // Validate introducerPercentage, introducerPercentage1, and introducerPercentage2
-    const introducerPercentage = parseFloat(data.introducerPercentage) || 0;
-    const introducerPercentage1 = parseFloat(data.introducerPercentage1) || 0;
-    const introducerPercentage2 = parseFloat(data.introducerPercentage2) || 0;
+    const introducerPercentage = data.introducerPercentage !== undefined ? parseFloat(data.introducerPercentage) : existingUser.introducerPercentage;
+    const introducerPercentage1 = data.introducerPercentage1 !== undefined ? parseFloat(data.introducerPercentage1) : existingUser.introducerPercentage1;
+    const introducerPercentage2 = data.introducerPercentage2 !== undefined ? parseFloat(data.introducerPercentage2) : existingUser.introducerPercentage2;
   
     if (isNaN(introducerPercentage) || isNaN(introducerPercentage1) || isNaN(introducerPercentage2)) {
       throw { code: 400, message: 'Introducer percentages must be valid numbers.' };
