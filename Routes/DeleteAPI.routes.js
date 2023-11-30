@@ -101,7 +101,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/restore/data/:bankName", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/bank/data/:bankName", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const bankName = req.params.bankName;
       const deletedData = await Trash.findOne({ bankName }).exec();
@@ -121,7 +121,11 @@ const DeleteAPIRoute = (app) => {
         bankName: deletedData.bankName,
         accountNumber: deletedData.accountNumber,
         ifscCode: deletedData.ifscCode,
-        createdAt: deletedData.createdAt
+        createdAt: deletedData.createdAt,
+        upiId: deletedData.upiId,
+        upiAppName: deletedData.upiAppName,
+        upiNumber: deletedData.upiNumber,
+        isSubmit: deletedData.isSubmit
       }
       const restoredData = await BankTransaction.create(dataToRestore);
       await Trash.findByIdAndDelete(deletedData._id);
@@ -131,7 +135,100 @@ const DeleteAPIRoute = (app) => {
       res.status(500).send({ message: e.message });
     }
   });
+
+
+  app.post("/api/restore/website/data/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const websiteName = req.params.websiteName;
+      const deletedData = await Trash.findOne({ websiteName }).exec();
+      console.log("first", deletedData);
+      if (!deletedData) {
+        return res.status(404).send({ message: "Data not found in Trash" });
+      }
+      const dataToRestore = {
+      websiteId: deletedData.websiteId,
+      transactionType: deletedData.transactionType,
+      remarks: deletedData.remarks,
+      withdrawAmount: deletedData.withdrawAmount,
+      depositAmount: deletedData.depositAmount,
+      subAdminId: deletedData.subAdminId,
+      subAdminName: deletedData.subAdminName,
+      websiteName: deletedData.websiteName,
+      createdAt: deletedData.createdAt,
+      }
+      const restoredData = await WebsiteTransaction.create(dataToRestore);
+      await Trash.findByIdAndDelete(deletedData._id);
+      res.status(200).send({ message: "Data restored successfully", data: restoredData });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+    }
+  });
   
+
+  app.post("/api/restore/transaction/data/:transactionID", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const transactionID = req.params.transactionID;
+      const deletedData = await Trash.findOne({ transactionID }).exec();
+      console.log("first", deletedData);
+      if (!deletedData) {
+        return res.status(404).send({ message: "Data not found in Trash" });
+      }
+      const dataToRestore = {
+        bankId: deletedData.bankId,
+        websiteId: deletedData.websiteId,
+        transactionID: deletedData.transactionID,
+        transactionType: deletedData.transactionType,
+        remarks: deletedData.remarks,
+        amount: deletedData.amount,
+        subAdminId: deletedData.subAdminId,
+        subAdminName: deletedData.subAdminName,
+        introducerUserName: deletedData.introducerUserName,
+        userId: deletedData.userId,
+        userName: deletedData.userName,
+        paymentMethod: deletedData.paymentMethod,
+        websiteName: deletedData.websiteName,
+        bankName: deletedData.bankName,
+        amount: deletedData.amount,
+        bonus: deletedData.bonus,
+        bankCharges: deletedData.bankCharges,
+        createdAt: deletedData.createdAt,
+      }
+      const restoredData = await Transaction.create(dataToRestore);
+      await Trash.findByIdAndDelete(deletedData._id);
+      res.status(200).send({ message: "Data restored successfully", data: restoredData });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+    }
+  });
+
+  app.post("/api/restore/Introducer/data/:introUserId", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const introUserId = req.params.introUserId;
+      const deletedData = await Trash.findOne({ introUserId }).exec();
+      console.log("first", deletedData);
+      if (!deletedData) {
+        return res.status(404).send({ message: "Data not found in Trash" });
+      }
+      const dataToRestore = {
+        introUserId: deletedData.introUserId,
+        amount: deletedData.amount,
+        transactionType: deletedData.transactionType,
+        remarks: deletedData.remarks,
+        subAdminId: deletedData.subAdminId,
+        subAdminName: deletedData.subAdminName,
+        introducerUserName: deletedData.introducerUserName,
+        createdAt: deletedData.createdAt
+      }
+      const restoredData = await IntroducerTransaction.create(dataToRestore);
+      await Trash.findByIdAndDelete(deletedData._id);
+      res.status(200).send({ message: "Data restored successfully", data: restoredData });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+    }
+  });
   
 }
 

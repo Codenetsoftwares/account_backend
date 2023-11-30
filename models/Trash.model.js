@@ -6,6 +6,7 @@ export const Trash = mongoose.model(
     id: { type: mongoose.Schema.Types.ObjectId },
     bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
     websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
+    introUserId: { type: mongoose.Schema.Types.ObjectId, ref: "IntroducerUser" },
     transactionID: { type: String },
     transactionType: { type: String, required: true },
     amount: { type: Number },
