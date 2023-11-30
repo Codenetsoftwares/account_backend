@@ -827,7 +827,6 @@ const AccountServices = {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const updatedTransactionData = {
-      id: transaction._id,
       bankId: transaction.bankId,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
@@ -839,7 +838,11 @@ const AccountServices = {
       bankName: transaction.bankName,
       accountNumber: transaction.accountNumber,
       ifscCode: transaction.ifscCode,
-      createdAt: transaction.createdAt
+      createdAt: transaction.createdAt,
+      upiId: transaction.upiId,
+      upiAppName: transaction.upiAppName,
+      upiNumber: transaction.upiNumber,
+      isSubmit: transaction.isSubmit
     };
       const backupTransaction = new Trash(updatedTransactionData);
       await backupTransaction.save();
@@ -856,7 +859,7 @@ const AccountServices = {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const updatedTransactionData = {
-      id: transaction._id,
+      websiteId: transaction.websiteId,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
       withdrawAmount: transaction.withdrawAmount,
@@ -864,6 +867,7 @@ const AccountServices = {
       subAdminId: transaction.subAdminId,
       subAdminName: transaction.subAdminName,
       websiteName: transaction.websiteName,
+      createdAt: transaction.createdAt,
     };
       const backupTransaction = new Trash(updatedTransactionData);
       await backupTransaction.save();
@@ -880,7 +884,6 @@ const AccountServices = {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const updatedTransactionData = {
-      id: transaction._id,
       bankId: transaction.bankId,
       websiteId: transaction.websiteId,
       transactionID: transaction.transactionID,
@@ -888,6 +891,8 @@ const AccountServices = {
       remarks: transaction.remarks,
       amount: transaction.amount,
       subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      introducerUserName: transaction.introducerUserName,
       userId: transaction.userId,
       userName: transaction.userName,
       paymentMethod: transaction.paymentMethod,
@@ -896,6 +901,7 @@ const AccountServices = {
       amount: transaction.amount,
       bonus: transaction.bonus,
       bankCharges: transaction.bankCharges,
+      createdAt: transaction.createdAt,
     };
       const backupTransaction = new Trash(updatedTransactionData);
       await backupTransaction.save();
@@ -912,13 +918,14 @@ const AccountServices = {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
     }
     const updatedTransactionData = {
-      id: transaction._id,
+      introUserId: transaction.introUserId,
+      amount: transaction.amount,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
       subAdminId: transaction.subAdminId,
       subAdminName: transaction.subAdminName,
-      amount: transaction.amount,
-      introducerUserName: transaction.introducerUserName
+      introducerUserName: transaction.introducerUserName,
+      createdAt: transaction.createdAt
     };
       const backupTransaction = new Trash(updatedTransactionData);
       await backupTransaction.save();
