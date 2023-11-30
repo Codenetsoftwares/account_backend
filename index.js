@@ -12,6 +12,7 @@ import IntroducerRoutes from './Routes/IntroducerUser.route.js';
 import EditApiRoute from './Routes/EditApi.route.js'
 import BankRoutes from './Routes/Bank.route.js'
 import WebisteRoutes from './Routes/Website.route.js';
+import DeleteAPIRoute from './Routes/DeleteAPI.routes.js'
 import crypto from 'crypto';
 
 dotenv.config();
@@ -23,61 +24,6 @@ app.use(express.urlencoded({ extended: true }));
 const  allowedOrigins = process.env.FRONTEND_URI.split(",");
 app.use(cors({ origin: allowedOrigins }));
 
-app.use(
-  "/api/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(
-    swaggerJsdoc({
-      definition: {
-        openapi: "3.0.0",
-        info: {
-          title: "Backend API for CRM",
-          version: "1.0.0",
-          description: "This is the Backend API for the CRM Platform",
-        },
-        servers: [
-          {
-            url: `http://localhost:${process.env.PORT || 8000}`,
-            description: "Local Dev Server",
-          },
-          {
-            url: "",
-            description: "Production Server",
-          },
-        ],
-        components: {
-          securitySchemes: {
-            bearerAuth: {
-              type: "http",
-              in: "header",
-              name: "Authorization",
-              description: "Bearer token to access protected endpoints",
-              scheme: "bearer",
-              bearerFormat: "JWT",
-            },
-          },
-        },
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
-        tags: [
-          {
-            name: "Accounts",
-            description: "User Register, Login & Profile APIs",
-          },
-          {
-            name: "Transaction",
-            description: "Transaction APIs",
-          },
-        ],
-      },
-      apis: ["./routes/*.js"],
-    }),
-    { explorer: true }
-  )
-);
 
 mongoose.set("strictQuery", true);
 mongoose.connect(process.env.MONGODB_URI, { dbName: process.env.MONGODB_NAME });
@@ -89,6 +35,7 @@ IntroducerRoutes(app);
 EditApiRoute(app);
 BankRoutes(app);
 WebisteRoutes(app);
+DeleteAPIRoute(app);
 
 app.listen(process.env.PORT, () => {
   console.log(`Read the docs - http://localhost:${process.env.PORT || 8000}/api/docs`);

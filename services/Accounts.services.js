@@ -15,6 +15,7 @@ import { IntroducerUser } from "../models/introducer.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
+import { Trash } from "../models/Trash.model.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -819,6 +820,114 @@ const AccountServices = {
     }
     return true;
   },
+
+  trashBankTransaction: async (transaction) => {
+    const existingTransaction = await BankTransaction.findById(transaction);
+    if (!existingTransaction) {
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
+    }
+    const updatedTransactionData = {
+      id: transaction._id,
+      bankId: transaction.bankId,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      withdrawAmount: transaction.withdrawAmount,
+      depositAmount: transaction.depositAmount,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      accountHolderName: transaction.accountHolderName,
+      bankName: transaction.bankName,
+      accountNumber: transaction.accountNumber,
+      ifscCode: transaction.ifscCode,
+      createdAt: transaction.createdAt
+    };
+      const backupTransaction = new Trash(updatedTransactionData);
+      await backupTransaction.save();
+      const deletedAdminUser = await BankTransaction.findByIdAndDelete(transaction);
+      if (!deletedAdminUser) {
+        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+      }
+    return true;
+  },
+
+  trashWebsiteTransaction: async (transaction) => {
+    const existingTransaction = await WebsiteTransaction.findById(transaction);
+    if (!existingTransaction) {
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
+    }
+    const updatedTransactionData = {
+      id: transaction._id,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      withdrawAmount: transaction.withdrawAmount,
+      depositAmount: transaction.depositAmount,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      websiteName: transaction.websiteName,
+    };
+      const backupTransaction = new Trash(updatedTransactionData);
+      await backupTransaction.save();
+      const deletedAdminUser = await WebsiteTransaction.findByIdAndDelete(transaction);
+      if (!deletedAdminUser) {
+        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+      }
+    return true;
+  },
+
+  trashTransaction: async (transaction) => {
+    const existingTransaction = await Transaction.findById(transaction);
+    if (!existingTransaction) {
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
+    }
+    const updatedTransactionData = {
+      id: transaction._id,
+      bankId: transaction.bankId,
+      websiteId: transaction.websiteId,
+      transactionID: transaction.transactionID,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      amount: transaction.amount,
+      subAdminId: transaction.subAdminId,
+      userId: transaction.userId,
+      userName: transaction.userName,
+      paymentMethod: transaction.paymentMethod,
+      websiteName: transaction.websiteName,
+      bankName: transaction.bankName,
+      amount: transaction.amount,
+      bonus: transaction.bonus,
+      bankCharges: transaction.bankCharges,
+    };
+      const backupTransaction = new Trash(updatedTransactionData);
+      await backupTransaction.save();
+      const deletedAdminUser = await Transaction.findByIdAndDelete(transaction);
+      if (!deletedAdminUser) {
+        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+      }
+    return true;
+  },
+
+  trashIntroducerTransaction: async (transaction) => {
+    const existingTransaction = await IntroducerTransaction.findById(transaction);
+    if (!existingTransaction) {
+      throw { code: 404, message: `Transaction not found with id: ${transaction}` };
+    }
+    const updatedTransactionData = {
+      id: transaction._id,
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      amount: transaction.amount,
+      introducerUserName: transaction.introducerUserName
+    };
+      const backupTransaction = new Trash(updatedTransactionData);
+      await backupTransaction.save();
+      const deletedAdminUser = await IntroducerTransaction.findByIdAndDelete(transaction);
+      if (!deletedAdminUser) {
+        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+      }
+    return true;
+  }
 };
 
 export default AccountServices;
