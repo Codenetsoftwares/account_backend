@@ -13,6 +13,7 @@ import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import { IntroducerUser } from "../models/introducer.model.js";
 import { introducerUser } from "../services/introducer.services.js";
+import { Trash } from "../models/Trash.model.js";
 
 const EditApiRoute = (app) => {
 
@@ -28,7 +29,7 @@ const EditApiRoute = (app) => {
       const updateResult = await AccountServices.deleteBankTransaction(transaction,user);
       console.log(updateResult);
       if (updateResult) {
-        res.status(201).send("Bank Transaction delete request sent to Super Admin");
+        res.status(201).send("Bank Transaction to trash request sent to Super Admin");
       }
     } catch (e) {
       console.error(e);
@@ -43,13 +44,32 @@ const EditApiRoute = (app) => {
       const id = req.params.id;
       const editRequest = await EditRequest.findById(id).exec();
       if (!editRequest) {
-        return res.status(404).send({ message: "Edit Bank Request not found" });
+        return res.status(404).send({ message: "Bank Request not found" });
       }
       const isApproved = true;
       if (isApproved) {
         await BankTransaction.deleteOne({ _id: editRequest.id }).exec();
+        const dataToRestore = {
+          bankId: editRequest.bankId,
+          transactionType: editRequest.transactionType,
+          remarks: editRequest.remarks,
+          withdrawAmount: editRequest.withdrawAmount,
+          depositAmount: editRequest.depositAmount,
+          subAdminId: editRequest.subAdminId,
+          subAdminName: editRequest.subAdminName,
+          accountHolderName: editRequest.accountHolderName,
+          bankName: editRequest.bankName,
+          accountNumber: editRequest.accountNumber,
+          ifscCode: editRequest.ifscCode,
+          createdAt: editRequest.createdAt,
+          upiId: editRequest.upiId,
+          upiAppName: editRequest.upiAppName,
+          upiNumber: editRequest.upiNumber,
+          isSubmit: editRequest.isSubmit
+        }
+        const restoredData = await Trash.create(dataToRestore);
         await EditRequest.deleteOne({ _id: req.params.id }).exec();
-        res.status(200).send({ message: "Bank Transaction deleted" });
+        res.status(200).send({ message: "Bank Transaction Moved To Trash", data: restoredData });
       } else {
         res.status(400).send({ message: "Approval request rejected by super admin" });
       }
@@ -72,7 +92,7 @@ const EditApiRoute = (app) => {
       const updateResult = await AccountServices.deleteWebsiteTransaction(transaction,user);
       console.log(updateResult);
       if (updateResult) {
-        res.status(201).send("Website Transaction delete request sent to Super Admin");
+        res.status(201).send("Website Transaction to trash request sent to Super Admin");
       }
     } catch (e) {
       console.error(e);
@@ -90,8 +110,20 @@ const EditApiRoute = (app) => {
       const isApproved = true;
       if (isApproved) {
         await WebsiteTransaction.deleteOne({ _id: editRequest.id }).exec();
+        const dataToRestore = {
+          websiteId: editRequest.websiteId,
+          transactionType: editRequest.transactionType,
+          remarks: editRequest.remarks,
+          withdrawAmount: editRequest.withdrawAmount,
+          depositAmount: editRequest.depositAmount,
+          subAdminId: editRequest.subAdminId,
+          subAdminName: editRequest.subAdminName,
+          websiteName: editRequest.websiteName,
+          createdAt: editRequest.createdAt,
+          }
+          const restoredData = await Trash.create(dataToRestore);
         await EditRequest.deleteOne({ _id: req.params.id }).exec();
-        res.status(200).send({ message: "Bank Transaction deleted" });
+        res.status(200).send({ message: "Website Transaction Moved To Trash", data: restoredData });
       } else {
         res.status(400).send({ message: "Approval request rejected by super admin" });
       }
@@ -114,7 +146,7 @@ const EditApiRoute = (app) => {
       const updateResult = await AccountServices.deleteTransaction(transaction, user);
       console.log(updateResult);
       if (updateResult) {
-        res.status(201).send("Transaction delete request sent to Super Admin");
+        res.status(201).send("Transaction to trash request sent to Super Admin");
       }
     } catch (e) {
       console.error(e);
@@ -132,12 +164,33 @@ const EditApiRoute = (app) => {
       const isApproved = true;
       if (isApproved) {
         await Transaction.deleteOne({ _id: editRequest.id }).exec();
+        const dataToRestore = {
+          bankId: editRequest.bankId,
+          websiteId: editRequest.websiteId,
+          transactionID: editRequest.transactionID,
+          transactionType: editRequest.transactionType,
+          remarks: editRequest.remarks,
+          amount: editRequest.amount,
+          subAdminId: editRequest.subAdminId,
+          subAdminName: editRequest.subAdminName,
+          introducerUserName: editRequest.introducerUserName,
+          userId: editRequest.userId,
+          userName: editRequest.userName,
+          paymentMethod: editRequest.paymentMethod,
+          websiteName: editRequest.websiteName,
+          bankName: editRequest.bankName,
+          amount: editRequest.amount,
+          bonus: editRequest.bonus,
+          bankCharges: editRequest.bankCharges,
+          createdAt: editRequest.createdAt,
+        }
+        const restoredData = await Trash.create(dataToRestore);
         await EditRequest.deleteOne({ _id: req.params.id }).exec();
         await User.updateOne(
           { "transactionDetail._id": editRequest.id },
           { $pull: { transactionDetail: { _id: editRequest.id } } }
         ).exec();
-        res.status(200).send({ message: "Transaction deleted" });
+        res.status(200).send({ message: "Transaction moved to Trash", data: restoredData });
       } else {
         res.status(400).send({ message: "Approval request rejected by super admin" });
       }
@@ -179,8 +232,19 @@ const EditApiRoute = (app) => {
       const isApproved = true;
       if (isApproved) {
         await IntroducerTransaction.deleteOne({ _id: editRequest.id }).exec();
+        const dataToRestore = {
+          introUserId: editRequest.introUserId,
+          amount: editRequest.amount,
+          transactionType: editRequest.transactionType,
+          remarks: editRequest.remarks,
+          subAdminId: editRequest.subAdminId,
+          subAdminName: editRequest.subAdminName,
+          introducerUserName: editRequest.introducerUserName,
+          createdAt: editRequest.createdAt
+        }
+        const restoredData = await Trash.create(dataToRestore);
         await IntroducerEditRequest.deleteOne({ _id: req.params.id }).exec();
-        res.status(200).send({ message: "Transaction deleted" });
+        res.status(200).send({ message: "Transaction moved to Trash", data: restoredData });
       } else {
         res.status(400).send({ message: "Approval request rejected by super admin" });
       }
