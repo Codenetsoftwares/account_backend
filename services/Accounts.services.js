@@ -562,27 +562,33 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Delete",
+      type: "Trash",
     });
     if (existingEditRequest) {
-      throw { code: 409, message: "Delete Request Already Sent For Approval" };
+      throw { code: 409, message: "Request Already Sent For Approval" };
     }
 
     const updatedTransactionData = {
       id: transaction._id,
-      transactionType: transaction.transactionType,
-      remarks: transaction.remarks,
-      withdrawAmount: transaction.withdrawAmount,
-      depositAmount: transaction.depositAmount,
-      subAdminId: transaction.subAdminId,
-      subAdminName: transaction.subAdminName,
-      accountHolderName: transaction.accountHolderName,
-      bankName: transaction.bankName,
-      accountNumber: transaction.accountNumber,
-      ifscCode: transaction.ifscCode,
+      bankId: transaction.bankId,
+        transactionType: transaction.transactionType,
+        remarks: transaction.remarks,
+        withdrawAmount: transaction.withdrawAmount,
+        depositAmount: transaction.depositAmount,
+        subAdminId: transaction.subAdminId,
+        subAdminName: transaction.subAdminName,
+        accountHolderName: transaction.accountHolderName,
+        bankName: transaction.bankName,
+        accountNumber: transaction.accountNumber,
+        ifscCode: transaction.ifscCode,
+        createdAt: transaction.createdAt,
+        upiId: transaction.upiId,
+        upiAppName: transaction.upiAppName,
+        upiNumber: transaction.upiNumber,
+        isSubmit: transaction.isSubmit
     };
     const name = user.firstname;
-    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving to trash approval`;
     await createEditRequest(updatedTransactionData, editMessage, name);
     async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new EditRequest({
@@ -590,7 +596,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Delete",
+        type: "Trash",
       });
       await backupTransaction.save();
     }
@@ -607,16 +613,17 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Delete",
+      type: "Trash",
     });
     if (existingEditRequest) {
       throw {
         code: 409,
-        message: "Delete Request Already Sent For Approval",
+        message: "Request Already Sent For Approval",
       };
     }
     const updatedTransactionData = {
       id: transaction._id,
+      websiteId: transaction.websiteId,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
       withdrawAmount: transaction.withdrawAmount,
@@ -624,9 +631,10 @@ const AccountServices = {
       subAdminId: transaction.subAdminId,
       subAdminName: transaction.subAdminName,
       websiteName: transaction.websiteName,
+      createdAt: transaction.createdAt,
     };
     const name = user.firstname;
-    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving into trash approval`;
     await createEditRequest(updatedTransactionData, editMessage,name);
     async function createEditRequest(updatedTransactionData, editMessage,name) {
       const backupTransaction = new EditRequest({
@@ -634,7 +642,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Delete",
+        type: "Trash",
       });
       await backupTransaction.save();
     }
@@ -649,21 +657,25 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Delete",
+      type: "Trash",
     });
     if (existingEditRequest) {
       throw {
         code: 409,
-        message: "Delete Request Already Sent For Approval",
+        message: "Request Already Sent For Approval",
       };
     }
     const updatedTransactionData = {
       id: transaction._id,
+      bankId: transaction.bankId,
+      websiteId: transaction.websiteId,
       transactionID: transaction.transactionID,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
       amount: transaction.amount,
       subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      introducerUserName: transaction.introducerUserName,
       userId: transaction.userId,
       userName: transaction.userName,
       paymentMethod: transaction.paymentMethod,
@@ -672,10 +684,11 @@ const AccountServices = {
       amount: transaction.amount,
       bonus: transaction.bonus,
       bankCharges: transaction.bankCharges,
+      createdAt: transaction.createdAt,
     };
     const name = user.firstname;
     console.log("user",user)
-    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving into trash approval`;
     await createEditRequest(updatedTransactionData, editMessage, name);
     async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new EditRequest({
@@ -683,7 +696,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Delete",
+        type: "Trash",
       });
       await backupTransaction.save();
     }
@@ -697,23 +710,25 @@ const AccountServices = {
     }
     const existingEditRequest = await IntroducerEditRequest.findOne({
       id: transaction,
-      type: "Delete",
+      type: "Trash",
     });
     if (existingEditRequest) {
-      throw { code: 409, message: "Delete Request Already Sent For Approval" };
+      throw { code: 409, message: "Request Already Sent For Approval" };
     }
 
     const updatedTransactionData = {
       id: transaction._id,
+      introUserId: transaction.introUserId,
+      amount: transaction.amount,
       transactionType: transaction.transactionType,
       remarks: transaction.remarks,
       subAdminId: transaction.subAdminId,
       subAdminName: transaction.subAdminName,
-      amount: transaction.amount,
-      introducerUserName: transaction.introducerUserName
+      introducerUserName: transaction.introducerUserName,
+      createdAt: transaction.createdAt
     };
     const name = user.firstname;
-    const editMessage = `Introducer ${updatedTransactionData.transactionType} is sent to Super Admin for deleting approval`;
+    const editMessage = `Introducer ${updatedTransactionData.transactionType} is sent to Super Admin for moving into trash approval`;
     await createEditRequest(updatedTransactionData, editMessage, name);
     async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new IntroducerEditRequest({
@@ -721,7 +736,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Delete",
+        type: "Trash",
       });
       await backupTransaction.save();
     }
