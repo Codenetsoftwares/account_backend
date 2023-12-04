@@ -43,7 +43,7 @@ const BankRoutes = (app) => {
           isActive: isActive,
           isApproved: false
         });
-        const id = await BankRequest.find({bankName});
+        const id = await Bank.find({bankName});
         id.map((data) => {
           console.log(data.bankName);
           if (
@@ -84,7 +84,6 @@ const BankRoutes = (app) => {
           subAdmins: subAdmins,
           isActive: true,
         });
-
         await approvedBank.save();
         await BankRequest.deleteOne({ _id: approvedBankRequest._id });
       } else {
@@ -179,9 +178,7 @@ const BankRoutes = (app) => {
         const updateResult = await AccountServices.updateBank(id, req.body);
         console.log(updateResult);
         if (updateResult) {
-          res
-            .status(201)
-            .send("Bank Detail's sent to Super Admin for Approval");
+          res.status(201).send("Bank Detail's edit request sent to Super Admin for Approval");
         }
       } catch (e) {
         console.error(e);
@@ -326,9 +323,7 @@ const BankRoutes = (app) => {
           createdAt: new Date(),
         });
         await bankTransaction.save();
-        res
-          .status(200)
-          .send({ message: "Wallet Balance Added to Your Bank Account" });
+        res.status(200).send({ message: "Wallet Balance Added to Your Bank Account" });
       } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
@@ -457,14 +452,15 @@ const BankRoutes = (app) => {
   );
 
   app.post(
-    "/api/admin/manual-user-bank-account-summary/:accountNumber",
+    "/api/admin/manual-user-bank-account-summary/:bankId",
     Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
     async (req, res) => {
       try {
         let balances = 0;
-        const bankName = req.params.accountNumber;
-        const bankSummary = await BankTransaction.find({ bankName }).sort({ createdAt: -1 }).exec();
-        const accountSummary = await Transaction.find({ bankName }).sort({ createdAt: -1 }).exec();
+        const bankId = req.params.bankId;
+        const bankSummary = await BankTransaction.find({ bankId }).sort({ createdAt: -1 }).exec();
+        console.log("id", bankSummary)
+        const accountSummary = await Transaction.find({ bankId }).sort({ createdAt: -1 }).exec();
 
         const allTransactions = [...accountSummary, ...bankSummary];
         allTransactions.sort((a, b) => {
