@@ -1,5 +1,6 @@
 import { Authorize } from "../middleware/Authorize.js";
 import { BankTransaction } from "../models/BankTransaction.model.js";
+import { EditRequest } from "../models/EditRequest.model.js";
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
 import { Trash } from "../models/Trash.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
@@ -11,7 +12,7 @@ const DeleteAPIRoute = (app) => {
   app.post("/api/admin/move-bank-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
-      const transaction = await BankTransaction.findById(requestId);
+      const transaction = await EditRequest.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Bank Transaction not found");
       }
@@ -38,7 +39,8 @@ const DeleteAPIRoute = (app) => {
   app.post("/api/admin/move-website-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
-      const transaction = await WebsiteTransaction.findById(requestId);
+      const transaction = await EditRequest.findById(requestId);
+      console.log("transac", transaction)
       if (!transaction) {
         return res.status(404).send("Website Transaction not found");
       }
@@ -55,7 +57,7 @@ const DeleteAPIRoute = (app) => {
   app.post("/api/admin/move-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
-      const transaction = await Transaction.findById(requestId);
+      const transaction = await EditRequest.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Transaction not found");
       }
@@ -72,7 +74,7 @@ const DeleteAPIRoute = (app) => {
   app.post("/api/admin/move-introducer-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
     try {
       const { requestId } = req.body;
-      const transaction = await IntroducerTransaction.findById(requestId);
+      const transaction = await EditRequest.findById(requestId);
       if (!transaction) {
         return res.status(404).send("Transaction not found");
       }

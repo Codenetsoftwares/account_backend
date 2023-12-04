@@ -14,6 +14,7 @@ export const IntroducerEditRequest = mongoose.model(
     createdAt: { type: Date },
     message: { type: String },
     type: { type: String },
+    Nametype : { type: String },
     changedFields: {},
     isApproved: { type: Boolean, default: false, required: true }
   }),
