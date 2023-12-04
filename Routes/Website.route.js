@@ -14,7 +14,6 @@ const WebisteRoutes = (app) => {
   app.post("/api/add-website-name", Authorize(["superAdmin", "Transaction-View", "Website-View"]), async (req, res) => {
     try {
       const userName = req.user;
-      console.log("userName", userName)
       const websiteName = req.body.websiteName;
       if (!websiteName) {
         throw { code: 400, message: "Please give a website name to add" };
@@ -26,8 +25,7 @@ const WebisteRoutes = (app) => {
         isApproved: false,
         isActive: false
       });
-      console.log("newWebsiteName", newWebsiteName)
-      const id = await WebsiteRequest.find({websiteName});
+      const id = await Website.find({websiteName});
       id.map((data) => {
         console.log(data.websiteName)
         if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {
@@ -356,13 +354,13 @@ const WebisteRoutes = (app) => {
   }
   );
 
-  app.post("/api/admin/manual-user-website-account-summary/:websiteName", Authorize(["superAdmin", "Bank-View", "Transaction-View", "Website-View"]),
+  app.post("/api/admin/manual-user-website-account-summary/:websiteId", Authorize(["superAdmin", "Bank-View", "Transaction-View", "Website-View"]),
     async (req, res) => {
       try {
-        const websiteName = req.params.websiteName;
+        const websiteId = req.params.websiteId;
         let balances = 0;
-        const accountSummary = await Transaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
-        const websiteSummary = await WebsiteTransaction.find({ websiteName }).sort({ createdAt: -1 }).exec();
+        const accountSummary = await Transaction.find({ websiteId }).sort({ createdAt: -1 }).exec();
+        const websiteSummary = await WebsiteTransaction.find({ websiteId }).sort({ createdAt: -1 }).exec();
         const allTransactions = [...accountSummary, ...websiteSummary]
         allTransactions.sort((a, b) => {
           const dateA = new Date(a.createdAt);

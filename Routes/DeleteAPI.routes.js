@@ -103,10 +103,10 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/restore/bank/data/:bankName", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/bank/data/:bankId", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const bankName = req.params.bankName;
-      const deletedData = await Trash.findOne({ bankName }).exec();
+      const bankId = req.params.bankId;
+      const deletedData = await Trash.findOne({ bankId }).exec();
       console.log("first", deletedData);
       if (!deletedData) {
         return res.status(404).send({ message: "Data not found in Trash" });
@@ -139,10 +139,10 @@ const DeleteAPIRoute = (app) => {
   });
 
 
-  app.post("/api/restore/website/data/:websiteName", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/website/data/:websiteId", Authorize(["superAdmin"]), async (req, res) => {
     try {
-      const websiteName = req.params.websiteName;
-      const deletedData = await Trash.findOne({ websiteName }).exec();
+      const websiteId = req.params.websiteId;
+      const deletedData = await Trash.findOne({ websiteId }).exec();
       console.log("first", deletedData);
       if (!deletedData) {
         return res.status(404).send({ message: "Data not found in Trash" });

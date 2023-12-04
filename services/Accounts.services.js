@@ -270,8 +270,7 @@ const AccountServices = {
     // Create updatedTransactionData using a ternary operator
     const updatedTransactionData = {
       id: id._id,
-      accountHolderName:
-        data.accountHolderName || existingTransaction.accountHolderName,
+      accountHolderName: data.accountHolderName || existingTransaction.accountHolderName,
       bankName: data.bankName || existingTransaction.bankName,
       accountNumber: data.accountNumber || existingTransaction.accountNumber,
       ifscCode: data.ifscCode || existingTransaction.ifscCode,
