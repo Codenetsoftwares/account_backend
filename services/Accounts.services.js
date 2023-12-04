@@ -562,7 +562,7 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Trash",
+      type: "Delete",
     });
     if (existingEditRequest) {
       throw { code: 409, message: "Request Already Sent For Approval" };
@@ -596,7 +596,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Trash",
+        type: "Delete",
       });
       await backupTransaction.save();
     }
@@ -613,7 +613,7 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Trash",
+      type: "Delete",
     });
     if (existingEditRequest) {
       throw {
@@ -642,7 +642,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Trash",
+        type: "Delete",
       });
       await backupTransaction.save();
     }
@@ -657,7 +657,7 @@ const AccountServices = {
     }
     const existingEditRequest = await EditRequest.findOne({
       id: transaction,
-      type: "Trash",
+      type: "Delete",
     });
     if (existingEditRequest) {
       throw {
@@ -696,7 +696,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Trash",
+        type: "Delete",
       });
       await backupTransaction.save();
     }
@@ -710,7 +710,7 @@ const AccountServices = {
     }
     const existingEditRequest = await IntroducerEditRequest.findOne({
       id: transaction,
-      type: "Trash",
+      type: "Delete",
     });
     if (existingEditRequest) {
       throw { code: 409, message: "Request Already Sent For Approval" };
@@ -736,7 +736,7 @@ const AccountServices = {
         isApproved: false,
         message: editMessage,
         requesteduserName: name,
-        type: "Trash",
+        type: "Delete",
       });
       await backupTransaction.save();
     }
