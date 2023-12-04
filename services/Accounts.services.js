@@ -859,7 +859,7 @@ const AccountServices = {
       upiNumber: transaction.upiNumber,
       isSubmit: transaction.isSubmit
     };
-      const backupTransaction = new Trash(updatedTransactionData);
+      const backupTransaction = new Trash({...updatedTransactionData, type: "Bank"});
       await backupTransaction.save();
       const deletedAdminUser = await BankTransaction.findByIdAndDelete(transaction);
       if (!deletedAdminUser) {
@@ -884,7 +884,7 @@ const AccountServices = {
       websiteName: transaction.websiteName,
       createdAt: transaction.createdAt,
     };
-      const backupTransaction = new Trash(updatedTransactionData);
+      const backupTransaction = new Trash({...updatedTransactionData, type: "Website"});
       await backupTransaction.save();
       const deletedAdminUser = await WebsiteTransaction.findByIdAndDelete(transaction);
       if (!deletedAdminUser) {
@@ -918,7 +918,7 @@ const AccountServices = {
       bankCharges: transaction.bankCharges,
       createdAt: transaction.createdAt,
     };
-      const backupTransaction = new Trash(updatedTransactionData);
+      const backupTransaction = new Trash({...updatedTransactionData, type: "Transaction"});
       await backupTransaction.save();
       const deletedAdminUser = await Transaction.findByIdAndDelete(transaction);
       if (!deletedAdminUser) {
@@ -942,7 +942,7 @@ const AccountServices = {
       introducerUserName: transaction.introducerUserName,
       createdAt: transaction.createdAt
     };
-      const backupTransaction = new Trash(updatedTransactionData);
+      const backupTransaction = new Trash({...updatedTransactionData, type: "Introducer"});
       await backupTransaction.save();
       const deletedAdminUser = await IntroducerTransaction.findByIdAndDelete(transaction);
       if (!deletedAdminUser) {
