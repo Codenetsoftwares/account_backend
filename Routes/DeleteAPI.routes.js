@@ -5,6 +5,7 @@ import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { Trash } from "../models/Trash.model.js";
 import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
+import { User } from "../models/user.model.js";
 import AccountServices from "../services/Accounts.services.js";
 
 const DeleteAPIRoute = (app) => {
@@ -197,6 +198,11 @@ const DeleteAPIRoute = (app) => {
         createdAt: deletedData.createdAt,
       }
       const restoredData = await Transaction.create(dataToRestore);
+      const user = await User.findOneAndUpdate(
+        { userName: deletedData.userName },
+        { $push: { transactionDetail: dataToRestore } },
+        { new: true }
+      );
       await Trash.findByIdAndDelete(deletedData._id);
       res.status(200).send({ message: "Data restored successfully", data: restoredData });
     } catch (e) {

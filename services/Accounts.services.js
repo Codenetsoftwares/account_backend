@@ -931,12 +931,21 @@ const AccountServices = {
     };
       const backupTransaction = new Trash({...updatedTransactionData, Nametype: "Transaction"});
       await backupTransaction.save();
-      const deletedAdminUser = await Transaction.findByIdAndDelete(transaction.id);
-      const deletedUser = await EditRequest.findByIdAndDelete(transaction);
-      if (!deletedAdminUser) {
+      const deletedAdminUser = await EditRequest.findByIdAndDelete(transaction);
+      const deletedAdminTransaction = await Transaction.findByIdAndDelete(transaction.id);
+      const user = await User.findOne({ "transactionDetail": { $elemMatch: { "transactionID": transaction.transactionID } } });
+      const transactionIndex = user.transactionDetail.findIndex(
+        (transactionItem) => transactionItem.transactionID === transaction.transactionID
+      );
+      if (transactionIndex === -1) {
+        throw { code: 404, message: `Transaction not found in user's transactionDetail` };
+      }
+      user.transactionDetail.splice(transactionIndex, 1);
+      await user.save();
+      if (!deletedAdminTransaction) {
         throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
       }
-      if (!deletedUser) {
+      if (!deletedAdminUser) {
         throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
       }
     return true;

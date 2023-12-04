@@ -5,6 +5,7 @@ export const EditRequest = mongoose.model(
   new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
     bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
+    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
     transactionID: { type: String },
     transactionType: { type: String, required: true },
     amount: { type: Number },
