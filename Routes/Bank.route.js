@@ -122,11 +122,8 @@ const BankRoutes = (app) => {
         subAdmins: subAdmins,
         isActive: true,
       });
-
       await approvedBank.save();
       // await BankRequest.deleteOne({ _id: approvedBankRequest._id });
-
-
       res.status(200).send({ message: "Bank approved successfully & Subadmin Assigned" });
     } catch (e) {
       console.error(e);

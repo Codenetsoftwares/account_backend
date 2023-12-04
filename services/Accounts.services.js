@@ -267,6 +267,10 @@ const AccountServices = {
       changedFields.upiNumber = data.upiNumber;
     }
 
+    const duplicateBank = await Bank.findOne({ bankName: data.bankName });
+    if (duplicateBank && duplicateBank._id.toString() !== id) {
+      throw { code: 400, message: "Bank name already exists!" };
+    }
     // Create updatedTransactionData using a ternary operator
     const updatedTransactionData = {
       id: id._id,
@@ -278,7 +282,6 @@ const AccountServices = {
       upiAppName: data.upiAppName || existingTransaction.upiAppName,
       upiNumber: data.upiNumber || existingTransaction.upiNumber,
     };
-
     const editRequest = new EditBankRequest({
       ...updatedTransactionData,
       changedFields,
@@ -432,6 +435,10 @@ const AccountServices = {
     let changedFields = {};
     if (data.websiteName !== existingTransaction.websiteName) {
       changedFields.websiteName = data.websiteName;
+    }
+    const duplicateWebsite = await Website.findOne({ websiteName: data.websiteName });
+    if (duplicateWebsite && duplicateWebsite._id.toString() !== id) {
+      throw { code: 400, message: "Website name already exists!" };
     }
     const updatedTransactionData = {
       id: id._id,
