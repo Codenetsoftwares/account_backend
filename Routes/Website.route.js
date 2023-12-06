@@ -102,6 +102,7 @@ const WebisteRoutes = (app) => {
       res.status(500).send({ message: e.message });
     }
   });
+
   app.delete("/api/website/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const id = req.params.id;
@@ -119,7 +120,20 @@ const WebisteRoutes = (app) => {
   });
 
 
-
+  app.delete("/api/reject-website-edit/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const result = await EditWebsiteRequest.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        res.status(200).send({ message: "Data deleted successfully" });
+      } else {
+        res.status(404).send({ message: "Data not found" });
+      }
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+    }
+  });
 
   // API To Edit Website Name
 
@@ -138,6 +152,34 @@ const WebisteRoutes = (app) => {
     }
   }
   );
+
+  app.post("/api/improve-website/:id", Authorize(["superAdmin"]), async (req, res) => {
+    try {
+      // console.log('req',subAdminId)
+      const { subAdmins } = req.body;
+      console.log('first',subAdmins)
+      const bankId = req.params.id;
+
+      const approvedBankRequest = await Website.findById(bankId);
+      console.log('first', approvedBankRequest)
+      if (!approvedBankRequest) {
+        throw { code: 404, message: "website not found in the approval requests!" };
+      }
+
+
+      const approvedWebsite = new Website({
+        websiteName: approvedBankRequest.websiteName,
+        subAdmins: subAdmins,
+        isActive: true,
+      });
+      await approvedWebsite.save();
+      // await BankRequest.deleteOne({ _id: approvedBankRequest._id });
+      res.status(200).send({ message: "Website Name approved successfully & Subadmin Assigned" });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code || 500).send({ message: e.message || "Internal Server Error" });
+    }
+  });
 
   // API To Delete Website Name
 
