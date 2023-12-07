@@ -27,7 +27,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.get("/api/admin/view-trash", Authorize(["superAdmin"]), async (req, res) => {
+  app.get("/api/admin/view-trash", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const resultArray = await Trash.find().exec();
       res.status(200).send(resultArray);
@@ -89,7 +89,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.delete("/api/delete/transactions/:id", Authorize(["superAdmin"]), async (req, res) => {
+  app.delete("/api/delete/transactions/:id", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const id = req.params.id;
       const result = await Trash.deleteOne({ _id: id });
@@ -104,7 +104,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/restore/bank/data/:bankId", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/bank/data/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const bankId = req.params.bankId;
       const deletedData = await Trash.findOne({ bankId }).exec();
@@ -140,7 +140,7 @@ const DeleteAPIRoute = (app) => {
   });
 
 
-  app.post("/api/restore/website/data/:websiteId", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/website/data/:websiteId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const websiteId = req.params.websiteId;
       const deletedData = await Trash.findOne({ websiteId }).exec();
@@ -169,7 +169,7 @@ const DeleteAPIRoute = (app) => {
   });
   
 
-  app.post("/api/restore/transaction/data/:transactionID", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/transaction/data/:transactionID", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const transactionID = req.params.transactionID;
       const deletedData = await Trash.findOne({ transactionID }).exec();
@@ -211,7 +211,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/restore/Introducer/data/:introUserId", Authorize(["superAdmin"]), async (req, res) => {
+  app.post("/api/restore/Introducer/data/:introUserId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const introUserId = req.params.introUserId;
       const deletedData = await Trash.findOne({ introUserId }).exec();
