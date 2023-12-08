@@ -10,7 +10,7 @@ import AccountServices from "../services/Accounts.services.js";
 
 const DeleteAPIRoute = (app) => {
 
-  app.post("/api/admin/move-bank-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
+  app.post("/api/admin/move-bank-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View", "RequestAdmin"]), async (req, res) => {
     try {
       const { requestId } = req.body;
       const transaction = await EditRequest.findById(requestId);
@@ -37,7 +37,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/admin/move-website-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
+  app.post("/api/admin/move-website-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View", "RequestAdmin"]), async (req, res) => {
     try {
       const { requestId } = req.body;
       const transaction = await EditRequest.findById(requestId);
@@ -55,7 +55,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/admin/move-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
+  app.post("/api/admin/move-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View", "RequestAdmin"]), async (req, res) => {
     try {
       const { requestId } = req.body;
       const transaction = await EditRequest.findById(requestId);
@@ -72,7 +72,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.post("/api/admin/move-introducer-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View"]), async (req, res) => {
+  app.post("/api/admin/move-introducer-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View", "RequestAdmin"]), async (req, res) => {
     try {
       const { requestId } = req.body;
       const transaction = await EditRequest.findById(requestId);
