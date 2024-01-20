@@ -237,7 +237,8 @@ const BankRoutes = (app) => {
           if (userSubAdmin) {
             bankData[index].isDeposit = userSubAdmin.isDeposit;
             bankData[index].isWithdraw = userSubAdmin.isWithdraw;
-            bankData[index].isStatement = userSubAdmin.isStatement;
+            bankData[index].isRenew = userSubAdmin.isRenew;
+            bankData[index].isEdit = userSubAdmin.isEdit;
             bankData[index].isDelete = userSubAdmin.isDelete;
           }
 

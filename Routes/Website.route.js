@@ -228,14 +228,16 @@ const WebisteRoutes = (app) => {
         for (var index = 0; index < websiteData.length; index++) {
           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
           const subAdmins = websiteData[index].subAdmins;
-          const user = req.user.userName; // Assuming the username of the current user is available in req.user
+          const user = req.user.userName; 
 
-          // Find the subAdmin that matches the current user's username
           const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
 
           if (userSubAdmin) {
             websiteData[index].isDeposit = userSubAdmin.isDeposit;
             websiteData[index].isWithdraw = userSubAdmin.isWithdraw;
+            websiteData[index].isDelete = userSubAdmin.isDelete;
+            websiteData[index].isRenew = userSubAdmin.isRenew;
+            websiteData[index].isEdit = userSubAdmin.isEdit;
           }
         }
         websiteData.sort((a, b) => b.createdAt - a.createdAt);

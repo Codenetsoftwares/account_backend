@@ -148,7 +148,7 @@ const AccountsRoute = (app) => {
   );
 
   app.get(
-    "/api/admin/sub-admin-name",
+    "/api/admin/sub-admin-name/bank-view",
     Authorize([
       "superAdmin",
       "Dashboard-View",
@@ -164,7 +164,36 @@ const AccountsRoute = (app) => {
       try {
         const superAdmin = await Admin.find({
           roles: {
-            $all: ['Bank-View', 'Website-View']
+            $all: ['Bank-View']
+          }
+        },'userName').exec();
+        console.log('superAdmin', superAdmin)
+        res.status(200).send(superAdmin);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
+    "/api/admin/sub-admin-name/website-view",
+    Authorize([
+      "superAdmin",
+      "Dashboard-View",
+      "Transaction-View",
+      "Transaction-Edit-Request",
+      "Transaction-Delete-Request",
+      "Website-View",
+      "Bank-View",
+      "Profile-View",
+      "Introducer-Profile-View"
+    ]),
+    async (req, res) => {
+      try {
+        const superAdmin = await Admin.find({
+          roles: {
+            $all: ['Website-View']
           }
         },'userName').exec();
         console.log('superAdmin', superAdmin)
