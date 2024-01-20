@@ -43,7 +43,7 @@ const BankRoutes = (app) => {
           isActive: isActive,
           isApproved: false
         });
-        const id = await Bank.find({bankName});
+        const id = await Bank.find({ bankName });
         id.map((data) => {
           console.log(data.bankName);
           if (
@@ -101,7 +101,7 @@ const BankRoutes = (app) => {
     try {
       // console.log('req',subAdminId)
       const { subAdmins } = req.body;
-      console.log('first',subAdmins)
+      console.log('first', subAdmins)
       const bankId = req.params.id;
 
       const approvedBankRequest = await Bank.findById(bankId);
@@ -211,39 +211,77 @@ const BankRoutes = (app) => {
 
   // API To View Bank Name
 
+  // app.get(
+  //   "/api/get-bank-name",
+  //   Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
+  //   async (req, res) => {
+  //     console.log('req', req.user)
+  //     const {
+  //       page,
+  //       itemsPerPage
+  //     } = req.query;
+
+  //     try {
+  //       let dbBankData = await Bank.find().exec();
+  //       let bankData = JSON.parse(JSON.stringify(dbBankData));
+
+  //       for (var index = 0; index < bankData.length; index++) {
+  //         bankData[index].balance = await AccountServices.getBankBalance(
+  //           bankData[index]._id
+  //         );
+  //         const subAdmins = bankData[index].subAdmins;
+  //         const user = req.user.userName; 
+
+  //         const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+  //         if (userSubAdmin) {
+  //           bankData[index].isDeposit = userSubAdmin.isDeposit;
+  //           bankData[index].isWithdraw = userSubAdmin.isWithdraw;
+  //           bankData[index].isRenew = userSubAdmin.isRenew;
+  //           bankData[index].isEdit = userSubAdmin.isEdit;
+  //           bankData[index].isDelete = userSubAdmin.isDelete;
+  //         }
+
+  //       }
+  //       bankData.sort((a, b) => b.createdAt - a.createdAt)
+
+  //       return res.status(200).send(bankData);
+  //     } catch (e) {
+  //       console.error(e);
+  //       res.status(e.code).send({ message: e.message });
+  //     }
+  //   }
+  // );
+
   app.get(
     "/api/get-bank-name",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
+    Authorize([
+      "superAdmin",
+      "Bank-View",
+      "Transaction-View",
+      "Create-Transaction",
+      "Create-Deposit-Transaction",
+      "Create-Withdraw-Transaction"
+    ]),
     async (req, res) => {
-      console.log('req', req.user)
-      const {
-        page,
-        itemsPerPage
-      } = req.query;
+      console.log('req', req.user);
+      const { page, itemsPerPage } = req.query;
 
       try {
         let dbBankData = await Bank.find().exec();
         let bankData = JSON.parse(JSON.stringify(dbBankData));
 
-        for (var index = 0; index < bankData.length; index++) {
-          bankData[index].balance = await AccountServices.getBankBalance(
-            bankData[index]._id
-          );
-          const subAdmins = bankData[index].subAdmins;
-          const user = req.user.userName; 
+        const userSubAdminId = req.user.userName;
 
-          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+        // Filter banks based on user permissions
+        bankData = bankData.filter(bank => {
+          const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
+          return userSubAdmin && userSubAdmin.isDeposit && userSubAdmin.isWithdraw &&  userSubAdmin.isDelete && userSubAdmin.isRenew && userSubAdmin.isEdit;
+          // Modify the condition based on your specific requirements
+        });
 
-          if (userSubAdmin) {
-            bankData[index].isDeposit = userSubAdmin.isDeposit;
-            bankData[index].isWithdraw = userSubAdmin.isWithdraw;
-            bankData[index].isRenew = userSubAdmin.isRenew;
-            bankData[index].isEdit = userSubAdmin.isEdit;
-            bankData[index].isDelete = userSubAdmin.isDelete;
-          }
-
-        }
-        bankData.sort((a, b) => b.createdAt - a.createdAt)
+        // Sort the filtered bankData array
+        bankData.sort((a, b) => b.createdAt - a.createdAt);
 
         return res.status(200).send(bankData);
       } catch (e) {
@@ -600,17 +638,17 @@ const BankRoutes = (app) => {
     try {
       const { subAdmins } = req.body;
       const bankId = req.params.id;
-  
+
       const approvedBankRequest = await Bank.findById(bankId);
-  
+
       if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found!" };
       }
-  
+
       for (const subAdminData of subAdmins) {
         const { subAdminId, isDeposit, isWithdraw } = subAdminData;
         const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
-  
+
         if (subAdmin) {
           // If subAdmin exists, update its properties
           subAdmin.isDeposit = isDeposit;
@@ -624,16 +662,16 @@ const BankRoutes = (app) => {
           });
         }
       }
-  
+
       await approvedBankRequest.save();
-  
+
       res.status(200).send({ message: "Updated successfully" });
     } catch (error) {
       res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }
   });
-  
-  
+
+
 
 
   app.get("/api/active-visible-bank", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
