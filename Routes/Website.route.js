@@ -563,42 +563,63 @@ const WebisteRoutes = (app) => {
 
 
 
-  app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin", "website-view"]), async (req, res) => {
-    try {
-      const { subAdmins } = req.body;
-      const bankId = req.params.id;
+  app.put(
+    "/api/website/edit-request/:id",
+    Authorize(["superAdmin", "RequstAdmin", "website-view"]),
+    async (req, res) => {
+      try {
+        const { subAdmins } = req.body;
+        const bankId = req.params.id;
 
-      const approvedBankRequest = await Website.findById(bankId);
+        const approvedBankRequest = await Website.findById(bankId);
 
-      if (!approvedBankRequest) {
-        throw { code: 404, message: "Bank not found!" };
-      }
+        if (!approvedBankRequest) {
+          throw { code: 404, message: "Bank not found!" };
+        }
 
-      for (const subAdminData of subAdmins) {
-        const { subAdminId, isDeposit, isWithdraw } = subAdminData;
-        const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
-
-        if (subAdmin) {
-          // If subAdmin exists, update its properties
-          subAdmin.isDeposit = isDeposit;
-          subAdmin.isWithdraw = isWithdraw;
-        } else {
-          // If subAdmin doesn't exist, add a new one
-          approvedBankRequest.subAdmins.push({
+        for (const subAdminData of subAdmins) {
+          const {
             subAdminId,
             isDeposit,
             isWithdraw,
-          });
+            isDelete,
+            isRenew,
+            isEdit,
+          } = subAdminData;
+          const subAdmin = approvedBankRequest.subAdmins.find(
+            (sa) => sa.subAdminId === subAdminId
+          );
+
+          if (subAdmin) {
+            // If subAdmin exists, update its properties
+            subAdmin.isDeposit = isDeposit;
+            subAdmin.isWithdraw = isWithdraw;
+            subAdmin.isDelete = isDelete;
+            subAdmin.isRenew = isRenew;
+            subAdmin.isEdit = isEdit;
+          } else {
+            // If subAdmin doesn't exist, add a new one
+            approvedBankRequest.subAdmins.push({
+              subAdminId,
+              isDeposit,
+              isWithdraw,
+              isDelete,
+              isRenew,
+              isEdit,
+            });
+          }
         }
+
+        await approvedBankRequest.save();
+
+        res.status(200).send({ message: "Updated successfully" });
+      } catch (error) {
+        res
+          .status(error.code || 500)
+          .send({ message: error.message || "An error occurred" });
       }
-
-      await approvedBankRequest.save();
-
-      res.status(200).send({ message: "Updated successfully" });
-    } catch (error) {
-      res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }
-  });
+  );
 
 };
 

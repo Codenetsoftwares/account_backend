@@ -18,11 +18,16 @@ export const Bank = mongoose.model(
         isEdit: { type: Boolean, default: false },
         isRenew: { type: Boolean, default: false },
         isDelete: { type: Boolean, default: false },
-      }
+      },
     ],
     subAdminName: { type: String },
     createdAt: { type: Date },
     isActive: { type: Boolean, default: false, required: true },
+    isDeposit: { type: Boolean, default: true },
+    isWithdraw: { type: Boolean, default: true },
+    isEdit: { type: Boolean, default: true },
+    isRenew: { type: Boolean, default: true },
+    isDelete: { type: Boolean, default: true }
   }),
   "Bank"
 );

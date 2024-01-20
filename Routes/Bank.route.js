@@ -673,19 +673,25 @@ const BankRoutes = (app) => {
       }
 
       for (const subAdminData of subAdmins) {
-        const { subAdminId, isDeposit, isWithdraw } = subAdminData;
+        const { subAdminId, isDeposit, isWithdraw,isDelete,isRenew, isEdit } = subAdminData;
         const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
 
         if (subAdmin) {
           // If subAdmin exists, update its properties
           subAdmin.isDeposit = isDeposit;
           subAdmin.isWithdraw = isWithdraw;
+          subAdmin.isEdit = isEdit;
+          subAdmin.isRenew = isRenew;
+          subAdmin.isDelete = isDelete;
         } else {
           // If subAdmin doesn't exist, add a new one
           approvedBankRequest.subAdmins.push({
             subAdminId,
             isDeposit,
             isWithdraw,
+            isEdit,
+            isRenew,
+            isDelete
           });
         }
       }
@@ -697,9 +703,6 @@ const BankRoutes = (app) => {
       res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }
   });
-
-
-
 
   app.get("/api/active-visible-bank", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
 
