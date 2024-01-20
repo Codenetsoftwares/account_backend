@@ -276,9 +276,28 @@ const BankRoutes = (app) => {
         // Filter banks based on user permissions
         bankData = bankData.filter(bank => {
           const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-          return userSubAdmin && userSubAdmin.isDeposit && userSubAdmin.isWithdraw &&  userSubAdmin.isDelete && userSubAdmin.isRenew && userSubAdmin.isEdit;
+          return userSubAdmin && userSubAdmin.isDeposit;
           // Modify the condition based on your specific requirements
         });
+
+        for (var index = 0; index < bankData.length; index++) {
+          bankData[index].balance = await AccountServices.getBankBalance(
+            bankData[index]._id
+          );
+          const subAdmins = bankData[index].subAdmins;
+          const user = req.user.userName;
+
+          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+          if (userSubAdmin) {
+            bankData[index].isDeposit = userSubAdmin.isDeposit;
+            bankData[index].isWithdraw = userSubAdmin.isWithdraw;
+            bankData[index].isRenew = userSubAdmin.isRenew;
+            bankData[index].isEdit = userSubAdmin.isEdit;
+            bankData[index].isDelete = userSubAdmin.isDelete;
+          }
+
+        }
 
         // Sort the filtered bankData array
         bankData.sort((a, b) => b.createdAt - a.createdAt);
