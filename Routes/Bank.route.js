@@ -230,15 +230,15 @@ const BankRoutes = (app) => {
             bankData[index]._id
           );
           const subAdmins = bankData[index].subAdmins;
-          const user = req.user.userName; // Assuming the username of the current user is available in req.user
+          const user = req.user.userName; 
 
-          // Find the subAdmin that matches the current user's username
           const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
 
           if (userSubAdmin) {
-            // Set the isDeposit and isWithdraw properties based on the current user's subAdmin data
             bankData[index].isDeposit = userSubAdmin.isDeposit;
             bankData[index].isWithdraw = userSubAdmin.isWithdraw;
+            bankData[index].isStatement = userSubAdmin.isStatement;
+            bankData[index].isDelete = userSubAdmin.isDelete;
           }
 
         }

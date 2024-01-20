@@ -10,18 +10,18 @@ export const Bank = mongoose.model(
     upiId: { type: String },
     upiAppName: { type: String },
     upiNumber: { type: String },
-    // subAdminId: { type: String },
-    // subAdminId: [],
     subAdmins: [
       {
         subAdminId: { type: String },
         isDeposit: { type: Boolean, default: false },
         isWithdraw: { type: Boolean, default: false },
+        isStatement: { type: Boolean, default: false },
+        isDelete: { type: Boolean, default: false },
       }
     ],
     subAdminName: { type: String },
     createdAt: { type: Date },
-    isActive: {type: Boolean, default: false, required: true},
+    isActive: { type: Boolean, default: false, required: true },
   }),
   "Bank"
 );
