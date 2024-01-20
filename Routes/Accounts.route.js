@@ -162,8 +162,12 @@ const AccountsRoute = (app) => {
     ]),
     async (req, res) => {
       try {
-        const superAdmin = await Admin.find({},"userName").exec();
-        console.log('superAdmin',superAdmin)
+        const superAdmin = await Admin.find({
+          roles: {
+            $all: ['Bank-View', 'Website-View']
+          }
+        },'userName').exec();
+        console.log('superAdmin', superAdmin)
         res.status(200).send(superAdmin);
       } catch (e) {
         console.error(e);
@@ -331,7 +335,7 @@ const AccountsRoute = (app) => {
 
         res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
       }
-     
+
       catch (e) {
         console.error(e);
         res.status(500).send({ message: "Internal Server Error" });
@@ -547,11 +551,11 @@ const AccountsRoute = (app) => {
           { _id: id },
           "userName"
         ).exec();
-        console.log('introuser',introducerUser)
+        console.log('introuser', introducerUser)
         if (!introducerUser) {
           return res.status(404).send({ message: "IntroducerUser not found" });
         }
-  
+
         // Fetch users with introducer names matching any of the three fields
         const users = await User.find({
           $or: [
@@ -560,7 +564,7 @@ const AccountsRoute = (app) => {
             { introducersUserName2: introducerUser.userName }
           ]
         }).exec();
-  
+
         res.send(users);
       } catch (e) {
         console.error(e);
@@ -568,7 +572,7 @@ const AccountsRoute = (app) => {
       }
     }
   );
-  
+
 
   app.post(
     "/api/admin/reset-password",
