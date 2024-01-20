@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.js";
 import { userservice } from "../services/user.service.js";
 import { introducerUser } from "../services/introducer.services.js"
 

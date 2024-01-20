@@ -15,7 +15,8 @@ export const Bank = mongoose.model(
         subAdminId: { type: String },
         isDeposit: { type: Boolean, default: false },
         isWithdraw: { type: Boolean, default: false },
-        isStatement: { type: Boolean, default: false },
+        isEdit: { type: Boolean, default: false },
+        isRenew: { type: Boolean, default: false },
         isDelete: { type: Boolean, default: false },
       }
     ],
