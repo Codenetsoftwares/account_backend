@@ -25,7 +25,7 @@ const WebisteRoutes = (app) => {
         isApproved: false,
         isActive: false
       });
-      const id = await Website.find({websiteName});
+      const id = await Website.find({ websiteName });
       id.map((data) => {
         console.log(data.websiteName)
         if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {
@@ -157,7 +157,7 @@ const WebisteRoutes = (app) => {
     try {
       // console.log('req',subAdminId)
       const { subAdmins } = req.body;
-      console.log('first',subAdmins)
+      console.log('first', subAdmins)
       const bankId = req.params.id;
 
       const approvedBankRequest = await Website.findById(bankId);
@@ -236,37 +236,46 @@ const WebisteRoutes = (app) => {
         if (dbWebsiteData.length === 0) {
           return res.status(404).send({ message: "No Website Active" });
         }
-  
+
         let websiteData = JSON.parse(JSON.stringify(dbWebsiteData));
-        const userSubAdminId = req.user.userName;
-  
-        // Filter websites based on user permissions
-        websiteData = websiteData.filter(website => {
-          const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-          return userSubAdmin && userSubAdmin.isDeposit;
-          // Modify the condition based on your specific requirements
-        });
-  
-        // Add balance and permissions based on subAdmins
-        for (var index = 0; index < websiteData.length; index++) {
-          websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
-          const subAdmins = websiteData[index].subAdmins;
-          const user = req.user.userName;
-  
-          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
-  
-          if (userSubAdmin) {
-            websiteData[index].isDeposit = userSubAdmin.isDeposit;
-            websiteData[index].isWithdraw = userSubAdmin.isWithdraw;
-            websiteData[index].isDelete = userSubAdmin.isDelete;
-            websiteData[index].isRenew = userSubAdmin.isRenew;
-            websiteData[index].isEdit = userSubAdmin.isEdit;
+        const userRole = req.user.roles;
+        console.log('role', userRole);
+        if (userRole.includes("superAdmin")) {
+          // If the user is superAdmin, no need to filter based on subAdminId
+          for (var index = 0; index < websiteData.length; index++) {
+            websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
+          }
+        } else {
+          const userSubAdminId = req.user.userName;
+
+          // Filter websites based on user permissions
+          websiteData = websiteData.filter(website => {
+            const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
+            return userSubAdmin && userSubAdmin.isDeposit;
+            // Modify the condition based on your specific requirements
+          });
+
+          // Add balance and permissions based on subAdmins
+          for (var index = 0; index < websiteData.length; index++) {
+            websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
+            const subAdmins = websiteData[index].subAdmins;
+            const user = req.user.userName;
+
+            const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+            if (userSubAdmin) {
+              websiteData[index].isDeposit = userSubAdmin.isDeposit;
+              websiteData[index].isWithdraw = userSubAdmin.isWithdraw;
+              websiteData[index].isDelete = userSubAdmin.isDelete;
+              websiteData[index].isRenew = userSubAdmin.isRenew;
+              websiteData[index].isEdit = userSubAdmin.isEdit;
+            }
           }
         }
-  
+
         // Sort the filtered websiteData array
         websiteData.sort((a, b) => b.createdAt - a.createdAt);
-  
+
         res.status(200).send(websiteData);
       } catch (e) {
         console.error(e);
@@ -274,7 +283,7 @@ const WebisteRoutes = (app) => {
       }
     }
   );
-  
+
 
   app.get("/api/get-single-webiste-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {
     try {
@@ -526,7 +535,7 @@ const WebisteRoutes = (app) => {
     try {
       const subadminId = req.params.subadminId;
       // console.log('subadminId', subadminId)
-      
+
       let dbWebsiteData = await Website.find({ 'subAdmins.subAdminId': subadminId }).exec();
       console.log('dweb', dbWebsiteData)
       let webisteData = JSON.parse(JSON.stringify(dbWebsiteData));
@@ -554,21 +563,21 @@ const WebisteRoutes = (app) => {
 
 
 
-  app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
+  app.put("/api/website/edit-request/:id", Authorize(["superAdmin", "RequstAdmin", "website-view"]), async (req, res) => {
     try {
       const { subAdmins } = req.body;
       const bankId = req.params.id;
-  
+
       const approvedBankRequest = await Website.findById(bankId);
-  
+
       if (!approvedBankRequest) {
         throw { code: 404, message: "Bank not found!" };
       }
-  
+
       for (const subAdminData of subAdmins) {
         const { subAdminId, isDeposit, isWithdraw } = subAdminData;
         const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
-  
+
         if (subAdmin) {
           // If subAdmin exists, update its properties
           subAdmin.isDeposit = isDeposit;
@@ -582,9 +591,9 @@ const WebisteRoutes = (app) => {
           });
         }
       }
-  
+
       await approvedBankRequest.save();
-  
+
       res.status(200).send({ message: "Updated successfully" });
     } catch (error) {
       res.status(error.code || 500).send({ message: error.message || "An error occurred" });

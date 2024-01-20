@@ -271,32 +271,40 @@ const BankRoutes = (app) => {
         let dbBankData = await Bank.find().exec();
         let bankData = JSON.parse(JSON.stringify(dbBankData));
 
-        const userSubAdminId = req.user.userName;
-
-        // Filter banks based on user permissions
-        bankData = bankData.filter(bank => {
-          const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-          return userSubAdmin && userSubAdmin.isDeposit;
-          // Modify the condition based on your specific requirements
-        });
-
-        for (var index = 0; index < bankData.length; index++) {
-          bankData[index].balance = await AccountServices.getBankBalance(
-            bankData[index]._id
-          );
-          const subAdmins = bankData[index].subAdmins;
-          const user = req.user.userName;
-
-          const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
-
-          if (userSubAdmin) {
-            bankData[index].isDeposit = userSubAdmin.isDeposit;
-            bankData[index].isWithdraw = userSubAdmin.isWithdraw;
-            bankData[index].isRenew = userSubAdmin.isRenew;
-            bankData[index].isEdit = userSubAdmin.isEdit;
-            bankData[index].isDelete = userSubAdmin.isDelete;
+        const userRole = req.user.roles;
+        if (userRole.includes('superAdmin')) {
+          for (var index = 0; index < bankData.length; index++) {
+            bankData[index].balance = await AccountServices.getBankBalance(
+              bankData[index]._id
+            );
           }
+        } else {
+          // For subAdmins, filter banks based on user permissions
+          const userSubAdminId = req.user.userName;
 
+          bankData = bankData.filter(bank => {
+            const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
+            return userSubAdmin && userSubAdmin.isDeposit;
+            // Modify the condition based on your specific requirements
+          });
+
+          for (var index = 0; index < bankData.length; index++) {
+            bankData[index].balance = await AccountServices.getBankBalance(
+              bankData[index]._id
+            );
+            const subAdmins = bankData[index].subAdmins;
+            const user = req.user.userName;
+
+            const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
+
+            if (userSubAdmin) {
+              bankData[index].isDeposit = userSubAdmin.isDeposit;
+              bankData[index].isWithdraw = userSubAdmin.isWithdraw;
+              bankData[index].isRenew = userSubAdmin.isRenew;
+              bankData[index].isEdit = userSubAdmin.isEdit;
+              bankData[index].isDelete = userSubAdmin.isDelete;
+            }
+          }
         }
 
         // Sort the filtered bankData array
@@ -308,7 +316,7 @@ const BankRoutes = (app) => {
         res.status(e.code).send({ message: e.message });
       }
     }
-  );
+  )
 
   // API To View Single Bank Name
 
@@ -653,7 +661,7 @@ const BankRoutes = (app) => {
   });
 
 
-  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
+  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin","bank-view"]), async (req, res) => {
     try {
       const { subAdmins } = req.body;
       const bankId = req.params.id;
