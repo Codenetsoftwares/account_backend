@@ -254,6 +254,26 @@ const BankRoutes = (app) => {
   // );
 
   app.get(
+    "/api/get-activeBank-name",
+    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
+    async (req, res) => {
+      console.log('req', req.user)
+      const {
+        page,
+        itemsPerPage
+      } = req.query;
+
+      try {
+        let dbBankData = await Bank.find({isActive: true}).select('bankName isActive').exec();
+        return res.status(200).send(dbBankData);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
     "/api/get-bank-name",
     Authorize([
       "superAdmin",
@@ -661,7 +681,7 @@ const BankRoutes = (app) => {
   });
 
 
-  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin","bank-view"]), async (req, res) => {
+  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin", "bank-view"]), async (req, res) => {
     try {
       const { subAdmins } = req.body;
       const bankId = req.params.id;
@@ -673,7 +693,7 @@ const BankRoutes = (app) => {
       }
 
       for (const subAdminData of subAdmins) {
-        const { subAdminId, isDeposit, isWithdraw,isDelete,isRenew, isEdit } = subAdminData;
+        const { subAdminId, isDeposit, isWithdraw, isDelete, isRenew, isEdit } = subAdminData;
         const subAdmin = approvedBankRequest.subAdmins.find(sa => sa.subAdminId === subAdminId);
 
         if (subAdmin) {

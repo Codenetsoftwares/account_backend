@@ -216,6 +216,21 @@ const WebisteRoutes = (app) => {
   // API To View Website Name
 
   app.get(
+    "/api/get-activeWebsite-name",
+    Authorize(["superAdmin", "Bank-View", "Transaction-View", "Create-Transaction", "Create-Deposit-Transaction", "Create-Withdraw-Transaction"]),
+    async (req, res) => {
+
+      try {
+        let dbBankData = await Website.find({isActive: true}).select('websiteName isActive').exec();
+        return res.status(200).send(dbBankData);
+      } catch (e) {
+        console.error(e);
+        res.status(e.code).send({ message: e.message });
+      }
+    }
+  );
+
+  app.get(
     "/api/get-website-name",
     Authorize([
       "superAdmin",
