@@ -273,6 +273,7 @@ const BankRoutes = (app) => {
     }
   );
 
+ 
   app.get(
     "/api/get-bank-name",
     Authorize([
@@ -284,13 +285,12 @@ const BankRoutes = (app) => {
       "Create-Withdraw-Transaction"
     ]),
     async (req, res) => {
-      console.log('req', req.user);
       const { page, itemsPerPage } = req.query;
-
+  
       try {
         let dbBankData = await Bank.find().exec();
         let bankData = JSON.parse(JSON.stringify(dbBankData));
-
+  
         const userRole = req.user.roles;
         if (userRole.includes('superAdmin')) {
           for (var index = 0; index < bankData.length; index++) {
@@ -301,31 +301,35 @@ const BankRoutes = (app) => {
         } else {
           // For subAdmins, filter banks based on user permissions
           const userSubAdminId = req.user.userName;
-
-          // Filter banks based on subAdmin's permissions
-          bankData = bankData.filter(bank => {
+  
+          // Update each bank individually
+          bankData = bankData.map(async bank => {
             const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-
+  
             if (userSubAdmin) {
-              bank.balance = AccountServices.getBankBalance(bank._id);
-
+              // Update balance for the specific bank
+              bank.balance = await AccountServices.getBankBalance(bank._id);
+  
               // Set permissions for the specific bank
               bank.isDeposit = userSubAdmin.isDeposit;
               bank.isWithdraw = userSubAdmin.isWithdraw;
               bank.isRenew = userSubAdmin.isRenew;
               bank.isEdit = userSubAdmin.isEdit;
               bank.isDelete = userSubAdmin.isDelete;
-
-              return true; // Include this bank in the filtered result
+  
+              return bank; // Include this bank in the result
             } else {
-              return false; // Exclude this bank from the filtered result
+              return null; // Exclude this bank from the result
             }
           });
+  
+          // Filter out null values (banks not authorized for the subAdmin)
+          bankData = (await Promise.all(bankData)).filter(bank => bank !== null);
         }
-
+  
         // Now, sort the filtered bankData array
         bankData.sort((a, b) => b.createdAt - a.createdAt);
-
+  
         return res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
@@ -333,10 +337,7 @@ const BankRoutes = (app) => {
       }
     }
   );
-
-
-  // API To View Single Bank Name
-
+  
   app.get(
     "/api/get-single-bank-name/:id",
     Authorize(["superAdmin", "Transaction-View", "Bank-View"]),
