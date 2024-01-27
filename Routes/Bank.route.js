@@ -730,7 +730,7 @@ const BankRoutes = (app) => {
       if (!bank) {
         throw { code: 404, message: "Bank not found!" };
       }
-``
+
       // Remove the subAdmin with the specified subAdminId
       bank.subAdmins = bank.subAdmins.filter(sa => sa.subAdminId !== subAdminId);
 

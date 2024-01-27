@@ -298,6 +298,27 @@ const WebisteRoutes = (app) => {
       }
     }
   );
+
+  app.delete("/api/website/delete-subadmin/:websiteId/:subAdminId", Authorize(["superAdmin", "RequstAdmin", "Bank-View"]), async (req, res) => {
+    try {
+      const { websiteId, subAdminId } = req.params;
+
+      const website = await Website.findById(websiteId);
+      if (!website) {
+        throw { code: 404, message: "website not found!" };
+      }
+
+      // Remove the subAdmin with the specified subAdminId
+      website.subAdmins = website.subAdmins.filter(sa => sa.subAdminId !== subAdminId);
+
+      await website.save();
+
+      res.status(200).send({ message: "SubAdmin removed successfully" });
+    } catch (error) {
+      res.status(error.code || 500).send({ message: error.message || "An error occurred" });
+    }
+  });
+
   
 
 
