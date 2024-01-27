@@ -264,7 +264,7 @@ const BankRoutes = (app) => {
       } = req.query;
 
       try {
-        let dbBankData = await Bank.find({isActive: true}).select('bankName isActive').exec();
+        let dbBankData = await Bank.find({ isActive: true }).select('bankName isActive').exec();
         return res.status(200).send(dbBankData);
       } catch (e) {
         console.error(e);
@@ -302,32 +302,28 @@ const BankRoutes = (app) => {
           // For subAdmins, filter banks based on user permissions
           const userSubAdminId = req.user.userName;
 
+          // Filter banks based on subAdmin's permissions
           bankData = bankData.filter(bank => {
             const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-            return userSubAdmin && userSubAdmin.isDeposit;
-            // Modify the condition based on your specific requirements
-          });
-
-          for (var index = 0; index < bankData.length; index++) {
-            bankData[index].balance = await AccountServices.getBankBalance(
-              bankData[index]._id
-            );
-            const subAdmins = bankData[index].subAdmins;
-            const user = req.user.userName;
-
-            const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
 
             if (userSubAdmin) {
-              bankData[index].isDeposit = userSubAdmin.isDeposit;
-              bankData[index].isWithdraw = userSubAdmin.isWithdraw;
-              bankData[index].isRenew = userSubAdmin.isRenew;
-              bankData[index].isEdit = userSubAdmin.isEdit;
-              bankData[index].isDelete = userSubAdmin.isDelete;
+              bank.balance = AccountServices.getBankBalance(bank._id);
+
+              // Set permissions for the specific bank
+              bank.isDeposit = userSubAdmin.isDeposit;
+              bank.isWithdraw = userSubAdmin.isWithdraw;
+              bank.isRenew = userSubAdmin.isRenew;
+              bank.isEdit = userSubAdmin.isEdit;
+              bank.isDelete = userSubAdmin.isDelete;
+
+              return true; // Include this bank in the filtered result
+            } else {
+              return false; // Exclude this bank from the filtered result
             }
-          }
+          });
         }
 
-        // Sort the filtered bankData array
+        // Now, sort the filtered bankData array
         bankData.sort((a, b) => b.createdAt - a.createdAt);
 
         return res.status(200).send(bankData);
@@ -336,7 +332,8 @@ const BankRoutes = (app) => {
         res.status(e.code).send({ message: e.message });
       }
     }
-  )
+  );
+
 
   // API To View Single Bank Name
 
@@ -681,7 +678,7 @@ const BankRoutes = (app) => {
   });
 
 
-  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin", "bank-view"]), async (req, res) => {
+  app.put("/api/bank/edit-request/:id", Authorize(["superAdmin", "RequstAdmin", "Bank-View"]), async (req, res) => {
     try {
       const { subAdmins } = req.body;
       const bankId = req.params.id;
