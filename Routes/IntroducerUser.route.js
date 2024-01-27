@@ -101,10 +101,19 @@ export const IntroducerRoutes = (app) => {
   }
   );
 
-  app.get("/api/list-introducer-user/:userName", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get("/api/list-introducer-user/:id", AuthorizeRole(["introducer"]), async (req, res) => {
     try {
-      const introducerId = req.user.userName
-      const introducerUser = await IntroducerUser.findOne({ introducersUserName: introducerId }).exec();
+      const id = req.params.id;
+      const introducerUser = await IntroducerUser.findOne(
+        { _id: id },
+        "userName"
+      ).exec();
+      console.log('introuser', introducerUser)
+      if (!introducerUser) {
+        return res.status(404).send({ message: "IntroducerUser not found" });
+      }
+
+      // Fetch users with introducer names matching any of the three fields
       const users = await User.find({
         $or: [
           { introducersUserName: introducerUser.userName },
@@ -112,6 +121,7 @@ export const IntroducerRoutes = (app) => {
           { introducersUserName2: introducerUser.userName }
         ]
       }).exec();
+
       res.send(users);
     } catch (e) {
       console.error(e);
