@@ -230,75 +230,7 @@ const WebisteRoutes = (app) => {
     }
   );
 
-  // app.get(
-  //   "/api/get-website-name",
-  //   Authorize([
-  //     "superAdmin",
-  //     "Dashboard-View",
-  //     "Transaction-View",
-  //     "Transaction-Edit-Request",
-  //     "Transaction-Delete-Request",
-  //     "Create-Transaction",
-  //     "Create-Deposit-Transaction",
-  //     "Create-Withdraw-Transaction",
-  //     "Website-View",
-  //     "Profile-View",
-  //     "Bank-View"
-  //   ]),
-  //   async (req, res) => {
-  //     try {
-  //       const dbWebsiteData = await Website.find({}).exec();
-  //       if (dbWebsiteData.length === 0) {
-  //         return res.status(404).send({ message: "No Website Active" });
-  //       }
   
-  //       let websiteData = JSON.parse(JSON.stringify(dbWebsiteData));
-  //       const userRole = req.user.roles;
-  
-  //       if (userRole.includes("superAdmin")) {
-  //         // If the user is superAdmin, no need to filter based on subAdminId
-  //         for (var index = 0; index < websiteData.length; index++) {
-  //           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
-  //         }
-  //       } else {
-  //         const userSubAdminId = req.user.userName;
-  
-  //         // Filter websites based on user permissions
-  //         websiteData = websiteData.filter(website => {
-  //           const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-  //           return userSubAdmin && userSubAdmin.isDeposit;
-  //           // Modify the condition based on your specific requirements
-  //         });
-  
-  //         // Add balance and permissions based on subAdmins
-  //         for (var index = 0; index < websiteData.length; index++) {
-  //           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
-  //           const subAdmins = websiteData[index].subAdmins;
-  //           const user = req.user.userName;
-  
-  //           const userSubAdmin = subAdmins.find(subAdmin => subAdmin.subAdminId === user);
-  
-  //           if (userSubAdmin) {
-  //             websiteData[index].isDeposit = userSubAdmin.isDeposit;
-  //             websiteData[index].isWithdraw = userSubAdmin.isWithdraw;
-  //             websiteData[index].isDelete = userSubAdmin.isDelete;
-  //             websiteData[index].isRenew = userSubAdmin.isRenew;
-  //             websiteData[index].isEdit = userSubAdmin.isEdit;
-  //           }
-  //         }
-  //       }
-  
-  //       // Sort the filtered websiteData array
-  //       websiteData.sort((a, b) => b.createdAt - a.createdAt);
-  
-  //       res.status(200).send(websiteData);
-  //     } catch (e) {
-  //       console.error(e);
-  //       res.status(e.code).send({ message: e.message });
-  //     }
-  //   }
-  // );
-
   app.get(
     "/api/get-website-name",
     Authorize([
