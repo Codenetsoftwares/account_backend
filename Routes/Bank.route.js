@@ -273,7 +273,7 @@ const BankRoutes = (app) => {
     }
   );
 
- 
+
   app.get(
     "/api/get-bank-name",
     Authorize([
@@ -286,11 +286,11 @@ const BankRoutes = (app) => {
     ]),
     async (req, res) => {
       const { page, itemsPerPage } = req.query;
-  
+
       try {
         let dbBankData = await Bank.find().exec();
         let bankData = JSON.parse(JSON.stringify(dbBankData));
-  
+
         const userRole = req.user.roles;
         if (userRole.includes('superAdmin')) {
           for (var index = 0; index < bankData.length; index++) {
@@ -301,35 +301,35 @@ const BankRoutes = (app) => {
         } else {
           // For subAdmins, filter banks based on user permissions
           const userSubAdminId = req.user.userName;
-  
+
           // Update each bank individually
           bankData = bankData.map(async bank => {
             const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-  
+
             if (userSubAdmin) {
               // Update balance for the specific bank
               bank.balance = await AccountServices.getBankBalance(bank._id);
-  
+
               // Set permissions for the specific bank
               bank.isDeposit = userSubAdmin.isDeposit;
               bank.isWithdraw = userSubAdmin.isWithdraw;
               bank.isRenew = userSubAdmin.isRenew;
               bank.isEdit = userSubAdmin.isEdit;
               bank.isDelete = userSubAdmin.isDelete;
-  
+
               return bank; // Include this bank in the result
             } else {
               return null; // Exclude this bank from the result
             }
           });
-  
+
           // Filter out null values (banks not authorized for the subAdmin)
           bankData = (await Promise.all(bankData)).filter(bank => bank !== null);
         }
-  
+
         // Now, sort the filtered bankData array
         bankData.sort((a, b) => b.createdAt - a.createdAt);
-  
+
         return res.status(200).send(bankData);
       } catch (e) {
         console.error(e);
@@ -337,7 +337,7 @@ const BankRoutes = (app) => {
       }
     }
   );
-  
+
   app.get(
     "/api/get-single-bank-name/:id",
     Authorize(["superAdmin", "Transaction-View", "Bank-View"]),
@@ -721,6 +721,29 @@ const BankRoutes = (app) => {
       res.status(error.code || 500).send({ message: error.message || "An error occurred" });
     }
   });
+
+  app.delete("/api/bank/delete-subadmin/:bankId/:subAdminId", Authorize(["superAdmin", "RequstAdmin", "Bank-View"]), async (req, res) => {
+    try {
+      const { bankId, subAdminId } = req.params;
+
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        throw { code: 404, message: "Bank not found!" };
+      }
+``
+      // Remove the subAdmin with the specified subAdminId
+      bank.subAdmins = bank.subAdmins.filter(sa => sa.subAdminId !== subAdminId);
+
+      await bank.save();
+
+      res.status(200).send({ message: "SubAdmin removed successfully" });
+    } catch (error) {
+      res.status(error.code || 500).send({ message: error.message || "An error occurred" });
+    }
+  });
+
+
+
 
   app.get("/api/active-visible-bank", Authorize(["superAdmin", "RequstAdmin"]), async (req, res) => {
 
