@@ -594,37 +594,70 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get(
-    "/introducer-user-single-data/:id",
-    Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const introducerUser = await IntroducerUser.findOne(
-          { _id: id },
-          "userName"
-        ).exec();
-        console.log('introuser', introducerUser)
-        if (!introducerUser) {
-          return res.status(404).send({ message: "IntroducerUser not found" });
+  app.get("/introducer-user-single-data/:id", Authorize(["superAdmin", "Introducer-Profile-View", "Profile-View"]), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const introducerUser = await IntroducerUser.findOne({ _id: id }, "userName").exec();
+      if (!introducerUser) {
+        return res.status(404).send({ message: "IntroducerUser not found" });
+      }
+      
+      const users = await User.find({
+        $or: [
+          { introducersUserName: introducerUser.userName },
+          { introducersUserName1: introducerUser.userName },
+          { introducersUserName2: introducerUser.userName }
+        ]
+      }).exec();
+
+      if (users.length === 0) {
+        return res.status(404).send({ message: "No matching users found" });
+      }
+
+      let filteredIntroducerUsers = [];
+
+      users.forEach(matchedUser => {
+        let filteredIntroducerUser = {
+          _id: matchedUser._id,
+          firstname: matchedUser.firstname,
+          lastname: matchedUser.lastname,
+          userName: matchedUser.userName,
+          wallet: matchedUser.wallet,
+          role: matchedUser.role,
+          webSiteDetail: matchedUser.webSiteDetail,
+          transactionDetail: matchedUser.transactionDetail
+        };
+
+        let matchedIntroducersUserName = null;
+        let matchedIntroducerPercentage = null;
+
+        if (matchedUser.introducersUserName === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage;
+        } else if (matchedUser.introducersUserName1 === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName1;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage1;
+        } else if (matchedUser.introducersUserName2 === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName2;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage2;
         }
 
-        // Fetch users with introducer names matching any of the three fields
-        const users = await User.find({
-          $or: [
-            { introducersUserName: introducerUser.userName },
-            { introducersUserName1: introducerUser.userName },
-            { introducersUserName2: introducerUser.userName }
-          ]
-        }).exec();
+        if (matchedIntroducersUserName) {
+          filteredIntroducerUser.matchedIntroducersUserName = matchedIntroducersUserName;
+          filteredIntroducerUser.introducerPercentage = matchedIntroducerPercentage;
+          filteredIntroducerUsers.push(filteredIntroducerUser);
+        }
+      });
 
-        res.send(users);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
+      return res.send(filteredIntroducerUsers);
+
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: "Internal Server Error" });
     }
-  );
+  });
+
+
 
 
   app.post(
