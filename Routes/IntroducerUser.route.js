@@ -136,20 +136,22 @@ export const IntroducerRoutes = (app) => {
       const user = req.user;
       const introUser = user.userName;
       const introducerUser = await User.findOne({ _id: id }).exec();
-
+      console.log("ddd", introducerUser);
       // Check if introducerUser exists
       if (!introducerUser) {
         return res.status(404).send({ message: 'User not found' });
       }
       
-      let filteredIntroducerUser = {
+      let filteredIntroducerUser = [{
         _id: introducerUser._id,
         firstname: introducerUser.firstname,
         lastname: introducerUser.lastname,
         userName: introducerUser.userName,
         wallet: introducerUser.wallet,
-        role: introducerUser.role
-      };
+        role: introducerUser.role,
+        webSiteDetail: introducerUser.webSiteDetail,
+        transactionDetail: introducerUser.transactionDetail
+      }];
       
       let matchedIntroducersUserName = null;
       let matchedIntroducerPercentage = null;
