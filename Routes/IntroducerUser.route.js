@@ -133,12 +133,50 @@ export const IntroducerRoutes = (app) => {
   app.get("/api/introducer-user-single-data/:id", AuthorizeRole(["introducer"]), async (req, res) => {
     try {
       const id = req.params.id;
-      const introducerId = req.user.introducerId;
-      const introducerUser = await User.find({ _id: id, introducersUserId: introducerId }).exec();
-      res.send(introducerUser);
+      const user = req.user;
+      const introUser = user.userName;
+      const introducerUser = await User.findOne({ _id: id }).exec();
+
+      // Check if introducerUser exists
+      if (!introducerUser) {
+        return res.status(404).send({ message: 'User not found' });
+      }
+      
+      let filteredIntroducerUser = {
+        _id: introducerUser._id,
+        firstname: introducerUser.firstname,
+        lastname: introducerUser.lastname,
+        userName: introducerUser.userName,
+        wallet: introducerUser.wallet,
+        role: introducerUser.role
+      };
+      
+      let matchedIntroducersUserName = null;
+      let matchedIntroducerPercentage = null;
+      
+      // Check if req.user.UserName exists in introducerUser's introducersUserName, introducersUserName1, or introducersUserName2 fields
+      if (introducerUser.introducersUserName === introUser) {
+        matchedIntroducersUserName = introducerUser.introducersUserName;
+        matchedIntroducerPercentage = introducerUser.introducerPercentage;
+      } else if (introducerUser.introducersUserName1 === introUser) {
+        matchedIntroducersUserName = introducerUser.introducersUserName1;
+        matchedIntroducerPercentage = introducerUser.introducerPercentage1;
+      } else if (introducerUser.introducersUserName2 === introUser) {
+        matchedIntroducersUserName = introducerUser.introducersUserName2;
+        matchedIntroducerPercentage = introducerUser.introducerPercentage2;
+      }
+      
+      // If matched introducersUserName found, include it along with percentage in the response
+      if (matchedIntroducersUserName) {
+        filteredIntroducerUser.matchedIntroducersUserName = matchedIntroducersUserName;
+        filteredIntroducerUser.introducerPercentage = matchedIntroducerPercentage;
+        return res.send(filteredIntroducerUser);
+      } else {
+        return res.status(403).send({ message: 'Unauthorized' });
+      }
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message });
+      res.status(e.code || 500).send({ message: e.message || 'Internal Server Error' });
     }
   });
 
