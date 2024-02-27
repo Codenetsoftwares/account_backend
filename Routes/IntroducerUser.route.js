@@ -142,7 +142,7 @@ export const IntroducerRoutes = (app) => {
         return res.status(404).send({ message: 'User not found' });
       }
       
-      let filteredIntroducerUser = [{
+      let filteredIntroducerUser = {
         _id: introducerUser._id,
         firstname: introducerUser.firstname,
         lastname: introducerUser.lastname,
@@ -151,7 +151,7 @@ export const IntroducerRoutes = (app) => {
         role: introducerUser.role,
         webSiteDetail: introducerUser.webSiteDetail,
         transactionDetail: introducerUser.transactionDetail
-      }];
+      };
       
       let matchedIntroducersUserName = null;
       let matchedIntroducerPercentage = null;
