@@ -48,8 +48,11 @@ export const IntroducerRoutes = (app) => {
   app.get("/api/intoducer/profile", AuthorizeRole(["introducer"]), async (req, res) => {
     try {
       const userId = req.user;
+      // console.log("userId", userId);
       const user = await IntroducerUser.findById(userId).exec();
+      // console.log("user", user);
       const introUserId = user._id;
+      console.log("introUserId", introUserId);
       const TPDLT = await AccountServices.IntroducerBalance(introUserId);
       const response = {
         _id: user._id,
