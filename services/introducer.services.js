@@ -244,7 +244,6 @@ export const introducerUser = {
       }
 
       let liveBalance = 0;
-      let perValue = 0; // Declare perValue outside the loop
       for (const user of userIntroId) {
         let matchedIntroducersUserName, matchedIntroducerPercentage;
 
@@ -260,7 +259,6 @@ export const introducerUser = {
         }
 
         const transDetails = user.transactionDetail;
-        console.log("transDetails", transDetails);
 
         if (!transDetails || transDetails.length === 0) {
           continue;
@@ -288,11 +286,9 @@ export const introducerUser = {
         }
 
         liveBalance += amount;
-        const percentageAmouunt = (liveBalance * matchedIntroducerPercentage) / 100;
-        perValue += percentageAmouunt;
       }
 
-      return Math.round(perValue);
+      return Math.round(liveBalance);
     } catch (error) {
       console.error(error);
       throw error;
