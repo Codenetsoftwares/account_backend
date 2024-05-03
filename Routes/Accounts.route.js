@@ -751,6 +751,7 @@ const AccountsRoute = (app) => {
           itemsPerPage
         } = req.query;
         const {
+          transactionID,
           transactionType,
           introducerList,
           subAdminList,
@@ -763,7 +764,10 @@ const AccountsRoute = (app) => {
         } = req.body;
 
         const filter = {};
-
+        console.log("Filter before applying:", filter);
+        if (transactionID) {
+          filter.transactionID = transactionID
+        }
         if (transactionType) {
           filter.transactionType = transactionType;
         }
@@ -786,7 +790,8 @@ const AccountsRoute = (app) => {
         } else if (edate) {
           filter.createdAt = { $lte: new Date(edate) };
         }
-
+        console.log("Transaction ID:", transactionID);
+        console.log("Filter after applying:", filter);
         const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
         // console.log('transactions', transactions)
         const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
