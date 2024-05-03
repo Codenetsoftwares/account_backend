@@ -746,10 +746,7 @@ const AccountsRoute = (app) => {
     ]),
     async (req, res) => {
       try {
-        const {
-          page,
-          itemsPerPage
-        } = req.query;
+        const { page, itemsPerPage } = req.query;
         const {
           transactionID,
           transactionType,
@@ -762,12 +759,13 @@ const AccountsRoute = (app) => {
           minAmount,
           maxAmount
         } = req.body;
-
+  
         const filter = {};
-        console.log("Filter before applying:", filter);
+  
         if (transactionID) {
-          filter.transactionID = transactionID
+          filter.transactionID = transactionID;
         }
+  
         if (transactionType) {
           filter.transactionType = transactionType;
         }
@@ -790,16 +788,20 @@ const AccountsRoute = (app) => {
         } else if (edate) {
           filter.createdAt = { $lte: new Date(edate) };
         }
-        console.log("Transaction ID:", transactionID);
-        console.log("Filter after applying:", filter);
-        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
-        // console.log('transactions', transactions)
-        const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
-        // console.log('websiteTransactions', websiteTransactions)
-        const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
-        // console.log('bankTransactions', bankTransactions)
+  
+      let filteredTransactions;
+      let filteredWebsiteTransactions;
+      let filteredBankTransactions;
 
-        const filteredTransactions = transactions.filter((transaction) => {
+      if (transactionID) {
+        const transaction = await Transaction.findOne(filter).sort({ createdAt: -1 }).exec();
+        if (!transaction) {
+          return res.status(404).json({ message: 'Transaction not found' });
+        }
+        filteredTransactions = [transaction];
+      } else {
+        const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
+        filteredTransactions = transactions.filter((transaction) => {
           if (minAmount && maxAmount) {
             return (
               transaction.amount >= minAmount &&
@@ -809,79 +811,110 @@ const AccountsRoute = (app) => {
             return true;
           }
         });
+      }
 
-        const filteredWebsiteTransactions = websiteTransactions.filter((transaction) => {
+      if (transactionID) {
+        const websiteTransaction = await WebsiteTransaction.findOne(filter).sort({ createdAt: -1 }).exec();
+        if (!websiteTransaction) {
+          return res.status(404).json({ message: 'Transaction not found' });
+        }
+        filteredWebsiteTransactions = [websiteTransaction];
+      } else {
+        const websiteTransaction = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+        filteredWebsiteTransactions = websiteTransaction.filter((transaction) => {
           if (minAmount && maxAmount) {
             return (
               transaction.withdrawAmount >= minAmount &&
               transaction.withdrawAmount <= maxAmount ||
               transaction.depositAmount >= minAmount &&
               transaction.depositAmount <= maxAmount
-
-            );
+              );
           } else {
             return true;
           }
         });
+      }
 
-        // console.log('filteredWebsiteTransactions', filteredWebsiteTransactions)
-
-        const filteredBankTransactions = bankTransactions.filter((transaction) => {
+      if (transactionID) {
+        const bankTransaction = await BankTransaction.findOne(filter).sort({ createdAt: -1 }).exec();
+        if (!bankTransaction) {
+          return res.status(404).json({ message: 'Transaction not found' });
+        }
+        filteredBankTransactions = [bankTransaction];
+      } else {
+        const bankTransaction = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
+        filteredBankTransactions = bankTransaction.filter((transaction) => {
           if (minAmount && maxAmount) {
             return (
               transaction.withdrawAmount >= minAmount &&
               transaction.withdrawAmount <= maxAmount ||
               transaction.depositAmount >= minAmount &&
               transaction.depositAmount <= maxAmount
-            );
+              );
           } else {
             return true;
           }
         });
+      }
 
-        // console.log('filteredBankTransactions', filteredBankTransactions)   
+      // if (minAmount && maxAmount) {
+      //   filteredWebsiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      //   filteredWebsiteTransactions = filteredWebsiteTransactions.filter((transaction) => {
+      //     return (
+      //       transaction.withdrawAmount >= minAmount &&
+      //       transaction.withdrawAmount <= maxAmount ||
+      //       transaction.depositAmount >= minAmount &&
+      //       transaction.depositAmount <= maxAmount
+      //     );
+      //   });
 
-        const alltrans = [...filteredTransactions, ...filteredWebsiteTransactions, ...filteredBankTransactions];
+      //   filteredBankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      //   filteredBankTransactions = filteredBankTransactions.filter((transaction) => {
+      //     return (
+      //       transaction.withdrawAmount >= minAmount &&
+      //       transaction.withdrawAmount <= maxAmount ||
+      //       transaction.depositAmount >= minAmount &&
+      //       transaction.depositAmount <= maxAmount
+      //     );
+      //   });
+      // }
+        const alltrans = [...filteredTransactions,...filteredWebsiteTransactions,...filteredBankTransactions];
         alltrans.sort((a, b) => b.createdAt - a.createdAt);
-        // console.log('all',alltrans.length)
+  
         const allIntroDataLength = alltrans.length;
-        // console.log("allIntroDataLength", allIntroDataLength);
+  
         let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
         const skip = (page - 1) * itemsPerPage;
         const limit = parseInt(itemsPerPage);
         const paginatedResults = alltrans.slice(skip, skip + limit);
-        // console.log('pagitren',paginatedResults.length)
-
-        if (paginatedResults.length !== 0) {
-          // console.log('s')
-          // console.log('pagin', paginatedResults.length)
+  
+        if (paginatedResults.length!== 0) {
           return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
-        }
-        else {
+        } else {
           const itemsPerPage = 10; // Specify the number of items per page
-
+  
           const totalItems = alltrans.length;
           const totalPages = Math.ceil(totalItems / itemsPerPage);
-
+  
           let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
           page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
-
+  
           const skip = (page - 1) * itemsPerPage;
           const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
           const paginatedResults = alltrans.slice(skip, skip + limit);
-
+  
           const pageNumber = page;
           const allIntroDataLength = totalItems;
-
+  
           return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
-
         }
       } catch (e) {
         console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
+        res.status(e.code).send({ message: e.message });
       }
     }
-  );
+    );
+  
 
 
   app.post('/api/admin/create/introducer/deposit-transaction', Authorize(["superAdmin", "Profile-View", "Introducer-Profile-View"]), async (req, res) => {
