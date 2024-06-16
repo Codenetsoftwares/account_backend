@@ -38,5 +38,5 @@ WebisteRoutes(app);
 DeleteAPIRoute(app);
 
 app.listen(process.env.PORT, () => {
-  console.log(`Read the docs - http://localhost:${process.env.PORT || 8000}/api/docs`);
+  console.log(`Read the docs - http://localhost:${process.env.PORT || 7000}/api/docs`);
 });
