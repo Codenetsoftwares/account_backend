@@ -1,3 +1,4 @@
+import { string } from "../constructor/string.js";
 import { Authorize } from "../middleware/Authorize.js";
 import { BankTransaction } from "../models/BankTransaction.model.js";
 import { EditRequest } from "../models/EditRequest.model.js";
@@ -7,6 +8,7 @@ import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { User } from "../models/user.model.js";
 import AccountServices from "../services/Accounts.services.js";
+import { DeleteService } from "../services/Delete.services.js";
 
 const DeleteAPIRoute = (app) => {
 
@@ -27,15 +29,7 @@ const DeleteAPIRoute = (app) => {
     }
   });
 
-  app.get("/api/admin/view-trash", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
-    try {
-      const resultArray = await Trash.find().exec();
-      res.status(200).send(resultArray);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal Server error");
-    }
-  });
+  app.get("/api/admin/view-trash", Authorize([string.superAdmin, string.requestAdmin]), DeleteService.trashView);
 
   app.post("/api/admin/move-website-transaction-to-trash", Authorize(["superAdmin", "Transaction-Delete-Request", "Dashboard-View", "RequestAdmin"]), async (req, res) => {
     try {
@@ -149,15 +143,15 @@ const DeleteAPIRoute = (app) => {
         return res.status(404).send({ message: "Data not found in Trash" });
       }
       const dataToRestore = {
-      websiteId: deletedData.websiteId,
-      transactionType: deletedData.transactionType,
-      remarks: deletedData.remarks,
-      withdrawAmount: deletedData.withdrawAmount,
-      depositAmount: deletedData.depositAmount,
-      subAdminId: deletedData.subAdminId,
-      subAdminName: deletedData.subAdminName,
-      websiteName: deletedData.websiteName,
-      createdAt: deletedData.createdAt,
+        websiteId: deletedData.websiteId,
+        transactionType: deletedData.transactionType,
+        remarks: deletedData.remarks,
+        withdrawAmount: deletedData.withdrawAmount,
+        depositAmount: deletedData.depositAmount,
+        subAdminId: deletedData.subAdminId,
+        subAdminName: deletedData.subAdminName,
+        websiteName: deletedData.websiteName,
+        createdAt: deletedData.createdAt,
       }
       const restoredData = await WebsiteTransaction.create(dataToRestore);
       await Trash.findByIdAndDelete(deletedData._id);
@@ -167,7 +161,7 @@ const DeleteAPIRoute = (app) => {
       res.status(500).send({ message: e.message });
     }
   });
-  
+
 
   app.post("/api/restore/transaction/data/:transactionID", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
@@ -237,7 +231,7 @@ const DeleteAPIRoute = (app) => {
       res.status(500).send({ message: e.message });
     }
   });
-  
+
 }
 
 export default DeleteAPIRoute;

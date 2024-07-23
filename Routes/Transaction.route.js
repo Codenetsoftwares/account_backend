@@ -28,7 +28,7 @@ const TransactionRoutes = (app) => {
   );
 
   // API To View Deposit Transaction Details
-
+// not in use
   app.get(
     '/api/deposit/view',
     Authorize(['superAdmin']),
@@ -43,7 +43,7 @@ const TransactionRoutes = (app) => {
   );
 
   // API To View Withdraw Transaction Details
-
+// not in used
   app.get(
     '/api/withdraw/view',
     Authorize(['superAdmin']),
