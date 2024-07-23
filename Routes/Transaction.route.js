@@ -8,6 +8,8 @@ import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import AccountServices from "../services/Accounts.services.js";
 import { User } from '../models/user.model.js';
+import TransactionService from '../services/Transaction.services.js';
+import { string } from '../constructor/string.js';
 
 const TransactionRoutes = (app) => {
 
@@ -15,7 +17,7 @@ const TransactionRoutes = (app) => {
 
   app.post(
     '/api/admin/create/transaction',
-    Authorize(["superAdmin", "Dashboard-View","Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]),
+    Authorize(["superAdmin", "Dashboard-View", "Create-Deposit-Transaction", "Create-Withdraw-Transaction", "Create-Transaction"]),
     async (req, res) => {
       try {
         const subAdminName = req.user;
@@ -28,7 +30,7 @@ const TransactionRoutes = (app) => {
   );
 
   // API To View Deposit Transaction Details
-// not in use
+  // not in use
   app.get(
     '/api/deposit/view',
     Authorize(['superAdmin']),
@@ -43,7 +45,7 @@ const TransactionRoutes = (app) => {
   );
 
   // API To View Withdraw Transaction Details
-// not in used
+  // not in used
   app.get(
     '/api/withdraw/view',
     Authorize(['superAdmin']),
@@ -85,7 +87,7 @@ const TransactionRoutes = (app) => {
         const user = req.user;
         const bankTransaction = await BankTransaction.findById(req.params.id);
         console.log("id", req.params.id)
-        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body,user);
+        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body, user);
         console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Bank Transaction update request send to Super Admin");
@@ -96,7 +98,7 @@ const TransactionRoutes = (app) => {
       }
     }
   );
-  
+
   app.put(
     "/api/admin/edit-website-transaction-request/:id",
     Authorize(["superAdmin", "Dashboard-View", "Transaction-Edit-Request"]),
@@ -105,7 +107,7 @@ const TransactionRoutes = (app) => {
         const user = req.user;
         const websiteTransaction = await WebsiteTransaction.findById(req.params.id);
         console.log("id", req.params.id)
-        const updateResult = await TransactionServices.updateWebsiteTransaction(websiteTransaction, req.body,user);
+        const updateResult = await TransactionServices.updateWebsiteTransaction(websiteTransaction, req.body, user);
         console.log(updateResult);
         if (updateResult) {
           res.status(201).send("Website Transaction update request send to Super Admin");
@@ -124,7 +126,7 @@ const TransactionRoutes = (app) => {
       try {
         const user = req.user;
         const trans = await IntroducerTransaction.findById(req.params.id);
-        const updateResult = await TransactionServices.updateIntroTransaction(trans, req.body,user);
+        const updateResult = await TransactionServices.updateIntroTransaction(trans, req.body, user);
         if (updateResult) {
           res.status(201).send("Transaction update request send to Super Admin");
         }
@@ -134,37 +136,15 @@ const TransactionRoutes = (app) => {
       }
     }
   );
-  
+
   // API To View Edit Transaction Details
 
-  app.get('/api/superadmin/view-edit-transaction-requests', Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
-    try {
-      const dbBankData = await EditRequest.find().exec();
-      // let bankData = JSON.parse(JSON.stringify(dbBankData));
-      // for (var index = 0; index < bankData.length; index++) {
-      //   bankData[index].balance = await AccountServices.getEditedBankBalance(
-      //     bankData[index]._id
-      //   );
-      // }
-      res.status(200).send(dbBankData);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal Server error");
-    }
-  });
+  app.get('/api/superadmin/view-edit-transaction-requests', Authorize([string.superAdmin, string.requestAdmin]), TransactionService.getEditTransactionRequests);
 
-  app.get('/api/superadmin/view-edit-introducer-transaction-requests', Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
-    try {
-      const introEdit = await IntroducerEditRequest.find().exec();
-      res.status(200).send(introEdit);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("Internal Server error");
-    }
-  });
+  app.get('/api/superadmin/view-edit-introducer-transaction-requests', Authorize([string.superAdmin, string.requestAdmin]), TransactionService.getIntroducerEditRequests);
 
   // API To View Approve Transaction Details
-  
+
   app.post("/api/admin/approve-transaction-edit-request/:requestId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
     try {
       const editRequest = await EditRequest.findById(req.params.requestId);
@@ -209,9 +189,10 @@ const TransactionRoutes = (app) => {
           user.transactionDetail[transactionIndex].websiteName = editRequest.websiteName;
           user.transactionDetail[transactionIndex].remarks = editRequest.remarks;
           // Update other fields as needed
-        
+
           // Save the updated user document
-          await user.save();}
+          await user.save();
+        }
         console.log("updatedTransaction", updatedTransaction)
         if (updatedTransaction.matchedCount === 0) {
           return res.status(404).send({ message: "Transaction not found" });
@@ -223,10 +204,11 @@ const TransactionRoutes = (app) => {
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-          
+
           return res.status(200).send({
             message: "Edit request approved and data updated",
-            updatedTransaction,})
+            updatedTransaction,
+          })
         } else {
           return res.status(200).send({ message: "Edit request rejected" });
         }
@@ -238,8 +220,8 @@ const TransactionRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
-  
+
+
   app.post("/api/admin/approve-bank-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const editRequest = await EditRequest.findById(req.params.requestId);
@@ -266,12 +248,12 @@ const TransactionRoutes = (app) => {
         }
         editRequest.isApproved = true;
         if (editRequest.isApproved === true) {
-          const deletedEditRequest = await EditRequest.deleteOne({_id: req.params.requestId,});
+          const deletedEditRequest = await EditRequest.deleteOne({ _id: req.params.requestId, });
           console.log(deletedEditRequest);
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-             
+
           return res.status(200).send({
             message: "Edit request approved and data updated",
             updatedTransaction,
@@ -287,7 +269,7 @@ const TransactionRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
-  
+
 
   app.post("/api/admin/approve-website-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
@@ -306,7 +288,7 @@ const TransactionRoutes = (app) => {
           remarks: editRequest.remarks,
           withdrawAmount: editRequest.withdrawAmount,
           depositAmount: editRequest.depositAmount,
-          currentWebsiteBalance : editRequest.currentWebsiteBalance,
+          currentWebsiteBalance: editRequest.currentWebsiteBalance,
           subAdminId: editRequest.subAdminId,
           subAdminName: editRequest.subAdminName,
         });
@@ -316,12 +298,12 @@ const TransactionRoutes = (app) => {
         }
         editRequest.isApproved = true;
         if (editRequest.isApproved === true) {
-          const deletedEditRequest = await EditRequest.deleteOne({_id: req.params.requestId,});
+          const deletedEditRequest = await EditRequest.deleteOne({ _id: req.params.requestId, });
           console.log(deletedEditRequest);
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-  
+
           return res.status(200).send({
             message: "Edit request approved and data updated",
             updatedTransaction,
@@ -337,20 +319,20 @@ const TransactionRoutes = (app) => {
       res.status(e.code).send({ message: e.message });
     }
   });
- 
-  app.get("/api/all/transaction/pages/:requestId",async(req,res)=>{
-       
+
+  app.get("/api/all/transaction/pages/:requestId", async (req, res) => {
+
     try {
       const page = req.query.page * 1 || 1;
       const limit = req.query.limit * 1 || 10;
-      const skip = (page - 1) * limit;     
-      const bankTransaction = await BankTransaction.find().limit(limit).skip(skip);      
+      const skip = (page - 1) * limit;
+      const bankTransaction = await BankTransaction.find().limit(limit).skip(skip);
       res.status(200).json({ bankTransaction });
     } catch (error) {
-      console.log(error); 
+      console.log(error);
     }
   });
-  
+
   app.post("/api/admin/approve-introducer-edit-request/:requestId", Authorize(["superAdmin"]), async (req, res) => {
     try {
       const editRequest = await IntroducerEditRequest.findById(req.params.requestId);
@@ -376,12 +358,12 @@ const TransactionRoutes = (app) => {
         }
         editRequest.isApproved = true;
         if (editRequest.isApproved === true) {
-          const deletedEditRequest = await IntroducerEditRequest.deleteOne({_id: req.params.requestId,});
+          const deletedEditRequest = await IntroducerEditRequest.deleteOne({ _id: req.params.requestId, });
           console.log(deletedEditRequest);
           if (!deletedEditRequest) {
             return res.status(500).send({ message: "Error deleting edit request" });
           }
-  
+
           return res.status(200).send({
             message: "Edit request approved and data updated",
             updatedTransaction,

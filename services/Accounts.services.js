@@ -1169,7 +1169,7 @@ const AccountServices = {
       // Send response with pagination info
       return apiResponsePagination(paginatedTransactions, true, statusCode.success, 'success', {
         page: parseInt(page),
-        limit: limit,
+        limit,
         totalPages,
         totalItems
       }, res);
@@ -1182,7 +1182,65 @@ const AccountServices = {
         res
       );
     }
-  }
+  },
+
+   getAccountSummary : async (req, res) => {
+    try {
+      let { page = 1, pageSize = 10 } = req.query;
+      
+      page = parseInt(page);
+      pageSize = parseInt(pageSize);
+  
+      const skip = (page - 1) * pageSize;
+      const limit = pageSize;
+  
+      // Fetch all transactions without pagination
+      const transactions = await Transaction.find({}).sort({ createdAt: -1 }).exec();
+      const websiteTransactions = await WebsiteTransaction.find({}).sort({ createdAt: -1 }).exec();
+      const bankTransactions = await BankTransaction.find({}).sort({ createdAt: -1 }).exec();
+  
+      const allTransactions = [
+        ...transactions,
+        ...websiteTransactions,
+        ...bankTransactions,
+      ];
+  
+      // Sort all transactions by createdAt in descending order
+      allTransactions.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB - dateA; // Descending order
+      });
+  
+      // Apply pagination to the combined result
+      const paginatedTransactions = allTransactions.slice(skip, skip + limit);
+  
+      const totalItems = allTransactions.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+  
+      return apiResponsePagination(
+        paginatedTransactions,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page,
+          limit: pageSize,
+          totalPages,
+          totalItems
+        },
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
 
 
 };

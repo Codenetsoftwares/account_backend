@@ -13,6 +13,7 @@ import { Website } from "../models/website.model.js";
 import { Bank } from "../models/bank.model.js";
 import TransactionServices from "../services/Transaction.services.js"
 import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
+import { string } from "../constructor/string.js";
 
 const AccountsRoute = (app) => {
   // API For Admin Login
@@ -200,6 +201,7 @@ const AccountsRoute = (app) => {
     }
   );
 
+  // pagination not needed
   app.get(
     "/api/admin/sub-admin-name/website-view",
     Authorize([
@@ -232,49 +234,16 @@ const AccountsRoute = (app) => {
   app.get(
     "/api/admin/account-summary",
     Authorize([
-      "superAdmin",
-      "Dashboard-View",
-      "Transaction-View",
-      "Transaction-Edit-Request",
-      "Transaction-Delete-Request",
-      "Website-View",
-      "Bank-View"
+      string.superAdmin,
+      string.dashboardView,
+      string.transactionView,
+      string.transactionEditRequest,
+      string.transactionDeleteRequest,
+      string.websiteView,
+      string.bankView
     ]),
-    async (req, res) => {
-      try {
-        const transactions = await Transaction.find({})
-          .sort({ createdAt: 1 })
-          .exec();
-        const websiteTransactions = await WebsiteTransaction.find({})
-          .sort({ createdAt: 1 })
-          .exec();
-        const bankTransactions = await BankTransaction.find({})
-          .sort({ createdAt: 1 })
-          .exec();
-        const allTransactions = [
-          ...transactions,
-          ...websiteTransactions,
-          ...bankTransactions,
-        ];
-        allTransactions.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          if (dateA < dateB) {
-            return 1;
-          } else if (dateA > dateB) {
-            return -1;
-          } else {
-            // If the dates are equal, sort by time in descending order
-            return b.createdAt - a.createdAt;
-          }
-        });
-        res.status(200).send(allTransactions);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
+    AccountServices.getAccountSummary
+  )
 
   app.post(
     "/api/admin/accounts/introducer/register",
@@ -656,9 +625,6 @@ const AccountsRoute = (app) => {
       res.status(500).send({ message: "Internal Server Error" });
     }
   });
-
-
-
 
   app.post(
     "/api/admin/reset-password",

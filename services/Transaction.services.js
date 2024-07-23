@@ -10,6 +10,8 @@ import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import { IntroducerUser } from "../models/introducer.model.js"
 import { introducerUser } from "../services/introducer.services.js";
 import AccountServices from "../services/Accounts.services.js";
+import { apiResponsePagination } from "../utils/response.js";
+import { statusCode } from "../utils/statusCodes.js";
 
 const TransactionService = {
   createTransaction: async (req, res, subAdminName) => {
@@ -170,7 +172,7 @@ const TransactionService = {
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
     }
   },
-  
+
 
   createIntroducerWithdrawTransaction: async (req, res, subAdminName) => {
     try {
@@ -229,7 +231,7 @@ const TransactionService = {
     }
   },
 
-  updateTransaction: async (trans, data,user) => {
+  updateTransaction: async (trans, data, user) => {
     const existingTransaction = await Transaction.findById(trans);
 
     const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit", });
@@ -252,19 +254,19 @@ const TransactionService = {
         remarks: data.remarks || existingTransaction.remarks,
         userName: data.userName || existingTransaction.userName
       };
-      
+
       const originalTransactionData = { ...existingTransaction.toObject() };
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
         originalData: changedFields,
@@ -292,15 +294,15 @@ const TransactionService = {
       const originalTransactionData = { ...existingTransaction.toObject() };
       for (const key in data) {
         if (existingTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
         originalData: changedFields,
@@ -315,7 +317,7 @@ const TransactionService = {
     return changedFields;
   },
 
-  updateBankTransaction: async (bankTransaction, data,user) => {
+  updateBankTransaction: async (bankTransaction, data, user) => {
     const existingBankTransaction = await BankTransaction.findById(bankTransaction);
 
     const existingEditRequest = await EditRequest.findOne({ id: bankTransaction, type: "Edit", });
@@ -339,15 +341,15 @@ const TransactionService = {
       const originalTransactionData = { ...existingBankTransaction.toObject() };
       for (const key in data) {
         if (existingBankTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
         requesteduserName: user.firstname,
@@ -371,15 +373,15 @@ const TransactionService = {
       const originalTransactionData = { ...existingBankTransaction.toObject() };
       for (const key in data) {
         if (existingBankTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData, originalData: changedFields, isApproved: false, type: "Edit",
         requesteduserName: user.firstname,
@@ -390,7 +392,7 @@ const TransactionService = {
     return changedFields;
   },
 
-  updateWebsiteTransaction: async (websiteTransaction, data,user) => {
+  updateWebsiteTransaction: async (websiteTransaction, data, user) => {
     const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
 
     const existingEditRequest = await EditRequest.findOne({ id: websiteTransaction, type: "Edit", });
@@ -413,15 +415,15 @@ const TransactionService = {
       const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
       for (const key in data) {
         if (existingWebsiteTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
         originalData: changedFields,
@@ -447,15 +449,15 @@ const TransactionService = {
       const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
       for (const key in data) {
         if (existingWebsiteTransaction[key] !== data[key]) {
-            changedFields[key] = {
-                oldValue: originalTransactionData[key],
-                newValue: data[key]
-            };
+          changedFields[key] = {
+            oldValue: originalTransactionData[key],
+            newValue: data[key]
+          };
         }
-    }
-    if (Object.keys(changedFields).length === 0) {
-      throw { code: 400, message: "No changes were made to the transaction." };
-  }
+      }
+      if (Object.keys(changedFields).length === 0) {
+        throw { code: 400, message: "No changes were made to the transaction." };
+      }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
         originalData: changedFields,
@@ -471,7 +473,7 @@ const TransactionService = {
   },
 
 
-  updateIntroTransaction: async (trans, data,user) => {
+  updateIntroTransaction: async (trans, data, user) => {
     const existingTransaction = await IntroducerTransaction.findById(trans);
 
     const existingEditRequest = await IntroducerEditRequest.findOne({ id: trans, type: "Edit", });
@@ -497,8 +499,9 @@ const TransactionService = {
         }
       }
 
-      const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
-      requesteduserName: user.firstname,
+      const editRequest = new IntroducerEditRequest({
+        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        requesteduserName: user.firstname,
         message: "Introducer Deposit transaction is being edited.",
       });
       await editRequest.save();
@@ -519,14 +522,81 @@ const TransactionService = {
         }
       }
 
-      const editRequest = new IntroducerEditRequest({...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
-      requesteduserName: user.firstname,
+      const editRequest = new IntroducerEditRequest({
+        ...updatedTransactionData, changedFields, isApproved: false, type: "Edit",
+        requesteduserName: user.firstname,
         message: "Introducer Withdraw transaction is being edited.",
       });
       await editRequest.save();
     }
     return changedFields;
   },
-};
 
+  getEditTransactionRequests: async (req, res) => {
+    try {
+      const { page = 1, pageSize = 10 } = req.query;
+      const skip = (page - 1) * pageSize;
+      const limit = parseInt(pageSize);
+
+      const dbBankData = await EditRequest.find().skip(skip).limit(limit).exec();
+
+      // Optionally, add balance fetching logic here
+      // const bankData = JSON.parse(JSON.stringify(dbBankData));
+      // for (var index = 0; index < bankData.length; index++) {
+      //   bankData[index].balance = await AccountServices.getEditedBankBalance(
+      //     bankData[index]._id
+      //   );
+      // }
+
+      const totalItems = await EditRequest.countDocuments();
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return apiResponsePagination(
+        dbBankData,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page: parseInt(page),
+          limit,
+          totalPages,
+          totalItems
+        },
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getIntroducerEditRequests: async (req, res) => {
+    try {
+      const { page = 1, pageSize = 10 } = req.query;
+      const skip = (page - 1) * pageSize;
+      const limit = parseInt(pageSize);
+
+      const introEdit = await IntroducerEditRequest.find().skip(skip).limit(limit).exec();
+
+      const totalItems = await IntroducerEditRequest.countDocuments();
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return apiResponsePagination(
+        introEdit,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page: parseInt(page),
+          limit,
+          totalPages,
+          totalItems
+        },
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+}
 export default TransactionService;
