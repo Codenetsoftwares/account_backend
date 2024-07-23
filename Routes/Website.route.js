@@ -6,6 +6,7 @@ import { Transaction } from "../models/transaction.js";
 import lodash from "lodash";
 import { EditWebsiteRequest } from "../models/EditWebsiteRequest.model.js";
 import { WebsiteRequest } from "../models/WebsiteRequest.model.js"
+import { string } from "../constructor/string.js";
 
 const WebisteRoutes = (app) => {
 
@@ -221,7 +222,7 @@ const WebisteRoutes = (app) => {
     async (req, res) => {
 
       try {
-        let dbBankData = await Website.find({isActive: true}).select('websiteName isActive').exec();
+        let dbBankData = await Website.find({ isActive: true }).select('websiteName isActive').exec();
         return res.status(200).send(dbBankData);
       } catch (e) {
         console.error(e);
@@ -230,68 +231,17 @@ const WebisteRoutes = (app) => {
     }
   );
 
-  
-  app.get(
-    "/api/get-website-name",
+
+  app.get("/api/get-website-name",
     Authorize([
-      "superAdmin",
-      "Bank-View",
-      "Transaction-View",
-      "Create-Transaction",
-      "Create-Deposit-Transaction",
-      "Create-Withdraw-Transaction"
+      string.superAdmin,
+      string.bankView,
+      string.transactionView,
+      string.createTransaction,
+      string.createDepositTransaction,
+      string.createWithdrawTransaction,
     ]),
-    async (req, res) => {
-      const { page, itemsPerPage } = req.query;
-
-      try {
-        let dbBankData = await Website.find().exec();
-        let websiteData = JSON.parse(JSON.stringify(dbBankData));
-
-        const userRole = req.user.roles;
-        if (userRole.includes('superAdmin')) {
-          for (var index = 0; index < websiteData.length; index++) {
-            websiteData[index].balance = await AccountServices.getWebsiteBalance(
-              websiteData[index]._id
-            );
-          }
-        } else {
-          // For subAdmins, filter banks based on user permissions
-          const userSubAdminId = req.user.userName;
-
-          // Update each bank individually
-          websiteData = websiteData.map(async website => {
-            const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-
-            if (userSubAdmin) {
-              // Update balance for the specific bank
-              website.balance = await AccountServices.getWebsiteBalance(website._id);
-              // Set permissions for the specific bank
-              website.isDeposit = userSubAdmin.isDeposit;
-              website.isWithdraw = userSubAdmin.isWithdraw;
-              website.isRenew = userSubAdmin.isRenew;
-              website.isEdit = userSubAdmin.isEdit;
-              website.isDelete = userSubAdmin.isDelete;
-
-              return website; // Include this bank in the result
-            } else {
-              return null; // Exclude this bank from the result
-            }
-          });
-
-          // Filter out null values (banks not authorized for the subAdmin)
-          websiteData = (await Promise.all(websiteData)).filter(website => website !== null);
-        }
-
-        // Now, sort the filtered bankData array
-        websiteData.sort((a, b) => b.createdAt - a.createdAt);
-
-        return res.status(200).send(websiteData);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
+    AccountServices.getWebsiteNames
   );
 
   app.delete("/api/website/delete-subadmin/:websiteId/:subAdminId", Authorize(["superAdmin", "RequstAdmin", "Bank-View"]), async (req, res) => {
@@ -314,7 +264,7 @@ const WebisteRoutes = (app) => {
     }
   });
 
-  
+
 
 
   app.get("/api/get-single-webiste-name/:id", Authorize(["superAdmin", "Transaction-View", "Bank-View"]), async (req, res) => {

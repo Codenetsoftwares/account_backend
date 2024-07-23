@@ -16,6 +16,9 @@ import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
 import { introducerUser } from "../services/introducer.services.js";
 import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js"
 import { Trash } from "../models/Trash.model.js";
+import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from "../utils/response.js";
+import { statusCode } from "../utils/statusCodes.js";
+import { string } from "../constructor/string.js";
 
 const AccountServices = {
   adminLogin: async (req, res) => {
@@ -160,8 +163,8 @@ const AccountServices = {
     return true;
   },
 
-  
-  
+
+
   generateAdminAccessToken: async (userName, password, persist) => {
     if (!userName) {
       throw { code: 400, message: "Invalid value for: User Name" };
@@ -364,31 +367,97 @@ const AccountServices = {
           balance = netAmount;
         }
       });
-  
+
       return balance;
     } catch (error) {
       console.error("Error in getBankBalance:", error);
       throw error;
     }
   },
-  
 
+  getWebsiteNames: async (req, res) => {
+    try {
+      const user = req.user;
+      const { page = 1, pageSize = 10, search = '' } = req.query;
+      const skip = (page - 1) * pageSize;
+      const limit = parseInt(pageSize);
+  
+      // Build search query
+      const searchQuery = search ? { websiteName: { $regex: search, $options: 'i' } } : {};
+  
+      let websiteData = await Website.find(searchQuery)
+        .skip(skip)
+        .limit(limit)
+        .exec();
+  
+      const userRole = user.roles;
+  
+      if (userRole.includes(string.superAdmin)) {
+        websiteData = await Promise.all(websiteData.map(async (website) => {
+          website.balance = await AccountServices.getWebsiteBalance(website._id);
+          return website;
+        }));
+      } else {
+        const userSubAdminId = user.userName;
+  
+        websiteData = await Promise.all(websiteData.map(async (website) => {
+          const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
+  
+          if (userSubAdmin) {
+            website.balance = await AccountServices.getWebsiteBalance(website._id);
+            website.isDeposit = userSubAdmin.isDeposit;
+            website.isWithdraw = userSubAdmin.isWithdraw;
+            website.isRenew = userSubAdmin.isRenew;
+            website.isEdit = userSubAdmin.isEdit;
+            website.isDelete = userSubAdmin.isDelete;
+            return website;
+          }
+          return null;
+        }));
+  
+        websiteData = websiteData.filter(website => website !== null);
+      }
+  
+      websiteData.sort((a, b) => b.createdAt - a.createdAt);
+  
+      // Count total documents with the same search query
+      const totalItems = await Website.countDocuments(searchQuery);
+      const totalPages = Math.ceil(totalItems / limit);
+  
+      return apiResponsePagination(
+        websiteData,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page: parseInt(page),
+          limit,
+          totalPages,
+          totalItems
+        },
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },  
+  
   getWebsiteBalance: async (websiteId) => {
-    const websiteTransactions = await WebsiteTransaction.find({
-      websiteId: websiteId,
-    }).exec();
-    const transaction = await Transaction.find({ websiteId: websiteId }).exec();
+    const websiteTransactions = await WebsiteTransaction.find({ websiteId }).exec();
+    const transactions = await Transaction.find({ websiteId }).exec();
+
     let balance = 0;
-    websiteTransactions.forEach((transaction) => {
+
+    websiteTransactions.forEach(transaction => {
       balance += transaction.depositAmount || 0;
       balance -= transaction.withdrawAmount || 0;
     });
 
-    transaction.forEach((transactions) => {
-      if (transactions.transactionType === "Deposit") {
-        balance = Number(balance) - Number(transactions.bonus) - Number(transactions.amount);
+    transactions.forEach(transaction => {
+      if (transaction.transactionType === "Deposit") {
+        balance -= Number(transaction.bonus) + Number(transaction.amount);
       } else {
-        balance += transactions?.amount;
+        balance += Number(transaction.amount);
       }
     });
 
@@ -459,22 +528,22 @@ const AccountServices = {
     if (!existingUser) {
       throw { code: 404, message: `Existing User not found with id: ${id}` };
     }
-  
+
     // Validate introducerPercentage, introducerPercentage1, and introducerPercentage2
     const introducerPercentage = data.introducerPercentage !== undefined ? parseFloat(data.introducerPercentage) : existingUser.introducerPercentage;
     const introducerPercentage1 = data.introducerPercentage1 !== undefined ? parseFloat(data.introducerPercentage1) : existingUser.introducerPercentage1;
     const introducerPercentage2 = data.introducerPercentage2 !== undefined ? parseFloat(data.introducerPercentage2) : existingUser.introducerPercentage2;
-  
+
     if (isNaN(introducerPercentage) || isNaN(introducerPercentage1) || isNaN(introducerPercentage2)) {
       throw { code: 400, message: 'Introducer percentages must be valid numbers.' };
     }
-  
+
     const totalIntroducerPercentage = introducerPercentage + introducerPercentage1 + introducerPercentage2;
-  
+
     if (totalIntroducerPercentage < 0 || totalIntroducerPercentage > 100) {
       throw { code: 400, message: 'The sum of introducer percentages must be between 0 and 100.' };
     }
-  
+
     // Create a new object to store the updated user data
     const updatedUserData = {
       ...existingUser.toObject(), // Convert existing user object to plain JavaScript object
@@ -483,7 +552,7 @@ const AccountServices = {
       introducersUserName2: data.introducersUserName2 || existingUser.introducersUserName2,
       introducerPercentage2: introducerPercentage2,
     };
-  
+
     // Update the remaining fields
     updatedUserData.firstname = data.firstname || existingUser.firstname;
     updatedUserData.lastname = data.lastname || existingUser.lastname;
@@ -493,7 +562,7 @@ const AccountServices = {
     updatedUserData.introducerPercentage = introducerPercentage;
     updatedUserData.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
     updatedUserData.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
-  
+
     // Save the updated user data
     await existingUser.set(updatedUserData).save().catch((err) => {
       console.error(err);
@@ -502,11 +571,11 @@ const AccountServices = {
         message: `Failed to update User Profile with id: ${id}`,
       };
     });
-  
+
     return true;
   },
-  
-  
+
+
 
   // updateBankTransaction: async (id, data) => {
   //   const existingTransaction = await BankTransaction.findById(id);
@@ -561,7 +630,7 @@ const AccountServices = {
   //   return true;
   // },
 
-  deleteBankTransaction: async (transaction,user) => {
+  deleteBankTransaction: async (transaction, user) => {
     const existingTransaction = await BankTransaction.findById(transaction);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
@@ -577,21 +646,21 @@ const AccountServices = {
     const updatedTransactionData = {
       id: transaction._id,
       bankId: transaction.bankId,
-        transactionType: transaction.transactionType,
-        remarks: transaction.remarks,
-        withdrawAmount: transaction.withdrawAmount,
-        depositAmount: transaction.depositAmount,
-        subAdminId: transaction.subAdminId,
-        subAdminName: transaction.subAdminName,
-        accountHolderName: transaction.accountHolderName,
-        bankName: transaction.bankName,
-        accountNumber: transaction.accountNumber,
-        ifscCode: transaction.ifscCode,
-        createdAt: transaction.createdAt,
-        upiId: transaction.upiId,
-        upiAppName: transaction.upiAppName,
-        upiNumber: transaction.upiNumber,
-        isSubmit: transaction.isSubmit
+      transactionType: transaction.transactionType,
+      remarks: transaction.remarks,
+      withdrawAmount: transaction.withdrawAmount,
+      depositAmount: transaction.depositAmount,
+      subAdminId: transaction.subAdminId,
+      subAdminName: transaction.subAdminName,
+      accountHolderName: transaction.accountHolderName,
+      bankName: transaction.bankName,
+      accountNumber: transaction.accountNumber,
+      ifscCode: transaction.ifscCode,
+      createdAt: transaction.createdAt,
+      upiId: transaction.upiId,
+      upiAppName: transaction.upiAppName,
+      upiNumber: transaction.upiNumber,
+      isSubmit: transaction.isSubmit
     };
     const name = user.firstname;
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving to trash approval`;
@@ -610,7 +679,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteWebsiteTransaction: async (transaction,user) => {
+  deleteWebsiteTransaction: async (transaction, user) => {
     const existingTransaction = await WebsiteTransaction.findById(transaction);
     if (!existingTransaction) {
       throw {
@@ -642,8 +711,8 @@ const AccountServices = {
     };
     const name = user.firstname;
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving into trash approval`;
-    await createEditRequest(updatedTransactionData, editMessage,name);
-    async function createEditRequest(updatedTransactionData, editMessage,name) {
+    await createEditRequest(updatedTransactionData, editMessage, name);
+    async function createEditRequest(updatedTransactionData, editMessage, name) {
       const backupTransaction = new EditRequest({
         ...updatedTransactionData,
         isApproved: false,
@@ -658,7 +727,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteTransaction: async (transaction,user) => {
+  deleteTransaction: async (transaction, user) => {
     const existingTransaction = await Transaction.findById(transaction);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
@@ -695,7 +764,7 @@ const AccountServices = {
       createdAt: transaction.createdAt,
     };
     const name = user.firstname;
-    console.log("user",user)
+    console.log("user", user)
     const editMessage = `${updatedTransactionData.transactionType} is sent to Super Admin for moving into trash approval`;
     await createEditRequest(updatedTransactionData, editMessage, name);
     async function createEditRequest(updatedTransactionData, editMessage, name) {
@@ -712,7 +781,7 @@ const AccountServices = {
     return true;
   },
 
-  deleteIntroducerTransaction: async (transaction,user) => {
+  deleteIntroducerTransaction: async (transaction, user) => {
     const existingTransaction = await IntroducerTransaction.findById(transaction);
     if (!existingTransaction) {
       throw { code: 404, message: `Transaction not found with id: ${transaction}` };
@@ -869,16 +938,16 @@ const AccountServices = {
       upiNumber: transaction.upiNumber,
       isSubmit: transaction.isSubmit
     };
-      const backupTransaction = new Trash({...updatedTransactionData, Nametype: "Bank"});
-      await backupTransaction.save();
-      const deletedAdminUser = await BankTransaction.findByIdAndDelete(transaction.id);
-      const deletedUser = await EditRequest.findByIdAndDelete(transaction);
-      if (!deletedAdminUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
-      if (!deletedUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
+    const backupTransaction = new Trash({ ...updatedTransactionData, Nametype: "Bank" });
+    await backupTransaction.save();
+    const deletedAdminUser = await BankTransaction.findByIdAndDelete(transaction.id);
+    const deletedUser = await EditRequest.findByIdAndDelete(transaction);
+    if (!deletedAdminUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
+    if (!deletedUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
     return true;
   },
 
@@ -898,16 +967,16 @@ const AccountServices = {
       websiteName: transaction.websiteName,
       createdAt: transaction.createdAt,
     };
-      const backupTransaction = new Trash({...updatedTransactionData, Nametype: "Website"});
-      await backupTransaction.save();
-      const deletedAdminUser = await WebsiteTransaction.findByIdAndDelete(transaction.id);
-      const deletedUser = await EditRequest.findByIdAndDelete(transaction);
-      if (!deletedAdminUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
-      if (!deletedUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
+    const backupTransaction = new Trash({ ...updatedTransactionData, Nametype: "Website" });
+    await backupTransaction.save();
+    const deletedAdminUser = await WebsiteTransaction.findByIdAndDelete(transaction.id);
+    const deletedUser = await EditRequest.findByIdAndDelete(transaction);
+    if (!deletedAdminUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
+    if (!deletedUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
     return true;
   },
 
@@ -936,25 +1005,25 @@ const AccountServices = {
       bankCharges: transaction.bankCharges,
       createdAt: transaction.createdAt,
     };
-      const backupTransaction = new Trash({...updatedTransactionData, Nametype: "Transaction"});
-      await backupTransaction.save();
-      const deletedAdminUser = await EditRequest.findByIdAndDelete(transaction);
-      const deletedAdminTransaction = await Transaction.findByIdAndDelete(transaction.id);
-      const user = await User.findOne({ "transactionDetail": { $elemMatch: { "transactionID": transaction.transactionID } } });
-      const transactionIndex = user.transactionDetail.findIndex(
-        (transactionItem) => transactionItem.transactionID === transaction.transactionID
-      );
-      if (transactionIndex === -1) {
-        throw { code: 404, message: `Transaction not found in user's transactionDetail` };
-      }
-      user.transactionDetail.splice(transactionIndex, 1);
-      await user.save();
-      if (!deletedAdminTransaction) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
-      if (!deletedAdminUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
+    const backupTransaction = new Trash({ ...updatedTransactionData, Nametype: "Transaction" });
+    await backupTransaction.save();
+    const deletedAdminUser = await EditRequest.findByIdAndDelete(transaction);
+    const deletedAdminTransaction = await Transaction.findByIdAndDelete(transaction.id);
+    const user = await User.findOne({ "transactionDetail": { $elemMatch: { "transactionID": transaction.transactionID } } });
+    const transactionIndex = user.transactionDetail.findIndex(
+      (transactionItem) => transactionItem.transactionID === transaction.transactionID
+    );
+    if (transactionIndex === -1) {
+      throw { code: 404, message: `Transaction not found in user's transactionDetail` };
+    }
+    user.transactionDetail.splice(transactionIndex, 1);
+    await user.save();
+    if (!deletedAdminTransaction) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
+    if (!deletedAdminUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
     return true;
   },
 
@@ -973,16 +1042,16 @@ const AccountServices = {
       introducerUserName: transaction.introducerUserName,
       createdAt: transaction.createdAt
     };
-      const backupTransaction = new Trash({...updatedTransactionData, Nametype: "Introducer"});
-      await backupTransaction.save();
-      const deletedAdminUser = await IntroducerTransaction.findByIdAndDelete(transaction.id);
-      const deletedUser = await EditRequest.findByIdAndDelete(transaction);
-      if (!deletedAdminUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
-      if (!deletedUser) {
-        throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
-      }
+    const backupTransaction = new Trash({ ...updatedTransactionData, Nametype: "Introducer" });
+    await backupTransaction.save();
+    const deletedAdminUser = await IntroducerTransaction.findByIdAndDelete(transaction.id);
+    const deletedUser = await EditRequest.findByIdAndDelete(transaction);
+    if (!deletedAdminUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
+    if (!deletedUser) {
+      throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
+    }
     return true;
   }
 };
