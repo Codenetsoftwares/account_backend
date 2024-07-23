@@ -601,7 +601,7 @@ const AccountsRoute = (app) => {
       if (!introducerUser) {
         return res.status(404).send({ message: "IntroducerUser not found" });
       }
-      
+
       const users = await User.find({
         $or: [
           { introducersUserName: introducerUser.userName },
@@ -977,27 +977,7 @@ const AccountsRoute = (app) => {
     }
   );
 
-  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin", "report-my-txn"]), async (req, res) => {
-    try {
-      const userId = req.params.subadminId;
-      console.log('userId', userId)
-      const transaction = await Transaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
-      const bankTransaction = await BankTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
-      const webisteTransaction = await WebsiteTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec();
-      // console.log('transaction', transaction)
-      // console.log('bankTransaction', bankTransaction)
-      // console.log('webisteTransaction', webisteTransaction)
-      if (!transaction && !bankTransaction && !webisteTransaction) {
-        return res.status(404).send({ message: "No transaction found" });
-      }
-      const allTransactions = [...transaction, ...bankTransaction, ...webisteTransaction]
-      allTransactions.sort((a, b) => b.createdAt - a.createdAt);
-      res.status(200).send(allTransactions);
-    } catch (e) {
-      console.error(e);
-      res.status(500).send({ message: "Internal server error" });
-    }
-  });
+  app.get("/api/view-subadmin-transaction/:subadminId", Authorize(["superAdmin", "report-my-txn"]), AccountServices.viewSubAdminTransaction);
 };
 
 export default AccountsRoute;

@@ -1128,7 +1128,62 @@ const AccountServices = {
       throw { code: 500, message: `Failed to delete Admin User with id: ${transaction}` };
     }
     return true;
+  },
+
+  viewSubAdminTransaction: async (req, res) => {
+    try {
+      const userId = req.params.subadminId;
+      const { page = 1, pageSize = 10 } = req.query;
+
+      const skip = (page - 1) * pageSize;
+      const limit = parseInt(pageSize);
+
+      // Fetch all transactions without pagination
+      const [transaction, bankTransaction, websiteTransaction] = await Promise.all([
+        Transaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec(),
+        BankTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec(),
+        WebsiteTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec()
+      ]);
+
+      // Combine and sort all transactions
+      const allTransactions = [...transaction, ...bankTransaction, ...websiteTransaction];
+      allTransactions.sort((a, b) => b.createdAt - a.createdAt);
+
+      if (allTransactions.length === 0) {
+        return apiResponseErr(
+          [],
+          true,
+          statusCode.success,
+          "No transactions found for this sub-admin.",
+          res
+        );
+      }
+
+      // Apply pagination to the combined result set
+      const paginatedTransactions = allTransactions.slice(skip, skip + limit);
+
+      // Calculate total pages and items
+      const totalItems = allTransactions.length;
+      const totalPages = Math.ceil(totalItems / limit);
+
+      // Send response with pagination info
+      return apiResponsePagination(paginatedTransactions, true, statusCode.success, 'success', {
+        page: parseInt(page),
+        limit: limit,
+        totalPages,
+        totalItems
+      }, res);
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
   }
+
 
 };
 
