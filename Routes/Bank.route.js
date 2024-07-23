@@ -7,6 +7,7 @@ import { EditBankRequest } from "../models/EditBankRequest.model.js";
 import { BankRequest } from "../models/BankRequest.model.js";
 import lodash from "lodash";
 import { Website } from "../models/website.model.js";
+import { string } from "../constructor/string.js";
 
 const BankRoutes = (app) => {
   // API To Add Bank Name
@@ -277,65 +278,14 @@ const BankRoutes = (app) => {
   app.get(
     "/api/get-bank-name",
     Authorize([
-      "superAdmin",
-      "Bank-View",
-      "Transaction-View",
-      "Create-Transaction",
-      "Create-Deposit-Transaction",
-      "Create-Withdraw-Transaction"
+      string.superAdmin,
+      string.bankView,
+      string.transactionView,
+      string.createTransaction,
+      string.createDepositTransaction,
+      string.createWithdrawTransaction,
     ]),
-    async (req, res) => {
-      const { page, itemsPerPage } = req.query;
-
-      try {
-        let dbBankData = await Bank.find().exec();
-        let bankData = JSON.parse(JSON.stringify(dbBankData));
-
-        const userRole = req.user.roles;
-        if (userRole.includes('superAdmin')) {
-          for (var index = 0; index < bankData.length; index++) {
-            bankData[index].balance = await AccountServices.getBankBalance(
-              bankData[index]._id
-            );
-          }
-        } else {
-          // For subAdmins, filter banks based on user permissions
-          const userSubAdminId = req.user.userName;
-
-          // Update each bank individually
-          bankData = bankData.map(async bank => {
-            const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-
-            if (userSubAdmin) {
-              // Update balance for the specific bank
-              bank.balance = await AccountServices.getBankBalance(bank._id);
-
-              // Set permissions for the specific bank
-              bank.isDeposit = userSubAdmin.isDeposit;
-              bank.isWithdraw = userSubAdmin.isWithdraw;
-              bank.isRenew = userSubAdmin.isRenew;
-              bank.isEdit = userSubAdmin.isEdit;
-              bank.isDelete = userSubAdmin.isDelete;
-
-              return bank; // Include this bank in the result
-            } else {
-              return null; // Exclude this bank from the result
-            }
-          });
-
-          // Filter out null values (banks not authorized for the subAdmin)
-          bankData = (await Promise.all(bankData)).filter(bank => bank !== null);
-        }
-
-        // Now, sort the filtered bankData array
-        bankData.sort((a, b) => b.createdAt - a.createdAt);
-
-        return res.status(200).send(bankData);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
+    AccountServices.getBankNames
   );
 
   app.get(

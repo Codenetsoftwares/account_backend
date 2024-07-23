@@ -330,12 +330,81 @@ const AccountServices = {
 
   },
 
-  getBankBalance: async (bankId) => {
+  getBankNames: async (req, res) => {
     try {
-      const bankTransactions = await BankTransaction.find({ bankId: bankId }).exec();
-      const transactions = await Transaction.find({ bankId: bankId }).exec();
-      const editTransaction = await EditRequest.find({ bankId: bankId }).exec();
+      const user = req.user
+
+      const { page = 1, pageSize = 10, search = '' } = req.query;
+      const skip = (page - 1) * pageSize;
+      const limit = parseInt(pageSize);
+
+      // Build search query
+      const searchQuery = search ? { bankName: { $regex: search, $options: 'i' } } : {};
+
+      let bankData = await Bank.find(searchQuery)
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      const userRole = user.roles;
+
+      if (userRole.includes(string.superAdmin)) {
+        bankData = await Promise.all(bankData.map(async (bank) => {
+          bank.balance = await AccountServices.getBankBalance(bank._id);
+          return bank;
+        }));
+      } else {
+        const userSubAdminId = user.userName;
+
+        bankData = await Promise.all(bankData.map(async (bank) => {
+          const userSubAdmin = bank.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
+
+          if (userSubAdmin) {
+            bank.balance = await AccountServices.getBankBalance(bank._id);
+            bank.isDeposit = userSubAdmin.isDeposit;
+            bank.isWithdraw = userSubAdmin.isWithdraw;
+            bank.isRenew = userSubAdmin.isRenew;
+            bank.isEdit = userSubAdmin.isEdit;
+            bank.isDelete = userSubAdmin.isDelete;
+            return bank;
+          }
+          return null;
+        }));
+
+        bankData = bankData.filter(bank => bank !== null);
+      }
+
+      bankData.sort((a, b) => b.createdAt - a.createdAt);
+
+      const totalItems = await Bank.countDocuments(searchQuery);
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return apiResponsePagination(
+        bankData,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page: parseInt(page),
+          limit: limit,
+          totalPages,
+          totalItems
+        },
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getBankBalance: async (bankId, res) => {
+    try {
+      const bankTransactions = await BankTransaction.find({ bankId }).exec();
+      const transactions = await Transaction.find({ bankId }).exec();
+      const editTransaction = await EditRequest.find({ bankId }).exec();
+
       let balance = 0;
+
       bankTransactions.forEach((transaction) => {
         if (transaction.depositAmount) {
           balance += transaction.depositAmount;
@@ -344,6 +413,7 @@ const AccountServices = {
           balance -= transaction.withdrawAmount;
         }
       });
+
       transactions.forEach((transaction) => {
         if (transaction.transactionType === "Deposit") {
           balance += transaction.amount;
@@ -352,6 +422,7 @@ const AccountServices = {
           balance = totalBalance;
         }
       });
+
       editTransaction.forEach((data) => {
         if (data.transactionType === "Manual-Bank-Deposit") {
           balance += data.depositAmount;
@@ -370,8 +441,7 @@ const AccountServices = {
 
       return balance;
     } catch (error) {
-      console.error("Error in getBankBalance:", error);
-      throw error;
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
 
@@ -381,17 +451,17 @@ const AccountServices = {
       const { page = 1, pageSize = 10, search = '' } = req.query;
       const skip = (page - 1) * pageSize;
       const limit = parseInt(pageSize);
-  
+
       // Build search query
       const searchQuery = search ? { websiteName: { $regex: search, $options: 'i' } } : {};
-  
+
       let websiteData = await Website.find(searchQuery)
         .skip(skip)
         .limit(limit)
         .exec();
-  
+
       const userRole = user.roles;
-  
+
       if (userRole.includes(string.superAdmin)) {
         websiteData = await Promise.all(websiteData.map(async (website) => {
           website.balance = await AccountServices.getWebsiteBalance(website._id);
@@ -399,10 +469,10 @@ const AccountServices = {
         }));
       } else {
         const userSubAdminId = user.userName;
-  
+
         websiteData = await Promise.all(websiteData.map(async (website) => {
           const userSubAdmin = website.subAdmins.find(subAdmin => subAdmin.subAdminId === userSubAdminId);
-  
+
           if (userSubAdmin) {
             website.balance = await AccountServices.getWebsiteBalance(website._id);
             website.isDeposit = userSubAdmin.isDeposit;
@@ -414,16 +484,16 @@ const AccountServices = {
           }
           return null;
         }));
-  
+
         websiteData = websiteData.filter(website => website !== null);
       }
-  
+
       websiteData.sort((a, b) => b.createdAt - a.createdAt);
-  
+
       // Count total documents with the same search query
       const totalItems = await Website.countDocuments(searchQuery);
       const totalPages = Math.ceil(totalItems / limit);
-  
+
       return apiResponsePagination(
         websiteData,
         true,
@@ -440,28 +510,33 @@ const AccountServices = {
     } catch (error) {
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
-  },  
-  
-  getWebsiteBalance: async (websiteId) => {
-    const websiteTransactions = await WebsiteTransaction.find({ websiteId }).exec();
-    const transactions = await Transaction.find({ websiteId }).exec();
+  },
 
-    let balance = 0;
+  getWebsiteBalance: async (websiteId, res) => {
+    try {
+      const websiteTransactions = await WebsiteTransaction.find({ websiteId }).exec();
+      const transactions = await Transaction.find({ websiteId }).exec();
 
-    websiteTransactions.forEach(transaction => {
-      balance += transaction.depositAmount || 0;
-      balance -= transaction.withdrawAmount || 0;
-    });
+      let balance = 0;
 
-    transactions.forEach(transaction => {
-      if (transaction.transactionType === "Deposit") {
-        balance -= Number(transaction.bonus) + Number(transaction.amount);
-      } else {
-        balance += Number(transaction.amount);
-      }
-    });
+      websiteTransactions.forEach(transaction => {
+        balance += transaction.depositAmount || 0;
+        balance -= transaction.withdrawAmount || 0;
+      });
 
-    return balance;
+      transactions.forEach(transaction => {
+        if (transaction.transactionType === "Deposit") {
+          balance -= Number(transaction.bonus) + Number(transaction.amount);
+        } else {
+          balance += Number(transaction.amount);
+        }
+      });
+
+      return balance;
+    }
+    catch {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
   },
 
   // getEditedBankBalance: async (bankId) => {
