@@ -568,7 +568,7 @@ const BankRoutes = (app) => {
 
       await bank.save();
 
-      res.status(200).send({ message: "Bank status updated successfully" });
+      return res.status(200).send({ message: "Bank status updated successfully" });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
