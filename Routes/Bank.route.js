@@ -568,7 +568,8 @@ const BankRoutes = (app) => {
 
       await bank.save();
 
-      return res.status(200).send({ message: "Bank status updated successfully" });
+      const message = isActive ? "Bank activated successfully" : "Bank inactivated successfully";
+      return res.status(200).send({ message });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });

@@ -484,7 +484,10 @@ const WebisteRoutes = (app) => {
 
       website.isActive = isActive;
       await website.save();
-      res.status(200).send({ message: "Bank status updated successfully" });
+
+      const message = isActive ? "Website activated successfully" : "Website inactivated successfully"; 
+
+      return res.status(200).send({ message });
     } catch (e) {
       console.error(e);
       res.status(e.code || 500).send({ message: e.message || "Internal server error" });
