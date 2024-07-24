@@ -465,7 +465,7 @@ const AccountServices = {
 
       const userRole = req.user.roles;
 
-      if (userRole.includes('superAdmin')) {
+      if (userRole.includes(string.superAdmin)) {
         for (let index = 0; index < websiteData.length; index++) {
           websiteData[index].balance = await AccountServices.getWebsiteBalance(websiteData[index]._id);
         }
