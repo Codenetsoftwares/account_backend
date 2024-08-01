@@ -12,6 +12,7 @@ import { introducerUser } from '../services/introducer.services.js';
 import AccountServices from '../services/Accounts.services.js';
 import { apiResponsePagination } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
+import { BankServices } from './Bank.services.js';
 
 const TransactionService = {
   createTransaction: async (req, res, subAdminName) => {
@@ -67,7 +68,7 @@ const TransactionService = {
       // Bank
       const dbBankData = await Bank.findOne({ bankName: bankName }).exec();
       const bankId = dbBankData._id;
-      const bankBalance = await AccountServices.getBankBalance(bankId);
+      const bankBalance = await BankServices.getBankBalance(bankId);
       const totalBankBalance = bankCharges + amount;
       if (bankBalance < totalBankBalance) {
         throw { code: 400, message: 'Insufficient Bank balance' };

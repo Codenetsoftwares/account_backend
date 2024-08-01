@@ -45,3 +45,18 @@ export const validatePagination = [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be an integer greater than or equal to 1'),
   query('pageSize').optional().isInt({ min: 1 }).withMessage('Page size must be an integer greater than or equal to 1'),
 ];
+
+export const validateId = [
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
+]
+
+export const validateBankUpdate = [
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
+  body('accountHolderName').optional().isString().withMessage('Account holder name must be a string'),
+  body('bankName').optional().isString().withMessage('Bank name must be a string'),
+  body('accountNumber').optional().isNumeric().withMessage('Account number must be a numnber'),
+  body('ifscCode').optional().isString().withMessage('IFSC code must be a string'),
+  body('upiId').optional().isString().withMessage('UPI ID must be a string'),
+  body('upiAppName').optional().isString().withMessage('UPI app name must be a string'),
+  body('upiNumber').optional().isString().withMessage('UPI number must be a string'),
+];
