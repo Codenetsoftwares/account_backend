@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const EditRequest = mongoose.model(
-  "EditRequest",
+  'EditRequest',
   new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
-    bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
-    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
+    bankId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bank' },
+    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Website' },
     transactionID: { type: String },
     transactionType: { type: String, required: true },
     amount: { type: Number },
@@ -32,11 +32,11 @@ export const EditRequest = mongoose.model(
     createdAt: { type: Date },
     message: { type: String },
     type: { type: String },
-    Nametype : { type: String },
+    Nametype: { type: String },
     changedFields: {},
-    originalData : { type: Object },
+    originalData: { type: Object },
     isSubmit: { type: Boolean, default: false },
     isApproved: { type: Boolean, default: false, required: true },
   }),
-  "EditRequest"
+  'EditRequest',
 );

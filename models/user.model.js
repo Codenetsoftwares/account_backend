@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const User = mongoose.model(
-  "User",
+  'User',
   new mongoose.Schema({
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
@@ -11,15 +11,15 @@ export const User = mongoose.model(
     password: { type: String, required: true },
     contactNumber: { type: Number, required: true },
     emailVerified: { type: Boolean },
-    introducersUserName : {  type: String },
-    introducerPercentage : { type: Number },
-    introducersUserName1 : {  type: String },
-    introducerPercentage1 : { type: Number },
-    introducersUserName2 : {  type: String },
-    introducerPercentage2 : { type: Number },
+    introducersUserName: { type: String },
+    introducerPercentage: { type: Number },
+    introducersUserName1: { type: String },
+    introducerPercentage1: { type: Number },
+    introducersUserName2: { type: String },
+    introducerPercentage2: { type: Number },
     wallet: { type: Number },
     profilePicture: { type: String },
-    role: { type: String, default: "user" },
+    role: { type: String, default: 'user' },
     bankDetail: {
       accountHolderName: { type: String },
       bankName: { type: String },
@@ -38,8 +38,8 @@ export const User = mongoose.model(
     },
     transactionDetail: [
       {
-        bankId: { type: mongoose.Schema.Types.ObjectId, ref: "Bank" },
-        websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
+        bankId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bank' },
+        websiteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Website' },
         subAdminUserName: { type: String },
         subAdminName: { type: String },
         transactionID: { type: String },
@@ -47,7 +47,7 @@ export const User = mongoose.model(
         amount: { type: Number },
         paymentMethod: { type: String },
         userName: { type: String },
-        introducerUserName : { type: String },
+        introducerUserName: { type: String },
         bonus: { type: Number },
         bankCharges: { type: Number },
         remarks: { type: String },
@@ -58,5 +58,5 @@ export const User = mongoose.model(
       },
     ],
   }),
-  "users"
+  'users',
 );

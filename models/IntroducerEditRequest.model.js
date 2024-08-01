@@ -1,22 +1,22 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const IntroducerEditRequest = mongoose.model(
-  "IntroducerEditRequest",
+  'IntroducerEditRequest',
   new mongoose.Schema({
     id: { type: mongoose.Schema.Types.ObjectId },
-    amount: { type: Number},
+    amount: { type: Number },
     requesteduserName: { type: String },
     transactionType: { type: String },
     remarks: { type: String },
     subAdminId: { type: String },
     subAdminName: { type: String },
-    introducerUserName : { type: String },
+    introducerUserName: { type: String },
     createdAt: { type: Date },
     message: { type: String },
     type: { type: String },
-    Nametype : { type: String },
+    Nametype: { type: String },
     changedFields: {},
-    isApproved: { type: Boolean, default: false, required: true }
+    isApproved: { type: Boolean, default: false, required: true },
   }),
-  "IntroducerEditRequest"
+  'IntroducerEditRequest',
 );

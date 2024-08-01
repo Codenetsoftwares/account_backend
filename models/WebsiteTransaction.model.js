@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const WebsiteTransaction = mongoose.model(
-  "WebsiteTransaction",
+  'WebsiteTransaction',
   new mongoose.Schema({
-    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: "Website" },
+    websiteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Website' },
     websiteName: { type: String },
     remarks: { type: String },
     transactionType: { type: String },
@@ -13,5 +13,5 @@ export const WebsiteTransaction = mongoose.model(
     subAdminName: { type: String },
     createdAt: { type: Date },
   }),
-  "WebsiteTransaction"
+  'WebsiteTransaction',
 );

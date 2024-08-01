@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const EditWebsiteRequest = mongoose.model(
-  "EditWebsiteRequest",
+  'EditWebsiteRequest',
   new mongoose.Schema({
-    id: { type: mongoose.Schema.Types.ObjectId, ref: "WebsiteTransaction", required: true },
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'WebsiteTransaction', required: true },
     transactionType: { type: String },
     remark: { type: String },
     withdrawAmount: { type: Number },
@@ -17,5 +17,5 @@ export const EditWebsiteRequest = mongoose.model(
     changedFields: {},
     isApproved: { type: Boolean, default: false, required: true },
   }),
-  "EditWebsiteRequest"
+  'EditWebsiteRequest',
 );

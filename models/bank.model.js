@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const Bank = mongoose.model(
-  "Bank",
+  'Bank',
   new mongoose.Schema({
     bankName: { type: String, required: true },
     accountHolderName: { type: String },
@@ -27,7 +27,7 @@ export const Bank = mongoose.model(
     isWithdraw: { type: Boolean, default: true },
     isEdit: { type: Boolean, default: true },
     isRenew: { type: Boolean, default: true },
-    isDelete: { type: Boolean, default: true }
+    isDelete: { type: Boolean, default: true },
   }),
-  "Bank"
+  'Bank',
 );

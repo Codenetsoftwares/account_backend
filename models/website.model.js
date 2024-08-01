@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const Website = mongoose.model(
-  "Website",
+  'Website',
   new mongoose.Schema({
     websiteName: { type: String, required: true },
     subAdminName: { type: String },
@@ -23,5 +23,5 @@ export const Website = mongoose.model(
     isRenew: { type: Boolean, default: true },
     isDelete: { type: Boolean, default: true },
   }),
-  "Website"
+  'Website',
 );

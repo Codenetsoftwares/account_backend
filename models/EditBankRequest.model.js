@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export const EditBankRequest = mongoose.model(
-  "EditBankRequest",
+  'EditBankRequest',
   new mongoose.Schema({
-    id: {type: mongoose.Schema.Types.ObjectId,ref: "BankTransaction", required: true},
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'BankTransaction', required: true },
     accountHolderName: { type: String },
     bankName: { type: String },
     accountNumber: { type: Number },
@@ -17,5 +17,5 @@ export const EditBankRequest = mongoose.model(
     changedFields: {},
     isApproved: { type: Boolean, default: false, required: true },
   }),
-  "EditBankRequest"
+  'EditBankRequest',
 );

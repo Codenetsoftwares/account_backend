@@ -1,43 +1,36 @@
-import { introducerUser } from "../services/introducer.services.js";
-import { IntroducerUser } from "../models/introducer.model.js"
-import { AuthorizeRole } from "../middleware/auth.js";
-import { User } from "../models/user.model.js";
-import AccountServices from "../services/Accounts.services.js"
-import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
+import { introducerUser } from '../services/introducer.services.js';
+import { IntroducerUser } from '../models/introducer.model.js';
+import { AuthorizeRole } from '../middleware/auth.js';
+import { User } from '../models/user.model.js';
+import AccountServices from '../services/Accounts.services.js';
+import { IntroducerTransaction } from '../models/IntroducerTransaction.model.js';
 
 export const IntroducerRoutes = (app) => {
-
-  app.post("/api/introducer/user/login", async (req, res) => {
+  app.post('/api/introducer/user/login', async (req, res) => {
     try {
       const { userName, password, persist } = req.body;
       if (!userName) {
-        throw { code: 400, message: "User Name is required" };
+        throw { code: 400, message: 'User Name is required' };
       }
 
       if (!password) {
-        throw { code: 400, message: "Password is required" };
+        throw { code: 400, message: 'Password is required' };
       }
-      const accessToken = await introducerUser.generateIntroducerAccessToken(
-        userName,
-        password,
-        persist
-      );
+      const accessToken = await introducerUser.generateIntroducerAccessToken(userName, password, persist);
 
       if (!accessToken) {
-        throw { code: 500, message: "Failed to generate access token" };
+        throw { code: 500, message: 'Failed to generate access token' };
       }
       const user = await IntroducerUser.findOne({ userName: userName });
       if (!user) {
-        throw { code: 404, message: "User not found" };
+        throw { code: 404, message: 'User not found' };
       }
       if (user && accessToken) {
         res.status(200).send({
           token: accessToken,
         });
       } else {
-        res
-          .status(404)
-          .json({ error: "User not found or access token is invalid" });
+        res.status(404).json({ error: 'User not found or access token is invalid' });
       }
     } catch (e) {
       console.error(e);
@@ -45,14 +38,14 @@ export const IntroducerRoutes = (app) => {
     }
   });
 
-  app.get("/api/intoducer/profile", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/intoducer/profile', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const userId = req.user;
       // console.log("userId", userId);
       const user = await IntroducerUser.findById(userId).exec();
       // console.log("user", user);
       const introUserId = user._id;
-      console.log("introUserId", introUserId);
+      console.log('introUserId', introUserId);
       const TPDLT = await AccountServices.IntroducerBalance(introUserId);
       const response = {
         _id: user._id,
@@ -68,29 +61,25 @@ export const IntroducerRoutes = (app) => {
       res.status(201).send(response);
     } catch (e) {
       console.error(e);
-      res.status(e.code).send({ message: e.message })
+      res.status(e.code).send({ message: e.message });
     }
-  })
+  });
 
-  app.put(
-    "/api/intoducer-profile-edit/:id",
-    AuthorizeRole(["introducer"]),
-    async (req, res) => {
-      try {
-        const id = await IntroducerUser.findById(req.params.id);
-        const updateResult = await introducerUser.updateIntroducerProfile(id, req.body);
-        console.log(updateResult);
-        if (updateResult) {
-          res.status(201).send("Profile updated");
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
+  app.put('/api/intoducer-profile-edit/:id', AuthorizeRole(['introducer']), async (req, res) => {
+    try {
+      const id = await IntroducerUser.findById(req.params.id);
+      const updateResult = await introducerUser.updateIntroducerProfile(id, req.body);
+      console.log(updateResult);
+      if (updateResult) {
+        res.status(201).send('Profile updated');
       }
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
-  );
+  });
 
-  app.get("/api/intoducer/user-data/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/intoducer/user-data/:id', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const id = req.params.id;
       const intoducer = await IntroducerUser.findOne({ id }).exec();
@@ -101,19 +90,15 @@ export const IntroducerRoutes = (app) => {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
-  }
-  );
+  });
 
-  app.get("/api/list-introducer-user/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/list-introducer-user/:id', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const id = req.params.id;
-      const introducerUser = await IntroducerUser.findOne(
-        { _id: id },
-        "userName"
-      ).exec();
-      console.log('introuser', introducerUser)
+      const introducerUser = await IntroducerUser.findOne({ _id: id }, 'userName').exec();
+      console.log('introuser', introducerUser);
       if (!introducerUser) {
-        return res.status(404).send({ message: "IntroducerUser not found" });
+        return res.status(404).send({ message: 'IntroducerUser not found' });
       }
 
       // Fetch users with introducer names matching any of the three fields
@@ -121,10 +106,9 @@ export const IntroducerRoutes = (app) => {
         $or: [
           { introducersUserName: introducerUser.userName },
           { introducersUserName1: introducerUser.userName },
-          { introducersUserName2: introducerUser.userName }
-        ]
+          { introducersUserName2: introducerUser.userName },
+        ],
       }).exec();
-      
 
       res.send(users);
     } catch (e) {
@@ -133,18 +117,18 @@ export const IntroducerRoutes = (app) => {
     }
   });
 
-  app.get("/api/introducer-user-single-data/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/introducer-user-single-data/:id', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const id = req.params.id;
       const user = req.user;
       const introUser = user.userName;
       const introducerUser = await User.findOne({ _id: id }).exec();
-      console.log("ddd", introducerUser);
+      console.log('ddd', introducerUser);
       // Check if introducerUser exists
       if (!introducerUser) {
         return res.status(404).send({ message: 'User not found' });
       }
-      
+
       let filteredIntroducerUser = {
         _id: introducerUser._id,
         firstname: introducerUser.firstname,
@@ -153,12 +137,12 @@ export const IntroducerRoutes = (app) => {
         wallet: introducerUser.wallet,
         role: introducerUser.role,
         webSiteDetail: introducerUser.webSiteDetail,
-        transactionDetail: introducerUser.transactionDetail
+        transactionDetail: introducerUser.transactionDetail,
       };
-      
+
       let matchedIntroducersUserName = null;
       let matchedIntroducerPercentage = null;
-      
+
       // Check if req.user.UserName exists in introducerUser's introducersUserName, introducersUserName1, or introducersUserName2 fields
       if (introducerUser.introducersUserName === introUser) {
         matchedIntroducersUserName = introducerUser.introducersUserName;
@@ -170,7 +154,7 @@ export const IntroducerRoutes = (app) => {
         matchedIntroducersUserName = introducerUser.introducersUserName2;
         matchedIntroducerPercentage = introducerUser.introducerPercentage2;
       }
-      
+
       // If matched introducersUserName found, include it along with percentage in the response
       if (matchedIntroducersUserName) {
         filteredIntroducerUser.matchedIntroducersUserName = matchedIntroducersUserName;
@@ -185,21 +169,20 @@ export const IntroducerRoutes = (app) => {
     }
   });
 
-  app.get("/api/introducer/introducer-live-balance/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/introducer/introducer-live-balance/:id', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const id = await IntroducerUser.findById(req.params.id);
-      console.log("id", id)
+      console.log('id', id);
       const data = await introducerUser.introducerLiveBalance(id);
-      console.log("data", data)
-      res.send({ LiveBalance: data })
+      console.log('data', data);
+      res.send({ LiveBalance: data });
     } catch (e) {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
-  }
-  );
+  });
 
-  app.get("/api/introducer-account-summary/:id", AuthorizeRole(["introducer"]), async (req, res) => {
+  app.get('/api/introducer-account-summary/:id', AuthorizeRole(['introducer']), async (req, res) => {
     try {
       const id = req.params.id;
       const introSummary = await IntroducerTransaction.find({ introUserId: id }).sort({ createdAt: 1 }).exec();
@@ -219,29 +202,24 @@ export const IntroducerRoutes = (app) => {
       console.error(e);
       res.status(e.code).send({ message: e.message });
     }
-  }
-  );
+  });
 
-  app.post(
-    "/api/introducer/reset-password",
-    AuthorizeRole(["introducer"]),
-    async (req, res) => {
-      try {
-        const { userName, oldPassword, password } = req.body;
-        await introducerUser.introducerPasswordResetCode(userName, oldPassword, password);
-        res.status(200).send({ code: 200, message: "Password reset successful!" });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
+  app.post('/api/introducer/reset-password', AuthorizeRole(['introducer']), async (req, res) => {
+    try {
+      const { userName, oldPassword, password } = req.body;
+      await introducerUser.introducerPasswordResetCode(userName, oldPassword, password);
+      res.status(200).send({ code: 200, message: 'Password reset successful!' });
+    } catch (e) {
+      console.error(e);
+      res.status(e.code).send({ message: e.message });
     }
-  );
+  });
 
   // app.get("/api/introducer/data/:id",AuthorizeRole(["introducer"]),
   //   async (req, res) => {
   //     try {
 
-  //       const {  
+  //       const {
   //         sdate,
   //         edate
   //       } = req.body;
@@ -253,7 +231,7 @@ export const IntroducerRoutes = (app) => {
   //       } else if (edate) {
   //         filter.createdAt = { $lte: new Date(edate) };
   //       }
-  //       const id = req.params.id; 
+  //       const id = req.params.id;
   //       console.log('id', id)
   //       const introducerUser = await IntroducerUser.findOne({ _id: id }, "userName").exec();
   //       console.log('introducerUser', introducerUser)
@@ -273,24 +251,25 @@ export const IntroducerRoutes = (app) => {
   //     }
   //   })
 
-  app.get("/api/introducer-user/accountsummary/:introducerUsername", AuthorizeRole(["introducer"]), async (req, res) => {
-    try {
+  app.get(
+    '/api/introducer-user/accountsummary/:introducerUsername',
+    AuthorizeRole(['introducer']),
+    async (req, res) => {
+      try {
         const id = req.params.introducerUsername;
         const introSummary = await User.find({ introducersUserName: id }).sort({ createdAt: 1 }).exec();
-        
+
         const formattedIntroSummary = {
-            transaction: introSummary.flatMap(user => user.transactionDetail)
+          transaction: introSummary.flatMap((user) => user.transactionDetail),
         };
 
         res.status(200).send(formattedIntroSummary);
-    } catch (e) {
+      } catch (e) {
         console.error(e);
         res.status(e.code).send({ message: e.message });
-    }
-});
-
-
+      }
+    },
+  );
 };
 
-
-export default IntroducerRoutes;  
+export default IntroducerRoutes;

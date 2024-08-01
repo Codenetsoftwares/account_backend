@@ -1,25 +1,25 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.js";
-import { IntroducerUser } from "../models/introducer.model.js";
-import { Admin } from "../models/admin_user.js";
-import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js"
-import dotenv from "dotenv";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { User } from '../models/user.model.js';
+import { IntroducerUser } from '../models/introducer.model.js';
+import { Admin } from '../models/admin_user.js';
+import { IntroducerTransaction } from '../models/IntroducerTransaction.model.js';
+import dotenv from 'dotenv';
 dotenv.config();
 
 export const introducerUser = {
   createintroducerUser: async (data) => {
     if (!data.firstname) {
-      throw { code: 400, message: "Firstname is required" };
+      throw { code: 400, message: 'Firstname is required' };
     }
     if (!data.lastname) {
-      throw { code: 400, message: "Lastname is required" };
+      throw { code: 400, message: 'Lastname is required' };
     }
     if (!data.userName) {
-      throw { code: 400, message: "Username is required" };
+      throw { code: 400, message: 'Username is required' };
     }
     if (!data.password) {
-      throw { code: 400, message: "Password is required" };
+      throw { code: 400, message: 'Password is required' };
     }
 
     const existingUser = await IntroducerUser.findOne({ userName: data.userName }).exec();
@@ -46,10 +46,9 @@ export const introducerUser = {
       return true;
     } catch (err) {
       console.error(err);
-      throw { code: 500, message: "Failed to Save New Introducer User" };
+      throw { code: 500, message: 'Failed to Save New Introducer User' };
     }
   },
-
 
   intorducerPasswordResetCode: async (userName, password) => {
     const existingUser = await introducerUser.findIntroducerUser({ userName: userName });
@@ -59,7 +58,7 @@ export const introducerUser = {
     if (passwordIsDuplicate) {
       throw {
         code: 409,
-        message: "New Password cannot be the same as existing password",
+        message: 'New Password cannot be the same as existing password',
       };
     }
 
@@ -69,7 +68,7 @@ export const introducerUser = {
     existingUser.password = encryptedPassword;
     existingUser.save().catch((err) => {
       console.error(err);
-      throw { code: 500, message: "Failed to save new password" };
+      throw { code: 500, message: 'Failed to save new password' };
     });
 
     return true;
@@ -77,7 +76,7 @@ export const introducerUser = {
 
   findIntroducerUserById: async (id) => {
     if (!id) {
-      throw { code: 409, message: "Required parameter: id" };
+      throw { code: 409, message: 'Required parameter: id' };
     }
 
     return IntroducerUser.findById(id).exec();
@@ -85,29 +84,29 @@ export const introducerUser = {
 
   findIntroducerUser: async (filter) => {
     if (!filter) {
-      throw { code: 409, message: "Required parameter: filter" };
+      throw { code: 409, message: 'Required parameter: filter' };
     }
     return IntroducerUser.findOne(filter).exec();
   },
 
   generateIntroducerAccessToken: async (userName, password, persist) => {
     if (!userName) {
-      throw { code: 400, message: "Invalid value for: User Name" };
+      throw { code: 400, message: 'Invalid value for: User Name' };
     }
     if (!password) {
-      throw { code: 400, message: "Invalid value for: password" };
+      throw { code: 400, message: 'Invalid value for: password' };
     }
 
     const existingUser = await introducerUser.findIntroducerUser({
       userName: userName,
     });
     if (!existingUser) {
-      throw { code: 401, message: "Invalid User Name or password" };
+      throw { code: 401, message: 'Invalid User Name or password' };
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: "Invalid User Name or password" };
+      throw { code: 401, message: 'Invalid User Name or password' };
     }
 
     const accessTokenResponse = {
@@ -117,13 +116,9 @@ export const introducerUser = {
       role: existingUser.role,
     };
     console.log(accessTokenResponse);
-    const accessToken = jwt.sign(
-      accessTokenResponse,
-      process.env.JWT_SECRET_KEY,
-      {
-        expiresIn: persist ? "1y" : "8h",
-      }
-    );
+    const accessToken = jwt.sign(accessTokenResponse, process.env.JWT_SECRET_KEY, {
+      expiresIn: persist ? '1y' : '8h',
+    });
 
     return {
       userName: existingUser.userName,
@@ -137,14 +132,14 @@ export const introducerUser = {
       const userName = user.userName;
       const userId = user.userId;
       const introducerUserId = user.introducersUserId;
-      console.log("introducerUserId", introducerUserId);
+      console.log('introducerUserId', introducerUserId);
 
       const introducerId = await IntroducerUser.findOne({
         id: introducerUserId,
       }).exec();
-      console.log("introducerUser", introducerId);
+      console.log('introducerUser', introducerId);
       const introducerid = introducerId.introducerId;
-      console.log("introducerid", introducerid);
+      console.log('introducerid', introducerid);
 
       // This is Introducer's User's Percentage
       const introducerpercent = user.introducerPercentage;
@@ -163,10 +158,10 @@ export const introducerUser = {
       let totalWith = 0;
 
       transactionsWithin7Days.map((res) => {
-        if (res.transactionType === "Deposit") {
+        if (res.transactionType === 'Deposit') {
           totalDep += Number(res.amount);
         }
-        if (res.transactionType === "Withdraw") {
+        if (res.transactionType === 'Withdraw') {
           totalWith += Number(res.amount);
         }
       });
@@ -176,7 +171,7 @@ export const introducerUser = {
       }
       const date = new Date();
       let amount = 0;
-      const transactionType = "Credit";
+      const transactionType = 'Credit';
       if (totalDep > totalWith) {
         let diff = totalDep - totalWith;
         amount = (introducerpercent / 100) * diff;
@@ -235,8 +230,8 @@ export const introducerUser = {
         $or: [
           { introducersUserName: IntroducerId },
           { introducersUserName1: IntroducerId },
-          { introducersUserName2: IntroducerId }
-        ]
+          { introducersUserName2: IntroducerId },
+        ],
       }).exec();
 
       if (userIntroId.length === 0) {
@@ -262,16 +257,16 @@ export const introducerUser = {
 
         if (!transDetails || transDetails.length === 0) {
           continue;
-      }
+        }
 
         let totalDep = 0;
         let totalWith = 0;
 
         transDetails?.forEach((res) => {
-          if (res.transactionType === "Deposit") {
+          if (res.transactionType === 'Deposit') {
             totalDep += Number(res.amount);
           }
-          if (res.transactionType === "Withdraw") {
+          if (res.transactionType === 'Withdraw') {
             totalWith += Number(res.amount);
           }
         });
@@ -295,33 +290,26 @@ export const introducerUser = {
     }
   },
 
-
   introducerPasswordResetCode: async (userName, oldPassword, password) => {
     const existingUser = await introducerUser.findIntroducerUser({
       userName: userName,
     });
 
-    const oldPasswordIsCorrect = await bcrypt.compare(
-      oldPassword,
-      existingUser.password
-    );
+    const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
 
     if (!oldPasswordIsCorrect) {
       throw {
         code: 401,
-        message: "Invalid old password",
+        message: 'Invalid old password',
       };
     }
 
-    const passwordIsDuplicate = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
+    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
     if (passwordIsDuplicate) {
       throw {
         code: 409,
-        message: "New Password cannot be the same as existing password",
+        message: 'New Password cannot be the same as existing password',
       };
     }
 
@@ -331,7 +319,7 @@ export const introducerUser = {
     existingUser.password = encryptedPassword;
     existingUser.save().catch((err) => {
       console.error(err);
-      throw { code: 500, message: "Failed to save new password" };
+      throw { code: 500, message: 'Failed to save new password' };
     });
 
     return true;
