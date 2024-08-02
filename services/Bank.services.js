@@ -13,6 +13,7 @@ import { BankTransaction } from "../models/BankTransaction.model.js";
 import { Transaction } from "../models/transaction.js";
 import { EditRequest } from "../models/EditRequest.model.js";
 import { string } from "../constructor/string.js";
+import { EditBankRequest } from "../models/EditBankRequest.model.js";
 
 export const BankServices = {
   addBank: async (req, res) => {
@@ -740,4 +741,45 @@ export const BankServices = {
       );
     }
   },
+
+  viewBankEditRequest: async (req, res) => {
+    try {
+      const { page = 1, pageSize = 10 } = req.query; 
+  
+      const skip = (page - 1) * pageSize;
+  
+      const resultArray = await EditBankRequest.find()
+        .skip(skip)
+        .limit(parseInt(pageSize))
+        .exec();
+  
+      const totalItems = await EditBankRequest.countDocuments().exec();
+  
+      const pagination = {
+        page: parseInt(page),
+        limit: parseInt(pageSize),
+        totalPages: Math.ceil(totalItems / pageSize),
+        totalItems,
+     
+      };
+  
+      return apiResponsePagination(
+        resultArray,  
+        true,
+        statusCode.success,
+        "Success",
+        pagination,
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },  
+
 };

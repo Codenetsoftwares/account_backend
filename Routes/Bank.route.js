@@ -11,6 +11,7 @@ import {
   addBankBalanceValidate,
   validateAddBank,
   validateApproveBank,
+  validateBankId,
   validateBankUpdate,
   validateId,
   validateImproveBank,
@@ -143,11 +144,20 @@ const BankRoutes = (app) => {
     BankServices.bankAccountSummary
   );
 
-  
   app.post(
     "/api/admin/manual-user-bank-account-summary/:bankId",
+    validateBankId,
+    customErrorHandler,
     Authorize([string.superAdmin, string.bankView, string.transactionView]),
     BankServices.mannualBankAccountSummary
+  );
+
+  app.get(
+    "/api/superadmin/view-bank-edit-requests",
+    validatePagination,
+    customErrorHandler,
+    Authorize([string.superAdmin]),
+    BankServices.viewBankEditRequest
   );
 
   // API To Delete Bank Name
@@ -218,21 +228,6 @@ const BankRoutes = (app) => {
   //     }
   //   }
   // );
-
-
-  app.get(
-    "/api/superadmin/view-bank-edit-requests",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
-      try {
-        const resultArray = await EditBankRequest.find().exec();
-        res.status(200).send(resultArray);
-      } catch (error) {
-        console.log(error);
-        res.status(500).send("Internal Server error");
-      }
-    }
-  );
 
   app.post(
     "/api/admin/bank/isactive/:bankId",

@@ -74,3 +74,7 @@ export const withdrawalBankBalanceValidate = [
   body('transactionType').equals('Manual-Bank-Withdraw').withMessage('Invalid transaction type'),
   body('remarks').notEmpty().withMessage('Remark is required'),
 ];
+
+export const validateBankId = [
+  param('bankId').notEmpty().withMessage('Bank Id  is required').isMongoId().withMessage('Bank Id must be a valid ID'),
+]
