@@ -8,12 +8,14 @@ import { Website } from "../models/website.model.js";
 import { string } from "../constructor/string.js";
 import { BankServices } from "../services/Bank.services.js";
 import {
+  addBankBalanceValidate,
   validateAddBank,
   validateApproveBank,
   validateBankUpdate,
   validateId,
   validateImproveBank,
   validatePagination,
+  withdrawalBankBalanceValidate,
 } from "../utils/commonSchema.js";
 import customErrorHandler from "../utils/customErrorHandler.js";
 
@@ -80,7 +82,7 @@ const BankRoutes = (app) => {
     ]),
     BankServices.getBankNames
   );
-  
+
   app.get(
     "/api/get-activeBank-name",
     validatePagination,
@@ -94,6 +96,58 @@ const BankRoutes = (app) => {
       string.createWithdrawTransaction,
     ]),
     BankServices.activeBankName
+  );
+
+  app.get(
+    "/api/get-single-bank-name/:id",
+    validateId,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.bankView, string.transactionView]),
+    BankServices.getSingleBankDetails
+  );
+
+  app.post(
+    "/api/admin/add-bank-balance/:id",
+    addBankBalanceValidate,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.bankView, string.transactionView]),
+    BankServices.addBankBalance
+  );
+
+  app.post(
+    "/api/admin/withdraw-bank-balance/:id",
+    withdrawalBankBalanceValidate,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.bankView, string.transactionView]),
+    BankServices.withdrawalBankBalance
+  );
+
+  app.get(
+    "/api/admin/bank-name",
+    Authorize([
+      string.superAdmin,
+      string.bankView,
+      string.transactionView,
+      string.dashboardView,
+      string.websiteView,
+      string.profileView,
+      string.transactionEditRequest,
+      string.transactionDeleteRequest,
+    ]),
+    BankServices.bankName
+  );
+
+  app.get(
+    "/api/admin/user-bank-account-summary/:accountNumber", // receives accountNumber in the parameters but sends bankName, so the parameter isn't functioning as expected
+    Authorize([string.superAdmin]),
+    BankServices.bankAccountSummary
+  );
+
+  
+  app.post(
+    "/api/admin/manual-user-bank-account-summary/:bankId",
+    Authorize([string.superAdmin, string.bankView, string.transactionView]),
+    BankServices.mannualBankAccountSummary
   );
 
   // API To Delete Bank Name
@@ -165,260 +219,6 @@ const BankRoutes = (app) => {
   //   }
   // );
 
-  app.get(
-    "/api/get-single-bank-name/:id",
-    Authorize(["superAdmin", "Transaction-View", "Bank-View"]),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const dbBankData = await Bank.findOne({ _id: id }).exec();
-        if (!dbBankData) {
-          return res.status(404).send({ message: "Bank not found" });
-        }
-        const bankId = dbBankData._id;
-        const bankBalance = await BankServices.getBankBalance(bankId);
-        const response = {
-          _id: dbBankData._id,
-          bankName: dbBankData.bankName,
-          subAdminId: dbBankData.subAdminId,
-          subAdminName: dbBankData.subAdminName,
-          balance: bankBalance,
-        };
-
-        res.status(200).send(response);
-      } catch (e) {
-        console.error(e);
-        res.status(500).send({ message: "Internal server error" });
-      }
-    }
-  );
-
-  app.post(
-    "/api/admin/add-bank-balance/:id",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const userName = req.user;
-        const { amount, transactionType, remarks } = req.body;
-        if (transactionType !== "Manual-Bank-Deposit") {
-          return res.status(500).send({ message: "Invalid transaction type" });
-        }
-        if (!amount || typeof amount !== "number") {
-          return res.status(400).send({ message: "Invalid amount" });
-        }
-        if (!remarks) {
-          throw { code: 400, message: "Remark is required" };
-        }
-        const bank = await Bank.findOne({ _id: id }).exec();
-        if (!bank) {
-          return res.status(404).send({ message: "Bank account not found" });
-        }
-        const bankTransaction = new BankTransaction({
-          bankId: bank._id,
-          accountHolderName: bank.accountHolderName,
-          bankName: bank.bankName,
-          accountNumber: bank.accountNumber,
-          ifscCode: bank.ifscCode,
-          transactionType: transactionType,
-          upiId: bank.upiId,
-          upiAppName: bank.upiAppName,
-          upiNumber: bank.upiNumber,
-          depositAmount: amount,
-          subAdminId: userName.userName,
-          subAdminName: userName.firstname,
-          remarks: remarks,
-          createdAt: new Date(),
-        });
-        await bankTransaction.save();
-        res
-          .status(200)
-          .send({ message: "Wallet Balance Added to Your Bank Account" });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
-
-  app.post(
-    "/api/admin/withdraw-bank-balance/:id",
-    Authorize(["superAdmin", "Transaction-View", "Bank-View"]),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const userName = req.user;
-        const { amount, transactionType, remarks } = req.body;
-        if (transactionType !== "Manual-Bank-Withdraw") {
-          return res.status(500).send({ message: "Invalid transaction type" });
-        }
-        if (!amount || typeof amount !== "number") {
-          return res.status(400).send({ message: "Invalid amount" });
-        }
-        if (!remarks) {
-          throw { code: 400, message: "Remark is required" };
-        }
-        const bank = await Bank.findOne({ _id: id }).exec();
-        if (!bank) {
-          return res.status(404).send({ message: "Bank account not found" });
-        }
-        if ((await BankServices.getBankBalance(id)) < Number(amount)) {
-          return res.status(400).send({ message: "Insufficient Balance " });
-        }
-        const bankTransaction = new BankTransaction({
-          bankId: bank._id,
-          accountHolderName: bank.accountHolderName,
-          bankName: bank.bankName,
-          accountNumber: bank.accountNumber,
-          ifscCode: bank.ifscCode,
-          transactionType: transactionType,
-          upiId: bank.upiId,
-          upiAppName: bank.upiAppName,
-          upiNumber: bank.upiNumber,
-          withdrawAmount: amount,
-          subAdminId: userName.userName,
-          subAdminName: userName.firstname,
-          remarks: remarks,
-          createdAt: new Date(),
-        });
-        await bankTransaction.save();
-        res
-          .status(200)
-          .send({ message: "Wallet Balance Deducted from your Bank Account" });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
-
-  app.get(
-    "/api/admin/bank-name",
-    Authorize([
-      "superAdmin",
-      "Dashboard-View",
-      "Transaction-View",
-      "Bank-View",
-      "Website-View",
-      "Profile-View",
-      "Transaction-Edit-Request",
-      "Transaction-Delete-Request",
-    ]),
-    async (req, res) => {
-      try {
-        const bankName = await Bank.find({}, "bankName").exec();
-        res.status(200).send(bankName);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
-
-  app.get(
-    "/api/admin/bank-account-summary/:accountNumber",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
-      try {
-        const accountNumber = req.params.bankName;
-        const bankSummary = await BankTransaction.find({ accountNumber })
-          .sort({ createdAt: 1 })
-          .exec();
-        console.log(bankSummary);
-
-        res.status(200).send(bankSummary);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
-
-  app.get(
-    "/api/admin/user-bank-account-summary/:accountNumber",
-    Authorize(["superAdmin"]),
-    async (req, res) => {
-      try {
-        const accountNumber = req.params.bankName;
-        const transaction = await Transaction.findOne({ accountNumber }).exec();
-        console.log("transaction", transaction);
-        if (!transaction) {
-          return res.status(404).send({ message: "Account not found" });
-        }
-        const userId = transaction.userName;
-        if (!userId) {
-          return res.status(404).send({ message: "User Id not found" });
-        }
-        const accountSummary = await Transaction.find({
-          accountNumber,
-          userId,
-        }).exec();
-        res.status(200).send(accountSummary);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    }
-  );
-
-  app.post(
-    "/api/admin/manual-user-bank-account-summary/:bankId",
-    Authorize(["superAdmin", "Bank-View", "Transaction-View"]),
-    async (req, res) => {
-      try {
-        let balances = 0;
-        const bankId = req.params.bankId;
-        const bankSummary = await BankTransaction.find({ bankId })
-          .sort({ createdAt: -1 })
-          .exec();
-        console.log("id", bankSummary);
-        const accountSummary = await Transaction.find({ bankId })
-          .sort({ createdAt: -1 })
-          .exec();
-
-        const allTransactions = [...accountSummary, ...bankSummary];
-        allTransactions.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return dateB - dateA;
-        });
-        let allData = JSON.parse(JSON.stringify(allTransactions));
-        allData
-          .slice(0)
-          .reverse()
-          .map((data) => {
-            if (data.transactionType === "Manual-Bank-Deposit") {
-              balances += data.depositAmount;
-              data.balance = balances;
-              console.log("balances", balances);
-            }
-            if (data.transactionType === "Manual-Bank-Withdraw") {
-              balances -= data.withdrawAmount;
-              data.balance = balances;
-              console.log("balances2", balances);
-            }
-            if (data.transactionType === "Deposit") {
-              let totalamount = 0;
-              totalamount += data.amount;
-              balances += totalamount;
-              data.balance = balances;
-              console.log("balances3", balances);
-            }
-            if (data.transactionType === "Withdraw") {
-              const netAmount = balances - data.bankCharges - data.amount;
-              console.log("netAmount", netAmount);
-              balances = netAmount;
-              data.balance = balances;
-              console.log("balances4", balances);
-            }
-          });
-        return res.status(200).send(allData);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code || 500).send({ message: e.message });
-      }
-    }
-  );
 
   app.get(
     "/api/superadmin/view-bank-edit-requests",

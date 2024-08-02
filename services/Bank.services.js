@@ -1,20 +1,33 @@
-import { parse } from 'dotenv';
-import { Bank } from '../models/bank.model.js';
-import { BankRequest } from '../models/BankRequest.model.js';
-import CustomError from '../utils/extendError.js';
-import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from '../utils/response.js';
-import { statusCode } from '../utils/statusCodes.js';
-import AccountServices from './Accounts.services.js';
-import { BankTransaction } from '../models/BankTransaction.model.js';
-import { Transaction } from '../models/transaction.js';
-import { EditRequest } from '../models/EditRequest.model.js';
-import { string } from '../constructor/string.js';
+import { parse } from "dotenv";
+import { Bank } from "../models/bank.model.js";
+import { BankRequest } from "../models/BankRequest.model.js";
+import CustomError from "../utils/extendError.js";
+import {
+  apiResponseErr,
+  apiResponsePagination,
+  apiResponseSuccess,
+} from "../utils/response.js";
+import { statusCode } from "../utils/statusCodes.js";
+import AccountServices from "./Accounts.services.js";
+import { BankTransaction } from "../models/BankTransaction.model.js";
+import { Transaction } from "../models/transaction.js";
+import { EditRequest } from "../models/EditRequest.model.js";
+import { string } from "../constructor/string.js";
 
 export const BankServices = {
   addBank: async (req, res) => {
     try {
       const userName = req.user;
-      const { accountHolderName, bankName, accountNumber, ifscCode, upiId, upiAppName, upiNumber, isActive } = req.body;
+      const {
+        accountHolderName,
+        bankName,
+        accountNumber,
+        ifscCode,
+        upiId,
+        upiAppName,
+        upiNumber,
+        isActive,
+      } = req.body;
 
       const newBankName = new BankRequest({
         accountHolderName: accountHolderName,
@@ -33,14 +46,33 @@ export const BankServices = {
       const id = await Bank.find({ bankName });
       id.map((data) => {
         console.log(data.bankName);
-        if (newBankName.bankName.toLocaleLowerCase() === data.bankName.toLocaleLowerCase()) {
-          throw new CustomError('Bank name already exists!', null, statusCode.exist);
+        if (
+          newBankName.bankName.toLocaleLowerCase() ===
+          data.bankName.toLocaleLowerCase()
+        ) {
+          throw new CustomError(
+            "Bank name already exists!",
+            null,
+            statusCode.exist
+          );
         }
       });
       await newBankName.save();
-      return apiResponseSuccess(newBankName, true, statusCode.create, 'Bank name sent for approval!', res);
+      return apiResponseSuccess(
+        newBankName,
+        true,
+        statusCode.create,
+        "Bank name sent for approval!",
+        res
+      );
     } catch (error) {
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
@@ -51,7 +83,13 @@ export const BankServices = {
 
       const approvedBankRequest = await BankRequest.findById(bankId);
       if (!approvedBankRequest) {
-        return apiResponseErr(null, true, statusCode.badRequest, 'Bank not found in the approval requests!', res);
+        return apiResponseErr(
+          null,
+          true,
+          statusCode.badRequest,
+          "Bank not found in the approval requests!",
+          res
+        );
       }
 
       let approvedBank;
@@ -72,30 +110,48 @@ export const BankServices = {
         await approvedBank.save();
         await BankRequest.deleteOne({ _id: approvedBankRequest._id });
       } else {
-        return apiResponseErr(null, true, statusCode.badRequest, 'Bank approval was not granted.', res);
+        return apiResponseErr(
+          null,
+          true,
+          statusCode.badRequest,
+          "Bank approval was not granted.",
+          res
+        );
       }
       return apiResponseSuccess(
         approvedBank,
         true,
         statusCode.create,
-        'Bank approved successfully & Subadmin Assigned',
-        res,
+        "Bank approved successfully & Subadmin Assigned",
+        res
       );
     } catch (error) {
-      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
   improveBank: async (req, res) => {
     try {
       const { subAdmins } = req.body;
-      console.log('first', subAdmins);
+      console.log("first", subAdmins);
       const bankId = req.params.id;
 
       const approvedBankRequest = await Bank.findById(bankId);
-      console.log('first', approvedBankRequest);
+      console.log("first", approvedBankRequest);
       if (!approvedBankRequest) {
-        return apiResponseErr(null, true, statusCode.badRequest, 'Bank not found in the approval requests!', res);
+        return apiResponseErr(
+          null,
+          true,
+          statusCode.badRequest,
+          "Bank not found in the approval requests!",
+          res
+        );
       }
 
       const approvedBank = new Bank({
@@ -115,11 +171,17 @@ export const BankServices = {
         approvedBank,
         true,
         statusCode.create,
-        'Bank approved successfully & Subadmin Assigned',
-        res,
+        "Bank approved successfully & Subadmin Assigned",
+        res
       );
     } catch (error) {
-      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
@@ -131,7 +193,10 @@ export const BankServices = {
 
       const totalItems = await BankRequest.countDocuments().exec();
 
-      const resultArray = await BankRequest.find().skip(skip).limit(limit).exec();
+      const resultArray = await BankRequest.find()
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
       const totalPages = Math.ceil(totalItems / limit);
 
@@ -139,17 +204,23 @@ export const BankServices = {
         resultArray,
         true,
         statusCode.success,
-        'Bank requests retrieved successfully',
+        "Bank requests retrieved successfully",
         {
           page: parseInt(page),
           limit,
           totalPages,
           totalItems,
         },
-        res,
+        res
       );
     } catch (error) {
-      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
@@ -162,18 +233,30 @@ export const BankServices = {
           null,
           true,
           statusCode.success,
-          'Data deleted successfully',
-          res,
+          "Data deleted successfully",
+          res
         );
       } else {
-      return apiResponseErr(null, false, statusCode.badRequest, 'Bank not found', res);
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Bank not found",
+          res
+        );
       }
     } catch (error) {
-      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
-  editBank : async (req, res) => {
+  editBank: async (req, res) => {
     try {
       const id = await Bank.findById(req.params.id);
       const updateResult = await AccountServices.updateBank(id, req.body);
@@ -183,12 +266,18 @@ export const BankServices = {
           updateResult,
           true,
           statusCode.success,
-           "Bank Detail's edit request sent to Super Admin for Approval",
-          res,
+          "Bank Detail's edit request sent to Super Admin for Approval",
+          res
         );
       }
     } catch (error) {
-      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
@@ -320,7 +409,7 @@ export const BankServices = {
     }
   },
 
-  activeBankName :  async (req, res) => {
+  activeBankName: async (req, res) => {
     try {
       console.log("req", req.user);
       const { page = 1, pageSize = 10 } = req.query;
@@ -362,4 +451,293 @@ export const BankServices = {
     }
   },
 
+  getSingleBankDetails: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const dbBankData = await Bank.findOne({ _id: id }).exec();
+      if (!dbBankData) {
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Bank not found",
+          res
+        );
+      }
+      const bankId = dbBankData._id;
+      const bankBalance = await BankServices.getBankBalance(bankId);
+      const subAdminIds = dbBankData.subAdmins.map(
+        (subAdmin) => subAdmin.subAdminId
+      );
+      const response = {
+        _id: dbBankData._id,
+        bankName: dbBankData.bankName,
+        subAdminId: subAdminIds,
+        subAdminName: dbBankData.subAdminName,
+        balance: bankBalance,
+      };
+      return apiResponseSuccess(
+        response,
+        true,
+        statusCode.success,
+        "Bank Detail's retrive successfully",
+        res
+      );
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
+
+  addBankBalance: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const userName = req.user;
+      const { amount, transactionType, remarks } = req.body;
+
+      if (!amount || typeof amount !== "number") {
+        return res.status(400).send({ message: "Invalid amount" });
+      }
+
+      const bank = await Bank.findOne({ _id: id }).exec();
+      if (!bank) {
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Bank account not found",
+          res
+        );
+      }
+      const bankTransaction = new BankTransaction({
+        bankId: bank._id,
+        accountHolderName: bank.accountHolderName,
+        bankName: bank.bankName,
+        accountNumber: bank.accountNumber,
+        ifscCode: bank.ifscCode,
+        transactionType: transactionType,
+        upiId: bank.upiId,
+        upiAppName: bank.upiAppName,
+        upiNumber: bank.upiNumber,
+        depositAmount: amount,
+        subAdminId: userName.userName,
+        subAdminName: userName.firstname,
+        remarks: remarks,
+        createdAt: new Date(),
+      });
+      await bankTransaction.save();
+      return apiResponseSuccess(
+        bankTransaction,
+        true,
+        statusCode.success,
+        "Wallet Balance Added to Your Bank Account",
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
+
+  withdrawalBankBalance: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const userName = req.user;
+      const { amount, transactionType, remarks } = req.body;
+      if (!amount || typeof amount !== "number") {
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Invalid amount",
+          res
+        );
+      }
+
+      const bank = await Bank.findOne({ _id: id }).exec();
+      if (!bank) {
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Bank account not found",
+          res
+        );
+      }
+      if ((await BankServices.getBankBalance(id)) < Number(amount)) {
+        return apiResponseErr(
+          null,
+          false,
+          statusCode.badRequest,
+          "Insufficient Balance",
+          res
+        );
+      }
+
+      const bankTransaction = new BankTransaction({
+        bankId: bank._id,
+        accountHolderName: bank.accountHolderName,
+        bankName: bank.bankName,
+        accountNumber: bank.accountNumber,
+        ifscCode: bank.ifscCode,
+        transactionType: transactionType,
+        upiId: bank.upiId,
+        upiAppName: bank.upiAppName,
+        upiNumber: bank.upiNumber,
+        withdrawAmount: amount,
+        subAdminId: userName.userName,
+        subAdminName: userName.firstname,
+        remarks: remarks,
+        createdAt: new Date(),
+      });
+      await bankTransaction.save();
+      return apiResponseSuccess(
+        bankTransaction,
+        true,
+        statusCode.success,
+        "Wallet Balance Deducted from your Bank Account",
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
+
+  bankName: async (req, res) => {
+    try {
+      const bankName = await Bank.find({}, "bankName").exec();
+      if (bankName.length === 0) {
+        return apiResponseSuccess(
+          [],
+          true,
+          statusCode.success,
+          "No data found",
+          res
+        );
+      }
+      return apiResponseSuccess(
+        bankName,
+        true,
+        statusCode.success,
+        "Success",
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
+
+  bankAccountSummary: async (req, res) => {
+    try {
+      const accountNumber = req.params.bankName;
+      const bankSummary = await BankTransaction.find({ accountNumber })
+        .sort({ createdAt: 1 })
+        .exec();
+      console.log(bankSummary);
+      return apiResponseSuccess(
+        bankSummary,
+        true,
+        statusCode.success,
+        "Success",
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
+
+  mannualBankAccountSummary: async (req, res) => {
+    try {
+      let balances = 0;
+      const bankId = req.params.bankId;
+      const bankSummary = await BankTransaction.find({ bankId })
+        .sort({ createdAt: -1 })
+        .exec();
+      console.log("id", bankSummary);
+      const accountSummary = await Transaction.find({ bankId })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      const allTransactions = [...accountSummary, ...bankSummary];
+      allTransactions.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB - dateA;
+      });
+      let allData = JSON.parse(JSON.stringify(allTransactions));
+      allData
+        .slice(0)
+        .reverse()
+        .map((data) => {
+          if (data.transactionType === "Manual-Bank-Deposit") {
+            balances += data.depositAmount;
+            data.balance = balances;
+            console.log("balances", balances);
+          }
+          if (data.transactionType === "Manual-Bank-Withdraw") {
+            balances -= data.withdrawAmount;
+            data.balance = balances;
+            console.log("balances2", balances);
+          }
+          if (data.transactionType === "Deposit") {
+            let totalamount = 0;
+            totalamount += data.amount;
+            balances += totalamount;
+            data.balance = balances;
+            console.log("balances3", balances);
+          }
+          if (data.transactionType === "Withdraw") {
+            const netAmount = balances - data.bankCharges - data.amount;
+            console.log("netAmount", netAmount);
+            balances = netAmount;
+            data.balance = balances;
+            console.log("balances4", balances);
+          }
+        });
+      return apiResponseSuccess(
+        allData,
+        true,
+        statusCode.success,
+        "Success",
+        res
+      );
+    } catch (error) {
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
+    }
+  },
 };

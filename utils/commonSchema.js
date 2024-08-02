@@ -60,3 +60,17 @@ export const validateBankUpdate = [
   body('upiAppName').optional().isString().withMessage('UPI app name must be a string'),
   body('upiNumber').optional().isString().withMessage('UPI number must be a string'),
 ];
+
+export const addBankBalanceValidate = [  
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'), 
+  body('amount').isNumeric().withMessage('Amount must be a number'),
+  body('transactionType').equals('Manual-Bank-Deposit').withMessage('Invalid transaction type'),
+  body('remarks').notEmpty().withMessage('Remark is required'),
+];
+
+export const withdrawalBankBalanceValidate = [  
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'), 
+  body('amount').isNumeric().withMessage('Amount must be a number'),
+  body('transactionType').equals('Manual-Bank-Withdraw').withMessage('Invalid transaction type'),
+  body('remarks').notEmpty().withMessage('Remark is required'),
+];

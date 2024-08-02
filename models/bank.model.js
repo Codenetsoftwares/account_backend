@@ -20,7 +20,7 @@ export const Bank = mongoose.model(
         isDelete: { type: Boolean, default: false },
       },
     ],
-    subAdminName: { type: String },
+    subAdminName: { type: String }, 
     createdAt: { type: Date },
     isActive: { type: Boolean, default: false, required: true },
     isDeposit: { type: Boolean, default: true },
