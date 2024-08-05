@@ -6,57 +6,73 @@ import { User } from '../models/user.model.js';
 import { IntroducerUser } from '../models/introducer.model.js';
 import dotenv from 'dotenv';
 import { Admin } from '../models/admin_user.js';
+import { apiResponseErr, apiResponseSuccess } from '../utils/response.js';
+import { statusCode } from '../utils/statusCodes.js';
+import CustomError from '../utils/extendError.js';
 dotenv.config();
 
 export const userservice = {
-  createUser: async (data) => {
-    if (!data.firstname) {
-      throw { code: 400, message: 'Firstname is required' };
-    }
-    if (!data.lastname) {
-      throw { code: 400, message: 'Lastname is required' };
-    }
-    if (!data.userName) {
-      throw { code: 400, message: 'User Name is required' };
-    }
-    if (!data.password) {
-      throw { code: 400, message: 'Password is required' };
-    }
-    const existingUser = await User.findOne({ userName: data.userName });
-    const existingAdminUser = await Admin.findOne({ userName: data.userName });
-    const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
-    if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingAdminUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingIntroUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-    // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
-    const newUser = new User({
-      firstname: data.firstname,
-      lastname: data.lastname,
-      userName: data.userName,
-      contactNumber: data.contactNumber,
-      introducerPercentage: data.introducerPercentage,
-      introducersUserName: data.introducersUserName,
-      introducerPercentage1: data.introducerPercentage1,
-      introducersUserName1: data.introducersUserName1,
-      introducerPercentage2: data.introducerPercentage2,
-      introducersUserName2: data.introducersUserName2,
-      password: encryptedPassword,
-      wallet: 0,
-    });
+  createUser: async (req, res) => {
+    try {
+      const {
+        firstname,
+        lastname,
+        userName,
+        password,
+        contactNumber,
+        introducersUserName,
+        introducersUserName1,
+        introducersUserName2,
+        introducerPercentage,
+        introducerPercentage1,
+        introducerPercentage2,
+      } = req.body;
+      // if (!data.firstname) {
+      //   throw { code: 400, message: "Firstname is required" };
+      // }
+      // if (!data.lastname) {
+      //   throw { code: 400, message: "Lastname is required" };
+      // }
+      // if (!data.userName) {
+      //   throw { code: 400, message: "User Name is required" };
+      // }
+      // if (!data.password) {
+      //   throw { code: 400, message: "Password is required" };
+      // }
+      const [existingUser, existingAdminUser, existingIntroUser] = await Promise.all([
+        User.findOne({ userName: userName }).exec(),
+        Admin.findOne({ userName: userName }).exec(),
+        IntroducerUser.findOne({ userName: userName }).exec(),
+      ]);
 
-    await newUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: 'Failed to save user' };
-    });
-    return true;
+      if (existingUser || existingAdminUser || existingIntroUser) {
+        //throw { code: 409, message: `User already exists: ${userName}` };
+        throw new CustomError(`User already exists: ${userName}`, null, 409);
+      }
+
+      const passwordSalt = await bcrypt.genSalt();
+      const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+      // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
+      const newUser = new User({
+        firstname: firstname,
+        lastname: lastname,
+        userName: userName,
+        contactNumber: contactNumber,
+        introducerPercentage: introducerPercentage,
+        introducersUserName: introducersUserName,
+        introducerPercentage1: introducerPercentage1,
+        introducersUserName1: introducersUserName1,
+        introducerPercentage2: introducerPercentage2,
+        introducersUserName2: introducersUserName2,
+        password: encryptedPassword,
+        wallet: 0,
+      });
+
+      const createdUser = await newUser.save();
+      return apiResponseSuccess(createdUser, true, statusCode.create, 'User registered successfully!', res);
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
   },
 
   createAdminUser: async (data) => {
@@ -217,28 +233,35 @@ export const userservice = {
     return existingUser;
   },
 
-  UserPasswordResetCode: async (userName, password) => {
-    const existingUser = await userservice.findUser({ userName: userName });
+  UserPasswordResetCode: async (req, res) => {
+    try {
+      const { userName, password } = req.body;
+      const existingUser = await userservice.findUser({ userName: userName });
 
-    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+      if (!existingUser) {
+        throw new CustomError('User not found', null, 404);
+      }
 
-    if (passwordIsDuplicate) {
-      throw {
-        code: 409,
-        message: 'New Password cannot be the same as existing password',
-      };
+      const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+
+      if (passwordIsDuplicate) {
+        // throw {
+        //   code: 409,
+        //   message: 'New Password cannot be the same as existing password',
+        // };
+        throw new CustomError('New Password cannot be the same as existing password', null, 409);
+      }
+
+      const passwordSalt = await bcrypt.genSalt();
+      const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+
+      existingUser.password = encryptedPassword;
+      const user = await existingUser.save();
+      return apiResponseSuccess(user, true, statusCode.success, 'Password Reset Successfully!', res);
+    } catch (error) {
+      console.log(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
-
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
-
-    existingUser.password = encryptedPassword;
-    existingUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: 'Failed to save new password' };
-    });
-
-    return true;
   },
 
   updateUserProfile: async (id, data) => {

@@ -1,5 +1,50 @@
 import { body, param, query } from 'express-validator';
 
+export const validateLogin = [
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isString()
+    .withMessage('Password must be a string')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+];
+
+export const validateCreateAdmin = [
+  body('firstname').notEmpty().withMessage('First name is required'),
+  body('lastname').notEmpty().withMessage('Last name is required'),
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('password').notEmpty().withMessage('Password is required').isString().withMessage('Password must be a string'),
+  body('roles').isArray().withMessage('Role is Required'),
+];
+
+export const validateInteroducer = [
+  body('firstname').notEmpty().withMessage('First name is required'),
+  body('lastname').notEmpty().withMessage('Last name is required'),
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('password').notEmpty().withMessage('Password is required').isString().withMessage('Password must be a string'),
+  //body("role").isArray().withMessage("Role is Required"),
+];
+
+export const userValidator = [
+  body('firstname')
+    .notEmpty()
+    .withMessage('Firstname is required')
+    .isString()
+    .withMessage('Firstname must be a string'),
+
+  body('lastname').notEmpty().withMessage('Lastname is required').isString().withMessage('Lastname must be a string'),
+
+  body('userName').notEmpty().withMessage('User Name is required').isString().withMessage('User Name must be a string'),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+];
+
 export const validateAddBank = [
   body('bankName').trim().notEmpty().withMessage('Please provide a bank name to add'),
   body('accountHolderName').optional().trim().isString().withMessage('Account Holder Name must be a string'),
@@ -48,7 +93,7 @@ export const validatePagination = [
 
 export const validateId = [
   param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
-]
+];
 
 export const validateBankUpdate = [
   param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
@@ -61,15 +106,15 @@ export const validateBankUpdate = [
   body('upiNumber').optional().isString().withMessage('UPI number must be a string'),
 ];
 
-export const addBankBalanceValidate = [  
-  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'), 
+export const addBankBalanceValidate = [
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
   body('amount').isNumeric().withMessage('Amount must be a number'),
   body('transactionType').equals('Manual-Bank-Deposit').withMessage('Invalid transaction type'),
   body('remarks').notEmpty().withMessage('Remark is required'),
 ];
 
-export const withdrawalBankBalanceValidate = [  
-  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'), 
+export const withdrawalBankBalanceValidate = [
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
   body('amount').isNumeric().withMessage('Amount must be a number'),
   body('transactionType').equals('Manual-Bank-Withdraw').withMessage('Invalid transaction type'),
   body('remarks').notEmpty().withMessage('Remark is required'),
@@ -77,4 +122,4 @@ export const withdrawalBankBalanceValidate = [
 
 export const validateBankId = [
   param('bankId').notEmpty().withMessage('Bank Id  is required').isMongoId().withMessage('Bank Id must be a valid ID'),
-]
+];
