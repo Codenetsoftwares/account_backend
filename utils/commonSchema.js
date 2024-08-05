@@ -123,3 +123,5 @@ export const withdrawalBankBalanceValidate = [
 export const validateBankId = [
   param('bankId').notEmpty().withMessage('Bank Id  is required').isMongoId().withMessage('Bank Id must be a valid ID'),
 ];
+
+export const validateRole = [body('roles').notEmpty().withMessage('Role is required')];

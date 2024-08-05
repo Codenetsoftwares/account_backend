@@ -1403,6 +1403,150 @@ const AccountServices = {
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
+
+  adminFilterData : async (req, res) => {
+    try {
+      const { page, itemsPerPage } = req.query;
+      const {
+        transactionID,
+        transactionType,
+        introducerList,
+        subAdminList,
+        BankList,
+        WebsiteList,
+        sdate,
+        edate,
+        minAmount,
+        maxAmount,
+      } = req.body;
+
+      const filter = {};
+      console.log('Filter before applying:', filter);
+      if (transactionID) {
+        filter.transactionID = transactionID;
+      }
+      if (transactionType) {
+        filter.transactionType = transactionType;
+      }
+      if (introducerList) {
+        filter.introducerUserName = introducerList;
+      }
+      if (subAdminList) {
+        filter.subAdminName = subAdminList;
+      }
+      if (BankList) {
+        filter.bankName = BankList;
+      }
+      if (WebsiteList) {
+        filter.websiteName = WebsiteList;
+      }
+      if (sdate && edate) {
+        filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+      } else if (sdate) {
+        filter.createdAt = { $gte: new Date(sdate) };
+      } else if (edate) {
+        filter.createdAt = { $lte: new Date(edate) };
+      }
+      console.log('Transaction ID:', transactionID);
+      console.log('Filter after applying:', filter);
+      const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('transactions', transactions)
+      const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('websiteTransactions', websiteTransactions)
+      const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('bankTransactions', bankTransactions)
+
+      const filteredTransactions = transactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return transaction.amount >= minAmount && transaction.amount <= maxAmount;
+        } else {
+          return true;
+        }
+      });
+
+      const filteredWebsiteTransactions = websiteTransactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return (
+            (transaction.withdrawAmount >= minAmount && transaction.withdrawAmount <= maxAmount) ||
+            (transaction.depositAmount >= minAmount && transaction.depositAmount <= maxAmount)
+          );
+        } else {
+          return true;
+        }
+      });
+
+      // console.log('filteredWebsiteTransactions', filteredWebsiteTransactions)
+
+      const filteredBankTransactions = bankTransactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return (
+            (transaction.withdrawAmount >= minAmount && transaction.withdrawAmount <= maxAmount) ||
+            (transaction.depositAmount >= minAmount && transaction.depositAmount <= maxAmount)
+          );
+        } else {
+          return true;
+        }
+      });
+
+      // console.log('filteredBankTransactions', filteredBankTransactions)
+
+      const alltrans = [...filteredTransactions, ...filteredWebsiteTransactions, ...filteredBankTransactions];
+      alltrans.sort((a, b) => b.createdAt - a.createdAt);
+      // console.log('all',alltrans.length)
+      const allIntroDataLength = alltrans.length;
+      // console.log("allIntroDataLength", allIntroDataLength);
+      let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+      const skip = (page - 1) * itemsPerPage;
+      const limit = parseInt(itemsPerPage);
+      const paginatedResults = alltrans.slice(skip, skip + limit);
+      // console.log('pagitren',paginatedResults.length)
+
+      if (paginatedResults.length !== 0) {
+        // console.log('s')
+        // console.log('pagin', paginatedResults.length)
+        //return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+        return apiResponseSuccess(
+          { paginatedResults, pageNumber,  allIntroDataLength }, 
+          true, 
+          statusCode.success,
+          "Filtered data retrieved successfully",
+          res   
+      )
+      } else {
+        const itemsPerPage = 10; // Specify the number of items per page
+
+        const totalItems = alltrans.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+        page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+        const skip = (page - 1) * itemsPerPage;
+        const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+        const paginatedResults = alltrans.slice(skip, skip + limit);
+
+        const pageNumber = page;
+        const allIntroDataLength = totalItems;
+
+       // return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+       return apiResponseSuccess(
+        { paginatedResults, pageNumber, totalPages, allIntroDataLength }, 
+        true, 
+        statusCode.success,
+        "Filtered data retrieved successfully",
+        res   
+    )
+      }
+    } catch (error) {
+    console.log(error)
+    return apiResponseErr(
+      null,
+      false,
+      error.responseCode ?? statusCode.internalServerError,
+      error.message,
+      res
+    )}
+  },
 };
 
 export default AccountServices;
