@@ -10,208 +10,89 @@ import { string } from '../constructor/string.js';
 import customErrorHandler from '../utils/customErrorHandler.js';
 import { apiResponseErr, apiResponseSuccess } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
-import { userValidator, validateCreateAdmin, validateInteroducer, validateLogin, validateRole } from '../utils/commonSchema.js';
+import { userValidator, validateCreateAdmin, validateInteroducer,validateUserProfileUpdate, validateLogin, validateRole, validateIntroducerUser, validateIntroducerProfileUpdate } from '../utils/commonSchema.js';
 
 const AccountsRoute = (app) => {
   // API For Admin Login
-  app.post('/admin/login', validateLogin, customErrorHandler, AccountServices.adminLogin);
+  app.post(
+    '/admin/login', 
+    validateLogin, 
+    customErrorHandler, 
+    AccountServices.adminLogin
+  );
 
   app.post(
     '/api/create/user-admin',
     validateCreateAdmin,
     customErrorHandler,
-    Authorize(['superAdmin', 'Create-SubAdmin']),
+    Authorize([string.superAdmin, string.createAdmin]),
     AccountServices.createAdmin,
   );
   // API To View User Profiles
 
   app.get(
     '/api/user-profile/:page',
-    customErrorHandler,
-    Authorize(['superAdmin', 'Profile-View', 'User-Profile-View']),
-    async (req, res) => {
-      const page = req.params.page;
-      const searchQuery = req.query.search;
-      try {
-        let allIntroDataLength;
-        if (searchQuery) {
-          console.log('first');
-          let SecondArray = [];
-          const users = await User.find({
-            userName: { $regex: new RegExp(searchQuery, 'i') },
-          }).exec();
-          SecondArray = SecondArray.concat(users);
-          allIntroDataLength = SecondArray.length;
-          const pageNumber = Math.ceil(allIntroDataLength / 10);
-          // res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-          return apiResponseSuccess(
-            { SecondArray, pageNumber, allIntroDataLength },
-            true,
-            statusCode.success,
-            'User Profile retrive successfully',
-            res,
-          );
-        } else {
-          console.log('second');
-          let introducerUser = await User.find({}).exec();
-          let introData = JSON.parse(JSON.stringify(introducerUser));
-          console.log('introData', introData.length);
-
-          const SecondArray = [];
-          const Limit = page * 10;
-          console.log('Limit', Limit);
-
-          for (let j = Limit - 10; j < Limit; j++) {
-            SecondArray.push(introData[j]);
-            console.log('lenth', SecondArray.length);
-          }
-          allIntroDataLength = introData.length;
-
-          if (SecondArray.length === 0) {
-            // return res
-            //   .status(404)
-            //   .json({ message: "No data found for the selected criteria." });
-            return apiResponseErr(null, false, statusCode.notFound, ' No data found for the selected criteria.', res);
-          }
-
-          const pageNumber = Math.ceil(allIntroDataLength / 10);
-
-          // res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
-          return apiResponseSuccess(
-            { SecondArray, pageNumber, allIntroDataLength },
-            true,
-            statusCode.success,
-            'User Profile retrive successfully',
-            res,
-          );
-        }
-      } catch (error) {
-        console.error(error);
-        return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-      }
-    },
+    Authorize([string.superAdmin, string.userProfileView , string.profileView]),
+    AccountServices.getUserProfile
   );
 
   // API To Edit User Profiles
   app.put(
     '/api/admin/user-profile-edit/:id',
+    validateUserProfileUpdate,
     customErrorHandler,
-    Authorize(['superAdmin', 'User-Profile-View', 'Profile-View']),
-    async (req, res) => {
-      try {
-        const id = await User.findById(req.params.id);
-        const updateResult = await AccountServices.updateUserProfile(id, req.body);
-        console.log(updateResult);
-        if (updateResult) {
-          return apiResponseSuccess(updateResult, true, statusCode.success, 'Profile updated', res);
-        }
-      } catch (error) {
-        return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-      }
-    },
+    Authorize([string.superAdmin, string.userProfileView , string.profileView]),
+   AccountServices.updateUserProfile
+       
   );
 
   app.get(
     '/api/admin/sub-admin-name/bank-view',
-    customErrorHandler,
     Authorize([
-      'superAdmin',
-      'Dashboard-View',
-      'Transaction-View',
-      'Transaction-Edit-Request',
-      'Transaction-Delete-Request',
-      'Website-View',
-      'Bank-View',
-      'Profile-View',
-      'Introducer-Profile-View',
+      string.superAdmin,
+      string.dashboardView,
+      string.transactionView,
+      string.transactionEditRequest,
+      string.transactionDeleteRequest,
+      string.websiteView,
+      string.bankView,
+      string.profileView,
+      string.introducerProfileView,
     ]),
-    async (req, res) => {
-      try {
-        const superAdmin = await Admin.find(
-          {
-            roles: {
-              $all: ['Bank-View'],
-            },
-          },
-          'userName',
-        ).exec();
-        console.log('superAdmin', superAdmin);
+    AccountServices.getBankViewAdmins
+     );
 
-        //res.status(200).send(superAdmin);
-        return apiResponseSuccess(superAdmin, true, statusCode.success, " Admins with 'Bank-View' role found.", res);
-      } catch (error) {
-        console.error(e);
-        return apiResponseErr(null, flase, error.responseCode ?? statusCode.internalServerError, error.message, res);
-      }
-    },
-  );
   app.get(
     '/api/admin/sub-admin-name',
-    customErrorHandler,
     Authorize([
-      'superAdmin',
-      'Dashboard-View',
-      'Transaction-View',
-      'Transaction-Edit-Request',
-      'Transaction-Delete-Request',
-      'Website-View',
-      'Bank-View',
-      'Profile-View',
-      'Introducer-Profile-View',
+      string.superAdmin,
+      string.dashboardView,
+      string.transactionView,
+      string.transactionEditRequest,
+      string.transactionDeleteRequest,
+      string.websiteView,
+      string.bankView,
+      string.profileView,
+      string.introducerProfileView,
     ]),
-    async (req, res) => {
-      try {
-        const superAdmin = await Admin.find({}, 'userName').exec();
-        console.log('superAdmin', superAdmin);
-        // res.status(200).send(superAdmin);
-        return apiResponseSuccess(superAdmin, true, statusCode.success, ' Suceessfully Retrived Admin User Name', res);
-      } catch (error) {
-        console.error(error);
-        return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-      }
-    },
+   AccountServices.getSubAdminName
   );
 
   // pagination not needed
   app.get(
     '/api/admin/sub-admin-name/website-view',
-    customErrorHandler,
     Authorize([
-      'superAdmin',
-      'Dashboard-View',
-      'Transaction-View',
-      'Transaction-Edit-Request',
-      'Transaction-Delete-Request',
-      'Website-View',
-      'Bank-View',
-      'Profile-View',
-      'Introducer-Profile-View',
+      string.superAdmin,
+      string.dashboardView,
+      string.transactionView,
+      string.transactionEditRequest,
+      string.transactionDeleteRequest,
+      string.websiteView,
+      string.bankView,
+      string.profileView,
+      string.introducerProfileView,
     ]),
-    async (req, res) => {
-      try {
-        const superAdmin = await Admin.find(
-          {
-            roles: {
-              $all: ['Website-View'],
-            },
-          },
-          'userName',
-        ).exec();
-        console.log('superAdmin', superAdmin);
-
-        //res.status(200).send(superAdmin);
-        return apiResponseSuccess(
-          superAdmin,
-          true,
-          statusCode.success,
-          'Successfully retrieved  admin with Website-View role',
-          res,
-        );
-      } catch (error) {
-        console.error(e);
-        return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-      }
-    },
+    AccountServices.getWebsiteViewAdmins
   );
 
   app.get(
@@ -230,58 +111,40 @@ const AccountsRoute = (app) => {
 
   app.post(
     '/api/admin/accounts/introducer/register',
-    Authorize(['superAdmin', 'Create-Introducer', 'Create-Admin']),
-    async (req, res) => {
-      try {
-        await introducerUser.createintroducerUser(req.body);
-        res.status(200).send({
-          code: 200,
-          message: 'Introducer User registered successfully!',
-        });
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    validateIntroducerUser,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.createIntroducer, string.createAdmin]),
+     introducerUser.createintroducerUser   
   );
 
-  app.post('/api/admin/introducer/introducerCut/:id', customErrorHandler,
-    Authorize(['superAdmin']), 
+  app.post('/api/admin/introducer/introducerCut/:id', 
+    Authorize([string.superAdmin]), 
      introducerUser.introducerPercentageCut  
 );
 
   app.get(
-    '/api/admin/introducer-live-balance/:id',customErrorHandler,
-    Authorize(['superAdmin', 'Profile-View', 'Introducer-Profile-View']),
-  introducerUser.interoducerLiveBalance
+    '/api/admin/introducer-live-balance/:id',
+    Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
+    introducerUser.introducerLiveBalance
   );
 
   app.put(
     '/api/admin/intoducer-profile-edit/:id',
-    Authorize(['superAdmin', 'Profile-View', 'Introducer-Profile-View']),
-    async (req, res) => {
-      try {
-        const id = await IntroducerUser.findById(req.params.id);
-        const updateResult = await introducerUser.updateIntroducerProfile(id, req.body);
-        console.log(updateResult);
-        if (updateResult) {
-          res.status(201).send('Profile updated');
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    validateIntroducerProfileUpdate,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
+    introducerUser.updateIntroducerProfile 
   );
 
   app.get(
     '/api/introducer-profile/:page',
     Authorize(['superAdmin', 'Introducer-Profile-View', 'Profile-View', 'Create-Introducer']),
     async (req, res) => {
+      try {
       const page = req.params.page;
       const userName = req.query.search;
 
-      try {
+      
         let introducerUser = await IntroducerUser.find().exec();
         let introData = JSON.parse(JSON.stringify(introducerUser));
         if (userName) {
@@ -316,36 +179,14 @@ const AccountsRoute = (app) => {
 
   app.get(
     '/api/intoducer/client-data/:id',
-    Authorize(['superAdmin', 'Profile-View', 'Introducer-Profile-View']),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const intoducer = await IntroducerUser.findOne({ id }).exec();
-        const intoducerId = intoducer.userName;
-        const introducerUser = await User.find({
-          introducersUserName: intoducerId,
-        }).exec();
-        res.send(introducerUser);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
+   introducerUser.getIntroducerClientData
   );
 
-  app.get(
+  app.get( 
     '/api/get-single-Introducer/:id',
-    Authorize(['superAdmin', 'Profile-View', 'Introducer-Profile-View']),
-    async (req, res) => {
-      try {
-        const id = req.params.id;
-        const bankData = await IntroducerUser.findOne({ _id: id }).exec();
-        res.status(200).send(bankData);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
+  introducerUser. getSingleIntroducer
   );
 
   app.get(

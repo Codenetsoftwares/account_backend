@@ -19,77 +19,84 @@ import { Trash } from '../models/Trash.model.js';
 import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
 import { string } from '../constructor/string.js';
+import CustomError from '../utils/extendError.js';
 
 const AccountServices = {
   adminLogin: async (req, res) => {
     try {
-      const email = req.body.email;
-      const password = req.body.password;
-      const data = await Admin.findOne({ adminEmail: email }).exec();
-      if (data === null) {
-        throw { code: 400, message: 'Unknown Admin' };
+      const { userName, password, persist } = req.body;
+
+
+      const user = await Admin.findOne({ userName: userName });
+      console.log("user", user);
+      if (!user) {
+        throw new CustomError("User not found" , null, 404)
       }
-      const checkPassword = await bcrypt.compare(password, data.adminPassword);
-      if (checkPassword) {
-        const token = await generateTokens({
-          email: data.adminEmail,
-          username: data.adminName,
-          role: 'admin',
-        });
-        return res.send({ status: 200, message: 'success', result: token });
-      } else {
-        throw { code: 400, message: 'Wrong Password' };
+
+      const accessToken = await AccountServices.generateAdminAccessToken(
+        userName,
+        password,
+        persist
+      );
+
+      if (!accessToken) {
+        throw new CustomError("Failed to generate access token" , null, responseCode)
       }
+
+     
+      return apiResponseSuccess({token: accessToken},true,statusCode.success,"Login Successfully!",res)
     } catch (error) {
-      return res.send(error);
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+        
+      )
     }
   },
 
-  createAdmin: async (data) => {
-    if (!data.firstname) {
-      throw { code: 400, message: 'Firstname is required' };
-    }
-    if (!data.lastname) {
-      throw { code: 400, message: 'Last Name is required' };
-    }
-    if (!data.userName) {
-      throw { code: 400, message: 'Username is required' };
-    }
-    if (!data.password) {
-      throw { code: 400, message: 'Password is required' };
-    }
-    if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
-      throw { code: 400, message: 'Roles is required' };
-    }
+  createAdmin: async (req, res) => {
+    try{
+  
+    const {firstname, lastname, userName, password, roles} = req. body
 
-    const existingUser = await Admin.findOne({
-      userName: data.userName,
-    }).exec();
-    const existingOtherUser = await User.findOne({ userName: data.userName });
-    const existingIntroUser = await IntroducerUser.findOne({
-      userName: data.userName,
-    });
+    const [existingUser, existingOtherUser, existingIntroUser] = await Promise.all([
+      Admin.findOne({ userName }).exec(),
+      User.findOne({ userName }),
+      IntroducerUser.findOne({ userName }),
+    ]);
+    
 
     if (existingUser || existingOtherUser || existingIntroUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
+      throw new CustomError(`User already exists: ${userName}`, null, 409) 
     }
 
     const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
+    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
 
     const newAdmin = new Admin({
-      firstname: data.firstname,
-      lastname: data.lastname,
-      userName: data.userName,
+      firstname: firstname,
+      lastname: lastname,
+      userName: userName,
       password: encryptedPassword,
-      roles: data.roles,
+      roles: roles,
     });
 
-    try {
-      await newAdmin.save();
-    } catch (err) {
-      console.error(err);
-      throw { code: 500, message: 'Failed to Save New Admin' };
+    
+      const user = await newAdmin.save();
+      return apiResponseSuccess(user, true, statusCode.success, "Admin created successfully", res)
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      )
     }
   },
 
@@ -155,24 +162,19 @@ const AccountServices = {
   },
 
   generateAdminAccessToken: async (userName, password, persist) => {
-    if (!userName) {
-      throw { code: 400, message: 'Invalid value for: User Name' };
-    }
-    if (!password) {
-      throw { code: 400, message: 'Invalid value for: password' };
-    }
+  
 
     const existingUser = await AccountServices.findAdmin({
       userName: userName,
     });
     console.log(existingUser);
     if (!existingUser) {
-      throw { code: 401, message: 'Invalid User Name or password' };
+      throw new CustomError('Invalid User Name ', null, 401 )
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: 'Invalid User Name or password' };
+      throw new CustomError('Invalid User Password', null, 401 )
     }
 
     const accessTokenResponse = {
@@ -472,75 +474,97 @@ const AccountServices = {
     return true;
   },
 
-  updateUserProfile: async (id, data) => {
-    const existingUser = await User.findById(id);
-    if (!existingUser) {
-      throw { code: 404, message: `Existing User not found with id: ${id}` };
-    }
-
-    // Validate introducerPercentage, introducerPercentage1, and introducerPercentage2
-    const introducerPercentage =
-      data.introducerPercentage !== undefined
-        ? parseFloat(data.introducerPercentage)
-        : existingUser.introducerPercentage;
-    const introducerPercentage1 =
-      data.introducerPercentage1 !== undefined
-        ? parseFloat(data.introducerPercentage1)
-        : existingUser.introducerPercentage1;
-    const introducerPercentage2 =
-      data.introducerPercentage2 !== undefined
-        ? parseFloat(data.introducerPercentage2)
-        : existingUser.introducerPercentage2;
-
-    if (isNaN(introducerPercentage) || isNaN(introducerPercentage1) || isNaN(introducerPercentage2)) {
-      throw {
-        code: 400,
-        message: 'Introducer percentages must be valid numbers.',
+  updateUserProfile: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const {
+        firstname,
+        lastname,
+        contactNumber,
+        bankDetail,
+        upiDetail,
+        introducerPercentage,
+        introducersUserName,
+        webSiteDetail,
+        introducersUserName1,
+        introducerPercentage1,
+        introducersUserName2,
+        introducerPercentage2,
+      } = req.body;
+  
+      const existingUser = await User.findById(id);
+      if (!existingUser) {
+        return apiResponseErr(null, false, statusCode.notFound, `Existing User not found with id: ${id}`, res);
+      }
+  
+      // Validate introducerPercentage, introducerPercentage1, and introducerPercentage2
+      const newIntroducerPercentage =
+        introducerPercentage !== undefined
+          ? parseFloat(introducerPercentage)
+          : existingUser.introducerPercentage;
+      const newIntroducerPercentage1 =
+        introducerPercentage1 !== undefined
+          ? parseFloat(introducerPercentage1)
+          : existingUser.introducerPercentage1;
+      const newIntroducerPercentage2 =
+        introducerPercentage2 !== undefined
+          ? parseFloat(introducerPercentage2)
+          : existingUser.introducerPercentage2;
+  
+      if (
+        isNaN(newIntroducerPercentage) ||
+        isNaN(newIntroducerPercentage1) ||
+        isNaN(newIntroducerPercentage2)
+      ) {
+        return apiResponseErr(null, false, statusCode.badRequest, 'Introducer percentages must be valid numbers.', res);
+      }
+  
+      const totalIntroducerPercentage =
+        newIntroducerPercentage + newIntroducerPercentage1 + newIntroducerPercentage2;
+  
+      if (totalIntroducerPercentage < 0 || totalIntroducerPercentage > 100) {
+        return apiResponseErr(
+          null,
+          false,
+         statusCode.badRequest,
+          'The sum of introducer percentages must be between 0 and 100.',
+          res
+        );
+      }
+  
+      // Create a new object to store the updated user data
+      const updatedUserData = {
+        firstname: firstname || existingUser.firstname,
+        lastname: lastname || existingUser.lastname,
+        contactNumber: contactNumber || existingUser.contactNumber,
+        bankDetail: bankDetail || existingUser.bankDetail,
+        upiDetail: upiDetail || existingUser.upiDetail,
+        introducerPercentage: newIntroducerPercentage,
+        introducersUserName: introducersUserName || existingUser.introducersUserName,
+        webSiteDetail: webSiteDetail || existingUser.webSiteDetail,
+        introducersUserName1: introducersUserName1 || existingUser.introducersUserName1,
+        introducerPercentage1: newIntroducerPercentage1,
+        introducersUserName2: introducersUserName2 || existingUser.introducersUserName2,
+        introducerPercentage2: newIntroducerPercentage2,
       };
+  
+      // Save the updated user data
+      existingUser.set(updatedUserData);
+      const updatedUser = await existingUser.save();
+  
+      return apiResponseSuccess(updatedUser, true, statusCode.success, "User profile updated successfully", res);
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message ?? `Failed to update User Profile with id: ${id}`,
+        res
+      );
     }
-
-    const totalIntroducerPercentage = introducerPercentage + introducerPercentage1 + introducerPercentage2;
-
-    if (totalIntroducerPercentage < 0 || totalIntroducerPercentage > 100) {
-      throw {
-        code: 400,
-        message: 'The sum of introducer percentages must be between 0 and 100.',
-      };
-    }
-
-    // Create a new object to store the updated user data
-    const updatedUserData = {
-      ...existingUser.toObject(), // Convert existing user object to plain JavaScript object
-      introducersUserName1: data.introducersUserName1 || existingUser.introducersUserName1,
-      introducerPercentage1: introducerPercentage1,
-      introducersUserName2: data.introducersUserName2 || existingUser.introducersUserName2,
-      introducerPercentage2: introducerPercentage2,
-    };
-
-    // Update the remaining fields
-    updatedUserData.firstname = data.firstname || existingUser.firstname;
-    updatedUserData.lastname = data.lastname || existingUser.lastname;
-    updatedUserData.contactNumber = data.contactNumber || existingUser.contactNumber;
-    updatedUserData.bankDetail = data.bankDetail || existingUser.bankDetail;
-    updatedUserData.upiDetail = data.upiDetail || existingUser.upiDetail;
-    updatedUserData.introducerPercentage = introducerPercentage;
-    updatedUserData.introducersUserName = data.introducersUserName || existingUser.introducersUserName;
-    updatedUserData.webSiteDetail = data.webSiteDetail || existingUser.webSiteDetail;
-
-    // Save the updated user data
-    await existingUser
-      .set(updatedUserData)
-      .save()
-      .catch((err) => {
-        console.error(err);
-        throw {
-          code: 500,
-          message: `Failed to update User Profile with id: ${id}`,
-        };
-      });
-
-    return true;
   },
+  
 
   // updateBankTransaction: async (id, data) => {
   //   const existingTransaction = await BankTransaction.findById(id);
@@ -1189,11 +1213,11 @@ const AccountServices = {
       if (!resultArray || resultArray.length === 0) {
         return apiResponseErr(null, false, statusCode.notFound, 'No users found in the database.', res);
       }
-      //res.status(200).send(resultArray);
+      
       return apiResponseSuccess(resultArray, true, statusCode.success, 'Usernames fetched successfully', res);
     } catch (error) {
       console.log(error);
-      //res.status(500).send("Internal Server error");
+    
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
@@ -1206,7 +1230,7 @@ const AccountServices = {
       if (!resultArray || resultArray.length === 0) {
         return apiResponseErr(null, false, statusCode.notFound, 'No introducer users found in the database.', res);
       }
-      //res.status(200).send(resultArray);
+      
       return apiResponseSuccess(
         resultArray,
         true,
@@ -1547,6 +1571,123 @@ const AccountServices = {
       res
     )}
   },
+
+ getUserProfile : async (req, res) => {
+  const page = req.params.page;
+  const searchQuery = req.query.search;
+  try {
+    let allIntroDataLength;
+    if (searchQuery) {
+      console.log('first');
+      let SecondArray = [];
+      const users = await User.find({
+        userName: { $regex: new RegExp(searchQuery, 'i') },
+      }).exec();
+      SecondArray = SecondArray.concat(users);
+      allIntroDataLength = SecondArray.length;
+      const pageNumber = Math.ceil(allIntroDataLength / 10);
+      return apiResponseSuccess(
+        { SecondArray, pageNumber, allIntroDataLength },
+        true,
+        statusCode.success,
+        'User Profile retrive successfully',
+        res,
+      );
+    } else {
+      console.log('second');
+      let introducerUser = await User.find({}).exec();
+      let introData = JSON.parse(JSON.stringify(introducerUser));
+      console.log('introData', introData.length);
+
+      const SecondArray = [];
+      const Limit = page * 10;
+      console.log('Limit', Limit);
+
+      for (let j = Limit - 10; j < Limit; j++) {
+        SecondArray.push(introData[j]);
+        console.log('lenth', SecondArray.length);
+      }
+      allIntroDataLength = introData.length;
+
+      if (SecondArray.length === 0) {
+        return apiResponseErr(null, false, statusCode.notFound, ' No data found for the selected criteria.', res);
+      }
+
+      const pageNumber = Math.ceil(allIntroDataLength / 10);
+
+      return apiResponseSuccess(
+        { SecondArray, pageNumber, allIntroDataLength },
+        true,
+        statusCode.success,
+        'User Profile retrive successfully',
+        res,
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+  }
+},
+
+getBankViewAdmins :  async (req, res) => {
+  try {
+    const superAdmin = await Admin.find(
+      {
+        roles: {
+          $all: ['Bank-View'],
+        },
+      },
+      'userName',
+    ).exec();
+    console.log('superAdmin', superAdmin);
+
+    //res.status(200).send(superAdmin);
+    return apiResponseSuccess(superAdmin, true, statusCode.success, " Admins with 'Bank-View' role found.", res);
+  } catch (error) {
+    console.error(e);
+    return apiResponseErr(null, flase,  statusCode.internalServerError, error.message, res);
+  }
+},
+
+getSubAdminName :  async (req, res) => {
+  try {
+    const superAdmin = await Admin.find({}, 'userName').exec();
+    console.log('superAdmin', superAdmin);
+    return apiResponseSuccess(superAdmin, true, statusCode.success, ' Suceessfully Retrived Admin User Name', res);
+  } catch (error) {
+    console.error(error);
+    return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+  }
+},
+
+getWebsiteViewAdmins : async (req, res) => {
+  try {
+    const superAdmin = await Admin.find(
+      {
+        roles: {
+          $all: ['Website-View'],
+        },
+      },
+      'userName',
+    ).exec();
+    console.log('superAdmin', superAdmin);
+
+    //res.status(200).send(superAdmin);
+    return apiResponseSuccess(
+      superAdmin,
+      true,
+      statusCode.success,
+      'Successfully retrieved  admin with Website-View role',
+      res,
+    );
+  } catch (error) {
+    console.error(e);
+    return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+  }
+},
+
+
+
 };
 
 export default AccountServices;

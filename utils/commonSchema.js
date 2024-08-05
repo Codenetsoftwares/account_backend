@@ -125,3 +125,40 @@ export const validateBankId = [
 ];
 
 export const validateRole = [body('roles').notEmpty().withMessage('Role is required')];
+
+export const validateUserProfileUpdate = [
+  body('firstname').optional().isString().withMessage('Firstname must be a string'),
+  body('lastname').optional().isString().withMessage('Lastname must be a string'),
+  body('contactNumber').optional().isString().withMessage('Contact Number must be a string'),
+  body('bankDetail').optional().isObject().withMessage('Bank Detail must be an object'),
+  body('upiDetail').optional().isString().withMessage('UPI Detail must be a string'),
+  body('introducerPercentage')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Introducer Percentage must be a number between 0 and 100'),
+  body('introducersUserName').optional().isString().withMessage('Introducers Username must be a string'),
+  body('webSiteDetail').optional().isString().withMessage('Website Detail must be a string'),
+  body('introducersUserName1').optional().isString().withMessage('Introducers Username 1 must be a string'),
+  body('introducerPercentage1')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Introducer Percentage 1 must be a number between 0 and 100'),
+  body('introducersUserName2').optional().isString().withMessage('Introducers Username 2 must be a string'),
+  body('introducerPercentage2')
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage('Introducer Percentage 2 must be a number between 0 and 100'),
+];
+
+export const validateIntroducerUser = [
+  body('firstname').notEmpty().withMessage('First name is required'),
+  body('lastname').notEmpty().withMessage('Last name is required'),
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('password').notEmpty().withMessage('Password is required').isString().withMessage('Password must be a string'),
+ // body('role').isArray().withMessage('Role must be an array of strings')
+];
+
+export const validateIntroducerProfileUpdate = [
+  body('firstname').optional().isString().withMessage('Firstname must be a string'),
+  body('lastname').optional().isString().withMessage('Lastname must be a string'),
+];

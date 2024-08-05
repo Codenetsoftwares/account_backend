@@ -49,45 +49,41 @@ export const introducerUser = {
     }
   },
 
-  createintroducerUser: async (data) => {
-    if (!data.firstname) {
-      throw { code: 400, message: 'Firstname is required' };
-    }
-    if (!data.lastname) {
-      throw { code: 400, message: 'Lastname is required' };
-    }
-    if (!data.userName) {
-      throw { code: 400, message: 'Username is required' };
-    }
-    if (!data.password) {
-      throw { code: 400, message: 'Password is required' };
-    }
+  createintroducerUser: async (req, res) => {
+    try{
+      const {firstname,lastname,userName,password, role} = req.body;
 
-    const existingUser = await IntroducerUser.findOne({ userName: data.userName }).exec();
-    const existingOtherUser = await User.findOne({ userName: data.userName });
-    const existingAdminUser = await Admin.findOne({ userName: data.userName });
-
+    const [existingOtherUser, existingUser, existingAdminUser] = await Promise.all([
+      IntroducerUser.findOne({ userName: userName }).exec(),
+      User.findOne({ userName: userName }),
+      Admin.findOne({ userName: userName }),
+    ]);
+    
     if (existingUser || existingOtherUser || existingAdminUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
+      return apiResponseSuccess(null,true,statusCode.exist,`User already exists: ${userName}`, res)
     }
 
     const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
+    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
 
     const newIntroducerUser = new IntroducerUser({
-      firstname: data.firstname,
-      lastname: data.lastname,
-      userName: data.userName,
+      firstname: firstname,
+      lastname: lastname,
+      userName: userName,
       password: encryptedPassword,
-      role: data.role,
+      role: role,
     });
-
-    try {
-      await newIntroducerUser.save();
-      return true;
-    } catch (err) {
-      console.error(err);
-      throw { code: 500, message: 'Failed to Save New Introducer User' };
+     const user = await newIntroducerUser.save();
+      return apiResponseSuccess(user, true, statusCode.success,"Intoducer Register SuccessFully!", res)
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      )
     }
   },
 
@@ -103,10 +99,7 @@ export const introducerUser = {
       const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
       if (passwordIsDuplicate) {
-        // throw {
-        //   code: 409,
-        //   message: 'New Password cannot be the same as existing password',
-        // };
+       
         throw new CustomError('New Password cannot be the same as existing password', null, 409);
       }
 
@@ -255,10 +248,6 @@ export const introducerUser = {
       const { firstname, lastname } = req.body;
       const existingUser = await IntroducerUser.findById(id);
       if (!existingUser) {
-        // throw {
-        //   code: 404,
-        //   message: `Existing Introducer User not found with id : ${id}`,
-        // };
         throw new CustomError(` User not found with id : ${id}`, null, 404);
       }
 
@@ -272,14 +261,12 @@ export const introducerUser = {
     }
   },
 
-  introducerLiveBalance: async (id) => {
+  introducerLiveBalance: async (req, res) => {
     try {
+      const id = req.params.id;
       const introId = await IntroducerUser.findById(id).exec();
       if (!introId) {
-        // throw {
-        //   code: 404,
-        //   message: `Introducer with ID ${id} not found`,
-        // };
+        
         throw new CustomError(`Introducer  ID  not found`, null, 404);
       }
 
@@ -343,10 +330,17 @@ export const introducerUser = {
         liveBalance += amount;
       }
 
-      return Math.round(liveBalance);
+      
+      const balance =  Math.round(liveBalance)
+      return apiResponseSuccess({ LiveBalance: balance }, true, statusCode.success, 'Balance Fetched SuccessFully!', res);
     } catch (error) {
       console.error(error);
-      throw error;
+      return apiResponseErr(null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      )
     }
   },
 
@@ -391,11 +385,9 @@ export const introducerUser = {
       const user = await User.findById(userId).exec();
 
       if (!user) {
-        // return res.status(404).send('User not found');
         throw new CustomError('User not found', null, 404);
       }
       const introducersUserName = await user.introducersUserName;
-      //res.status(200).send(introducersUserName);
       return apiResponseSuccess(
         introducersUserName,
         true,
@@ -431,7 +423,7 @@ export const introducerUser = {
             data.balance = balances;
           }
         });
-      //res.status(200).send(accountData);
+     
       return apiResponseSuccess(accountData, true, statusCode.success, 'Account summary retrieved successfully', res);
     } catch (error) {
       console.error(error);
@@ -439,19 +431,22 @@ export const introducerUser = {
     }
   },
 
-  interoducerLiveBalance: async (req, res) => {
-    try {
-      const id = await IntroducerUser.findById(req.params.id);
-      console.log('id', id);
-      const data = await introducerUser.introducerLiveBalance(id);
-      console.log('data', data);
-      //res.send({ LiveBalance: data });
-      return apiResponseSuccess({ LiveBalance: data }, true, statusCode.success, 'Balance Fetched SuccessFully!', res);
-    } catch (error) {
-      console.error(error);
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-    }
-  },
+  // interoducerLiveBalance: async (req, res) => {
+  //   try {
+  //     const id = await IntroducerUser.findById(req.params.id);
+  //     if (!id) {
+        
+  //       throw new CustomError(`Introducer  ID  not found`, null, 404);
+  //     }
+  //     console.log('id', id);
+  //     const data = await introducerUser.introducerLiveBalance();
+  //     console.log('data', data);
+  //     return apiResponseSuccess({ LiveBalance: data }, true, statusCode.success, 'Balance Fetched SuccessFully!', res);
+  //   } catch (error) {
+  //     console.error(error);
+  //     return apiResponseErr(null, false,  statusCode.internalServerError, error.message, res);
+  //   }
+  // },
 
   getInroducerProfile: async (req, res) => {
     try {
@@ -480,4 +475,57 @@ export const introducerUser = {
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
+
+  getIntroducerClientData :  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const introducer = await IntroducerUser.findById(
+        id).exec();
+
+      if (!introducer) {
+        return apiResponseErr(null, false, statusCode.notFound, 'Introducer not found', res);
+      }
+
+      const intoducerId = introducer.userName;
+      const introducerUser = await User.find({
+        introducersUserName: intoducerId,
+      }).exec();
+
+     
+      return apiResponseSuccess(introducerUser, true, statusCode.success, "Successfully retrieved introducer clients", res)
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      )
+    }
+  },
+
+  getSingleIntroducer :   async (req, res) => {
+    try {
+      const id = req.params.id;
+      const bankData = await IntroducerUser.findOne({ _id: id }).exec();
+
+      if (!bankData) {
+        return apiResponseErr(null, false, statusCode.notFound, 'Introducer not found', res);
+      }
+
+      return apiResponseSuccess(bankData, true, statusCode.success, "Successfully retrieved introducer", res)
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+
+      )
+    }
+  },
+
 };
