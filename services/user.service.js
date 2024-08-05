@@ -1,84 +1,102 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import crypto from "node:crypto";
-import nodemailer from "nodemailer";
-import { User } from "../models/user.model.js";
-import { IntroducerUser } from "../models/introducer.model.js"
-import dotenv from "dotenv";
-import { Admin } from "../models/admin_user.js";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
+import nodemailer from 'nodemailer';
+import { User } from '../models/user.model.js';
+import { IntroducerUser } from '../models/introducer.model.js';
+import dotenv from 'dotenv';
+import { Admin } from '../models/admin_user.js';
+import { apiResponseErr, apiResponseSuccess } from '../utils/response.js';
+import { statusCode } from '../utils/statusCodes.js';
+import CustomError from '../utils/extendError.js';
 dotenv.config();
 
 export const userservice = {
+  createUser: async (req, res) => {
+    try {
+      const {
+        firstname,
+        lastname,
+        userName,
+        password,
+        contactNumber,
+        introducersUserName,
+        introducersUserName1,
+        introducersUserName2,
+        introducerPercentage,
+        introducerPercentage1,
+        introducerPercentage2,
+      } = req.body;
+      // if (!data.firstname) {
+      //   throw { code: 400, message: "Firstname is required" };
+      // }
+      // if (!data.lastname) {
+      //   throw { code: 400, message: "Lastname is required" };
+      // }
+      // if (!data.userName) {
+      //   throw { code: 400, message: "User Name is required" };
+      // }
+      // if (!data.password) {
+      //   throw { code: 400, message: "Password is required" };
+      // }
+      const [existingUser, existingAdminUser, existingIntroUser] = await Promise.all([
+        User.findOne({ userName: userName }).exec(),
+        Admin.findOne({ userName: userName }).exec(),
+        IntroducerUser.findOne({ userName: userName }).exec(),
+      ]);
 
-  createUser: async (data) => {
-    if (!data.firstname) {
-      throw { code: 400, message: "Firstname is required" };
-    }
-    if (!data.lastname) {
-      throw { code: 400, message: "Lastname is required" };
-    }
-    if (!data.userName) {
-      throw { code: 400, message: "User Name is required" };
-    }
-    if (!data.password) {
-      throw { code: 400, message: "Password is required" };
-    }
-    const existingUser = await User.findOne({ userName: data.userName });
-    const existingAdminUser = await Admin.findOne({ userName: data.userName });
-    const existingIntroUser = await IntroducerUser.findOne({ userName: data.userName });
-    if (existingUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingAdminUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    if (existingIntroUser) {
-      throw { code: 409, message: `User already exists: ${data.userName}` };
-    }
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-    // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
-    const newUser = new User({
-      firstname: data.firstname,
-      lastname: data.lastname,
-      userName: data.userName,
-      contactNumber: data.contactNumber,
-      introducerPercentage : data.introducerPercentage,
-      introducersUserName : data.introducersUserName,
-      introducerPercentage1 : data.introducerPercentage1,
-      introducersUserName1 : data.introducersUserName1,
-      introducerPercentage2 : data.introducerPercentage2,
-      introducersUserName2 : data.introducersUserName2,
-      password: encryptedPassword,
-      wallet: 0,
-    });
+      if (existingUser || existingAdminUser || existingIntroUser) {
+        //throw { code: 409, message: `User already exists: ${userName}` };
+        throw new CustomError(`User already exists: ${userName}`, null, 409);
+      }
 
-    await newUser.save().catch((err) => {console.error(err); throw { code: 500, message: "Failed to save user" };});
-    return true;
+      const passwordSalt = await bcrypt.genSalt();
+      const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+      // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
+      const newUser = new User({
+        firstname: firstname,
+        lastname: lastname,
+        userName: userName,
+        contactNumber: contactNumber,
+        introducerPercentage: introducerPercentage,
+        introducersUserName: introducersUserName,
+        introducerPercentage1: introducerPercentage1,
+        introducersUserName1: introducersUserName1,
+        introducerPercentage2: introducerPercentage2,
+        introducersUserName2: introducersUserName2,
+        password: encryptedPassword,
+        wallet: 0,
+      });
+
+      const createdUser = await newUser.save();
+      return apiResponseSuccess(createdUser, true, statusCode.create, 'User registered successfully!', res);
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
   },
-  
+
   createAdminUser: async (data) => {
     const existingUser = await IntroducerUser.findOne({ email: data.email }).exec();
     if (existingUser) {
       throw { code: 409, message: `User already exists: ${data.email}` };
     }
-  
+
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(data.password, passwordSalt);
-    
+
     if (!data.firstname) {
-      throw { code: 400, message: "Firstname is required" };
+      throw { code: 400, message: 'Firstname is required' };
     }
     if (!data.lastname) {
-      throw { code: 400, message: "Lastname is required" };
+      throw { code: 400, message: 'Lastname is required' };
     }
     if (!data.email) {
-      throw { code: 400, message: "Email is required" };
+      throw { code: 400, message: 'Email is required' };
     }
     if (!data.password) {
-      throw { code: 400, message: "Password is required" };
+      throw { code: 400, message: 'Password is required' };
     }
-  
+
     const newIntroducerUser = new IntroducerUser({
       firstname: data.firstname,
       lastname: data.lastname,
@@ -86,32 +104,32 @@ export const userservice = {
       password: encryptedPassword,
       roles: data.roles,
       introducerId: data.introducerId,
-      introducerPercentage: data.introducerPercentage
+      introducerPercentage: data.introducerPercentage,
     });
-  
+
     newIntroducerUser.save().catch((err) => {
       console.error(err);
-      throw { code: 500, message: "Failed to Save New Introducer User" };
+      throw { code: 500, message: 'Failed to Save New Introducer User' };
     });
-  
+
     return true;
   },
 
-  generateRandomAlphanumeric: async(length) => {
+  generateRandomAlphanumeric: async (length) => {
     const alphanumericChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
-    
+
     for (let i = 0; i < length; i++) {
       const randomIndex = Math.floor(Math.random() * alphanumericChars.length);
       result += alphanumericChars.charAt(randomIndex);
     }
-    
+
     return result;
   },
-  
+
   findUserById: async (id) => {
     if (!id) {
-      throw { code: 409, message: "Required parameter: id" };
+      throw { code: 409, message: 'Required parameter: id' };
     }
 
     return User.findById(id).exec();
@@ -119,7 +137,7 @@ export const userservice = {
 
   findUser: async (filter) => {
     if (!filter) {
-      throw { code: 409, message: "Required parameter: filter" };
+      throw { code: 409, message: 'Required parameter: filter' };
     }
     return User.findOne(filter).exec();
   },
@@ -143,41 +161,37 @@ export const userservice = {
 
   generateAccessToken: async (userName, password, persist) => {
     if (!userName) {
-      throw { code: 400, message: "Invalid value for: User Name" };
+      throw { code: 400, message: 'Invalid value for: User Name' };
     }
     if (!password) {
-      throw { code: 400, message: "Invalid value for: Password" };
+      throw { code: 400, message: 'Invalid value for: Password' };
     }
 
     const existingUser = await userservice.findUser({ userName: userName });
     if (!existingUser) {
-      throw { code: 401, message: "Invalid User Name  or Password" };
+      throw { code: 401, message: 'Invalid User Name  or Password' };
     }
 
     const passwordValid = await bcrypt.compare(password, existingUser.password);
     if (!passwordValid) {
-      throw { code: 401, message: "Invalid User Name or Password" };
+      throw { code: 401, message: 'Invalid User Name or Password' };
     }
 
     const accessTokenResponse = {
       id: existingUser._id,
       name: existingUser.firstname,
       userName: existingUser.userName,
-      role: existingUser.role
+      role: existingUser.role,
     };
     console.log(accessTokenResponse);
-    const accessToken = jwt.sign(
-      accessTokenResponse,
-      process.env.JWT_SECRET_KEY,
-      {
-        expiresIn: persist ? "1y" : "8h",
-      }
-    );
+    const accessToken = jwt.sign(accessTokenResponse, process.env.JWT_SECRET_KEY, {
+      expiresIn: persist ? '1y' : '8h',
+    });
 
     return {
       userName: existingUser.userName,
       accessToken: accessToken,
-      role: existingUser.role
+      role: existingUser.role,
     };
   },
 
@@ -185,14 +199,14 @@ export const userservice = {
     const existingUser = await userservice.findUser({ email: email });
 
     if (!existingUser) {
-      throw { code: 409, message: "First Register with Gamex" };
+      throw { code: 409, message: 'First Register with Gamex' };
     }
 
-    const emailVerificationCode = await crypto.randomBytes(6).toString("hex");
+    const emailVerificationCode = await crypto.randomBytes(6).toString('hex');
     existingUser.tokens.passwordReset = emailVerificationCode;
     existingUser.save().catch((err) => {
       console.error(err);
-      throw { code: 500, message: "Failed to save new password" };
+      throw { code: 500, message: 'Failed to save new password' };
     });
 
     nodemailer
@@ -208,46 +222,63 @@ export const userservice = {
       .sendMail({
         from: `'Customer Relationship Manager' <${process.env.SMTP_SENDER}>`,
         to: email,
-        subject: "Password Reset Code",
+        subject: 'Password Reset Code',
         text: `The verification code to reset your password is ${emailVerificationCode}. (Note) : If you have not initiated a password reset then contact support as soon as possible. `,
       })
       .catch((err) => {
         console.error(err);
-        throw { code: 500, message: "Failed to send verification email" };
+        throw { code: 500, message: 'Failed to send verification email' };
       });
 
     return existingUser;
   },
 
-  UserPasswordResetCode: async (userName, password) => {
+  UserPasswordResetCode: async (req , res) => {
+try{
+    const {userName, password} = req.body
     const existingUser = await userservice.findUser({ userName: userName });
-  
+
+    if (!existingUser) {
+      throw new CustomError('User not found', null, 404);
+    }
+
     const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
     if (passwordIsDuplicate) {
-      throw {
-        code: 409,
-        message: "New Password cannot be the same as existing password",
-      };
+      // throw {
+      //   code: 409,
+      //   message: 'New Password cannot be the same as existing password',
+      // };
+      throw new CustomError('New Password cannot be the same as existing password', null, 409)
     }
 
     const passwordSalt = await bcrypt.genSalt();
     const encryptedPassword = await bcrypt.hash(password, passwordSalt);
 
     existingUser.password = encryptedPassword;
-    existingUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: "Failed to save new password" };
-    });
+   const user =await existingUser.save()
+   return apiResponseSuccess(user, true, statusCode.success, "Password Reset Successfully!", res)
+  }catch(error){
+      console.log(error)
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      )
+  }
 
-    return true;
+    
   },
 
-  updateUserProfile: async(id, data) => {
+  updateUserProfile: async (id, data) => {
     const existingUser = await User.findById(id);
-    if (!existingUser) { throw { code: 404, message: `Existing User not found with id : ${id}`, };}
-        
-    existingUser.firstname = data.firstname ? data. firstname : existingUser.firstname;
+    if (!existingUser) {
+      throw { code: 404, message: `Existing User not found with id : ${id}` };
+    }
+
+    existingUser.firstname = data.firstname ? data.firstname : existingUser.firstname;
     existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
     existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
     // existingUser.bankDetail = data.bankDetail ? data.bankDetail : existingUser.bankDetail;
@@ -261,36 +292,30 @@ export const userservice = {
         message: `Failed to update User Profile with id : ${id}`,
       };
     });
-  
+
     return true;
   },
-  
+
   userPasswordResetCode: async (userName, oldPassword, password) => {
     const existingUser = await userservice.findUser({
       userName: userName,
     });
 
-    const oldPasswordIsCorrect = await bcrypt.compare(
-      oldPassword,
-      existingUser.password
-    );
+    const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
 
     if (!oldPasswordIsCorrect) {
       throw {
         code: 401,
-        message: "Invalid old password",
+        message: 'Invalid old password',
       };
     }
 
-    const passwordIsDuplicate = await bcrypt.compare(
-      password,
-      existingUser.password
-    );
+    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
     if (passwordIsDuplicate) {
       throw {
         code: 409,
-        message: "New Password cannot be the same as existing password",
+        message: 'New Password cannot be the same as existing password',
       };
     }
 
@@ -300,10 +325,9 @@ export const userservice = {
     existingUser.password = encryptedPassword;
     existingUser.save().catch((err) => {
       console.error(err);
-      throw { code: 500, message: "Failed to save new password" };
+      throw { code: 500, message: 'Failed to save new password' };
     });
 
     return true;
   },
- 
 };

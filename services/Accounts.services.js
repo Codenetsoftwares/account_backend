@@ -1142,7 +1142,7 @@ const AccountServices = {
       const [transaction, bankTransaction, websiteTransaction] = await Promise.all([
         Transaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec(),
         BankTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec(),
-        WebsiteTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec()
+        WebsiteTransaction.find({ subAdminId: userId }).sort({ createdAt: -1 }).exec(),
       ]);
 
       // Combine and sort all transactions
@@ -1150,13 +1150,8 @@ const AccountServices = {
       allTransactions.sort((a, b) => b.createdAt - a.createdAt);
 
       if (allTransactions.length === 0) {
-        return apiResponseErr(
-          [],
-          true,
-          statusCode.success,
-          "No transactions found for this sub-admin.",
-          res
-        );
+        return apiResponseErr([], true, statusCode.success, 'No transactions found for this sub-admin.', res);
+        
       }
 
       // Apply pagination to the combined result set
@@ -1167,20 +1162,21 @@ const AccountServices = {
       const totalPages = Math.ceil(totalItems / limit);
 
       // Send response with pagination info
-      return apiResponsePagination(paginatedTransactions, true, statusCode.success, 'success', {
-        page: parseInt(page),
-        limit,
-        totalPages,
-        totalItems
-      }, res);
-    } catch (error) {
-      return apiResponseErr(
-        null,
-        false,
-        error.responseCode ?? statusCode.internalServerError,
-        error.message,
-        res
+      return apiResponsePagination(
+        paginatedTransactions,
+        true,
+        statusCode.success,
+        'success',
+        {
+          page: parseInt(page),
+          limit,
+          totalPages,
+          totalItems,
+        },
+        res,
       );
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
 
@@ -1199,11 +1195,7 @@ const AccountServices = {
       const websiteTransactions = await WebsiteTransaction.find({}).sort({ createdAt: -1 }).exec();
       const bankTransactions = await BankTransaction.find({}).sort({ createdAt: -1 }).exec();
 
-      const allTransactions = [
-        ...transactions,
-        ...websiteTransactions,
-        ...bankTransactions,
-      ];
+      const allTransactions = [...transactions, ...websiteTransactions, ...bankTransactions];
 
       // Sort all transactions by createdAt in descending order
       allTransactions.sort((a, b) => {
@@ -1227,19 +1219,386 @@ const AccountServices = {
           page,
           limit: pageSize,
           totalPages,
-          totalItems
+          totalItems,
         },
-        res
+        res,
       );
     } catch (error) {
-      return apiResponseErr(
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getUserDetails: async (req, res) => {
+    try {
+      const resultArray = await User.find({}, 'userName').exec();
+
+      // Validate the resultArray
+      if (!resultArray || resultArray.length === 0) {
+        return apiResponseErr(null, false, statusCode.notFound, 'No users found in the database.', res);
+      }
+      //res.status(200).send(resultArray);
+      return apiResponseSuccess(resultArray, true, statusCode.success, 'Usernames fetched successfully', res);
+    } catch (error) {
+      console.log(error);
+      //res.status(500).send("Internal Server error");
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getIntroUserDetails: async (req, res) => {
+    try {
+      const resultArray = await IntroducerUser.find({}, 'userName').exec();
+
+      // Validate the resultArray
+      if (!resultArray || resultArray.length === 0) {
+        return apiResponseErr(null, false, statusCode.notFound, 'No introducer users found in the database.', res);
+      }
+      //res.status(200).send(resultArray);
+      return apiResponseSuccess(
+        resultArray,
+        true,
+        statusCode.success,
+        'Introducer usernames fetched successfully',
+        res,
+      );
+    } catch (error) {
+      console.log(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  viewSubAdminPage: async (req, res) => {
+    const page = req.params.page;
+    const searchQuery = req.query.search;
+    try {
+      let allIntroDataLength;
+      if (searchQuery) {
+        console.log('first');
+        let SecondArray = [];
+        const users = await Admin.find({ userName: { $regex: new RegExp(searchQuery, 'i') } }).exec();
+        SecondArray = SecondArray.concat(users);
+        allIntroDataLength = SecondArray.length;
+        const pageNumber = Math.ceil(allIntroDataLength / 10);
+
+        //res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        return apiResponseSuccess(
+          { SecondArray, pageNumber, allIntroDataLength },
+          true,
+          statusCode.success,
+          'Admin fetched successfully based on the search query',
+          res,
+        );
+      } else {
+        console.log('second');
+        let introducerUser = await Admin.find({ roles: { $nin: ['superAdmin'] } }).exec();
+        let introData = JSON.parse(JSON.stringify(introducerUser));
+        console.log('introData', introData.length);
+
+        const SecondArray = [];
+        const Limit = page * 10;
+        console.log('Limit', Limit);
+
+        for (let j = Limit - 10; j < Limit && j < introData.length; j++) {
+          if (introData[j]) {
+            SecondArray.push(introData[j]);
+          }
+        }
+        allIntroDataLength = introData.length;
+
+        if (SecondArray.length === 0) {
+          // return res.status(404).json({ message: "No data found for the selected criteria." });
+          throw new CustomError('No data found for the selected criteria.', null, 404);
+        }
+
+        const pageNumber = Math.ceil(allIntroDataLength / 10);
+        //res.status(200).json({ SecondArray, pageNumber, allIntroDataLength });
+        return apiResponseSuccess(
+          { SecondArray, pageNumber, allIntroDataLength },
+          true,
+          statusCode.success,
+          'Admin fetched successfully',
+          res,
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getSingleSubAdmin: async (req, res) => {
+    try {
+      if (!req.params.id) {
+        throw { code: 400, message: "Sub Admin's Id not present" };
+      }
+      const subAdminId = req.params.id;
+      const subAdmin = await Admin.findById(subAdminId);
+      if (!subAdmin) {
+        //throw { code: 500, message: "Sub Admin not found with the given Id" };
+        throw new CustomError('Sub Admin not found with the given Id', null, 404);
+      }
+      //res.status(200).send(subAdmin);
+      return apiResponseSuccess(subAdmin, true, statusCode.success, 'Sub Admin details fetched successfully', res);
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  editSubAdmin: async (req, res) => {
+    try {
+      const subAdminId = req.params.id;
+      const { roles } = req.body;
+      // if (!subAdminId) {
+      //   throw { code: 400, message: "Id not found" };
+      // }
+      const subAdmin = await Admin.findById(subAdminId);
+      if (!subAdmin) {
+        throw new CustomError('Sub Admin not found', null, 404);
+      }
+      subAdmin.roles = roles;
+      const user = await subAdmin.save();
+      return apiResponseSuccess(user, true, statusCode.success, 'Sub Admin roles updated successfully', res);
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  userSingleData: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const introducerUser = await IntroducerUser.findOne({ _id: id }, 'userName').exec();
+      if (!introducerUser) {
+        //return res.status(404).send({ message: "IntroducerUser not found" });
+        throw new CustomError('IntroducerUser not found', null, 404);
+      }
+
+      const users = await User.find({
+        $or: [
+          { introducersUserName: introducerUser.userName },
+          { introducersUserName1: introducerUser.userName },
+          { introducersUserName2: introducerUser.userName },
+        ],
+      }).exec();
+
+      if (users.length === 0) {
+        return res.status(404).send({ message: 'No matching users found' });
+      }
+
+      let filteredIntroducerUsers = [];
+
+      users.forEach((matchedUser) => {
+        let filteredIntroducerUser = {
+          _id: matchedUser._id,
+          firstname: matchedUser.firstname,
+          lastname: matchedUser.lastname,
+          userName: matchedUser.userName,
+          wallet: matchedUser.wallet,
+          role: matchedUser.role,
+          webSiteDetail: matchedUser.webSiteDetail,
+          transactionDetail: matchedUser.transactionDetail,
+        };
+
+        let matchedIntroducersUserName = null;
+        let matchedIntroducerPercentage = null;
+
+        if (matchedUser.introducersUserName === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage;
+        } else if (matchedUser.introducersUserName1 === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName1;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage1;
+        } else if (matchedUser.introducersUserName2 === introducerUser.userName) {
+          matchedIntroducersUserName = matchedUser.introducersUserName2;
+          matchedIntroducerPercentage = matchedUser.introducerPercentage2;
+        }
+
+        if (matchedIntroducersUserName) {
+          filteredIntroducerUser.matchedIntroducersUserName = matchedIntroducersUserName;
+          filteredIntroducerUser.introducerPercentage = matchedIntroducerPercentage;
+          filteredIntroducerUsers.push(filteredIntroducerUser);
+        }
+      });
+
+      // return res.send(filteredIntroducerUsers);
+      return apiResponseSuccess(
+        filteredIntroducerUsers,
+        true,
+        statusCode.success,
+        'User Data Reterive Successfully!',
+        res,
+      );
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  getSingleUserProfile : async (req, res) => {
+    try {
+      const id = req.params.id;
+      const userProfile = await User.find({ _id: id }).sort({ createdAt: 1 }).exec();
+
+      if(!userProfile || userProfile.length === 0){
+        throw new CustomError(`User profile not Found with ${id}`, null, 404)
+      }
+      //res.status(200).send(userProfile);
+      return apiResponseSuccess(userProfile, true, statusCode.success, "User Profile Fetched Successfully!", res)
+    } catch (error) {
+      console.error(error);
+        return apiResponseErr(
         null,
         false,
         error.responseCode ?? statusCode.internalServerError,
         error.message,
         res
-      );
+)
     }
+  },
+
+  adminFilterData : async (req, res) => {
+    try {
+      const { page, itemsPerPage } = req.query;
+      const {
+        transactionID,
+        transactionType,
+        introducerList,
+        subAdminList,
+        BankList,
+        WebsiteList,
+        sdate,
+        edate,
+        minAmount,
+        maxAmount,
+      } = req.body;
+
+      const filter = {};
+      console.log('Filter before applying:', filter);
+      if (transactionID) {
+        filter.transactionID = transactionID;
+      }
+      if (transactionType) {
+        filter.transactionType = transactionType;
+      }
+      if (introducerList) {
+        filter.introducerUserName = introducerList;
+      }
+      if (subAdminList) {
+        filter.subAdminName = subAdminList;
+      }
+      if (BankList) {
+        filter.bankName = BankList;
+      }
+      if (WebsiteList) {
+        filter.websiteName = WebsiteList;
+      }
+      if (sdate && edate) {
+        filter.createdAt = { $gte: new Date(sdate), $lte: new Date(edate) };
+      } else if (sdate) {
+        filter.createdAt = { $gte: new Date(sdate) };
+      } else if (edate) {
+        filter.createdAt = { $lte: new Date(edate) };
+      }
+      console.log('Transaction ID:', transactionID);
+      console.log('Filter after applying:', filter);
+      const transactions = await Transaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('transactions', transactions)
+      const websiteTransactions = await WebsiteTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('websiteTransactions', websiteTransactions)
+      const bankTransactions = await BankTransaction.find(filter).sort({ createdAt: -1 }).exec();
+      // console.log('bankTransactions', bankTransactions)
+
+      const filteredTransactions = transactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return transaction.amount >= minAmount && transaction.amount <= maxAmount;
+        } else {
+          return true;
+        }
+      });
+
+      const filteredWebsiteTransactions = websiteTransactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return (
+            (transaction.withdrawAmount >= minAmount && transaction.withdrawAmount <= maxAmount) ||
+            (transaction.depositAmount >= minAmount && transaction.depositAmount <= maxAmount)
+          );
+        } else {
+          return true;
+        }
+      });
+
+      // console.log('filteredWebsiteTransactions', filteredWebsiteTransactions)
+
+      const filteredBankTransactions = bankTransactions.filter((transaction) => {
+        if (minAmount && maxAmount) {
+          return (
+            (transaction.withdrawAmount >= minAmount && transaction.withdrawAmount <= maxAmount) ||
+            (transaction.depositAmount >= minAmount && transaction.depositAmount <= maxAmount)
+          );
+        } else {
+          return true;
+        }
+      });
+
+      // console.log('filteredBankTransactions', filteredBankTransactions)
+
+      const alltrans = [...filteredTransactions, ...filteredWebsiteTransactions, ...filteredBankTransactions];
+      alltrans.sort((a, b) => b.createdAt - a.createdAt);
+      // console.log('all',alltrans.length)
+      const allIntroDataLength = alltrans.length;
+      // console.log("allIntroDataLength", allIntroDataLength);
+      let pageNumber = Math.floor(allIntroDataLength / 10 + 1);
+      const skip = (page - 1) * itemsPerPage;
+      const limit = parseInt(itemsPerPage);
+      const paginatedResults = alltrans.slice(skip, skip + limit);
+      // console.log('pagitren',paginatedResults.length)
+
+      if (paginatedResults.length !== 0) {
+        // console.log('s')
+        // console.log('pagin', paginatedResults.length)
+        //return res.status(200).json({ paginatedResults, pageNumber, allIntroDataLength });
+        return apiResponseSuccess(
+          { paginatedResults, pageNumber,  allIntroDataLength }, 
+          true, 
+          statusCode.success,
+          "Filtered data retrieved successfully",
+          res   
+      )
+      } else {
+        const itemsPerPage = 10; // Specify the number of items per page
+
+        const totalItems = alltrans.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        let page = parseInt(req.query.page) || 1; // Get the page number from the request, default to 1 if not provided
+        page = Math.min(Math.max(1, page), totalPages); // Ensure page is within valid range
+
+        const skip = (page - 1) * itemsPerPage;
+        const limit = Math.min(itemsPerPage, totalItems - skip); // Ensure limit doesn't exceed the number of remaining items
+        const paginatedResults = alltrans.slice(skip, skip + limit);
+
+        const pageNumber = page;
+        const allIntroDataLength = totalItems;
+
+       // return res.status(200).json({ paginatedResults, pageNumber, totalPages, allIntroDataLength });
+       return apiResponseSuccess(
+        { paginatedResults, pageNumber, totalPages, allIntroDataLength }, 
+        true, 
+        statusCode.success,
+        "Filtered data retrieved successfully",
+        res   
+    )
+      }
+    } catch (error) {
+    console.log(error)
+    return apiResponseErr(
+      null,
+      false,
+      error.responseCode ?? statusCode.internalServerError,
+      error.message,
+      res
+    )}
   },
 
 
