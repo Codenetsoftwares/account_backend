@@ -4,7 +4,7 @@ import { Authorize } from '../middleware/Authorize.js';
 import { User } from '../models/user.model.js';
 import { introducerUser } from '../services/introducer.services.js';
 import { IntroducerUser } from '../models/introducer.model.js';
-import { userservice } from '../services/user.service.js';
+import { userService } from '../services/user.service.js';
 import TransactionServices from '../services/Transaction.services.js';
 import { string } from '../constructor/string.js';
 import customErrorHandler from '../utils/customErrorHandler.js';
@@ -227,7 +227,7 @@ const AccountsRoute = (app) => {
     userValidator,
     customErrorHandler,
     Authorize(['superAdmin', 'Create-Admin', 'Create-User']),
-    userservice.createUser,
+    userService.createUser,
   );
 
   app.get(
@@ -269,7 +269,7 @@ const AccountsRoute = (app) => {
   app.post(
     '/api/admin/user/reset-password',validateLogin,customErrorHandler,
     Authorize(['superAdmin', 'Create-User', 'Create-Admin', 'Profile-View', 'User-Profile-View']),
-    userservice.UserPasswordResetCode
+    userService.UserPasswordResetCode
      
   );
 

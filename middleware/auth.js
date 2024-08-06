@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { userservice } from '../services/user.service.js';
+import { userService } from '../services/user.service.js';
 import { introducerUser } from '../services/introducer.services.js';
 
 export const AuthorizeRole = (roles) => {
@@ -24,7 +24,7 @@ export const AuthorizeRole = (roles) => {
 
       let existingUser;
       if (roles.includes('user')) {
-        existingUser = await userservice.findUserById(user.id);
+        existingUser = await userService.findUserById(user.id);
         if (!existingUser) {
           return res.status(401).send({ code: 401, message: 'Invalid login attempt for user (4)' });
         }
