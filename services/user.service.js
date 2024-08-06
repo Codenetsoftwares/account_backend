@@ -11,7 +11,7 @@ import { statusCode } from '../utils/statusCodes.js';
 import CustomError from '../utils/extendError.js';
 dotenv.config();
 
-export const userservice = {
+export const userService = {
   createUser: async (req, res) => {
     try {
       const {
@@ -27,18 +27,6 @@ export const userservice = {
         introducerPercentage1,
         introducerPercentage2,
       } = req.body;
-      // if (!data.firstname) {
-      //   throw { code: 400, message: "Firstname is required" };
-      // }
-      // if (!data.lastname) {
-      //   throw { code: 400, message: "Lastname is required" };
-      // }
-      // if (!data.userName) {
-      //   throw { code: 400, message: "User Name is required" };
-      // }
-      // if (!data.password) {
-      //   throw { code: 400, message: "Password is required" };
-      // }
       const [existingUser, existingAdminUser, existingIntroUser] = await Promise.all([
         User.findOne({ userName: userName }).exec(),
         Admin.findOne({ userName: userName }).exec(),
@@ -46,13 +34,11 @@ export const userservice = {
       ]);
 
       if (existingUser || existingAdminUser || existingIntroUser) {
-        //throw { code: 409, message: `User already exists: ${userName}` };
         throw new CustomError(`User already exists: ${userName}`, null, 409);
       }
 
       const passwordSalt = await bcrypt.genSalt();
       const encryptedPassword = await bcrypt.hash(password, passwordSalt);
-      // const emailVerificationCode = crypto.randomBytes(6).toString("hex");
       const newUser = new User({
         firstname: firstname,
         lastname: lastname,
@@ -137,76 +123,92 @@ export const userservice = {
 
   findUser: async (filter) => {
     if (!filter) {
-      throw { code: 409, message: 'Required parameter: filter' };
+      throw new CustomError('Required parameter: filter', null, statusCode.exist)
     }
-    return User.findOne(filter).exec();
+    return await User.findOne(filter).exec();
   },
 
-  verifyEmail: async (email, code) => {
-    const existingUser = await userservice.findUser({ email: email });
-    if (!existingUser) throw { code: 404, message: `Invalid user: ${email}` };
-
-    if (existingUser.emailVerified) {
-      throw { code: 400, message: `Email already verified for ${email}` };
+  verifyEmail: async (req,res) => {
+    try {
+      const { email, code } = req.body;
+      const existingUser = await userService.findUser({ email: email });
+      if (!existingUser){
+        return apiResponseErr(null, true, statusCode.badRequest, `Invalid user: ${email}`, res);
+      }
+  
+      if (existingUser.emailVerified) {
+        return apiResponseErr(null, true, statusCode.badRequest, `Email already verified for ${email}`, res);
+      }
+  
+      if (existingUser.tokens.emailVerification !== code) {
+        return apiResponseErr(null, true, statusCode.badRequest, `Invalid verification code: ${code}`, res);
+      }
+  
+      existingUser.emailVerified = true;
+      existingUser.tokens.emailVerification = null;
+     const result=await existingUser.save();
+      return apiResponseSuccess(result, true, statusCode.create, 'Email verified Successfully', res);
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
-
-    if (existingUser.tokens.emailVerification !== code) {
-      throw { code: 401, message: `Invalid verification code: ${code}` };
-    }
-
-    existingUser.emailVerified = true;
-    existingUser.tokens.emailVerification = null;
-    existingUser.save();
+   
   },
 
-  generateAccessToken: async (userName, password, persist) => {
-    if (!userName) {
-      throw { code: 400, message: 'Invalid value for: User Name' };
-    }
-    if (!password) {
-      throw { code: 400, message: 'Invalid value for: Password' };
-    }
+  generateAccessToken: async (req, res) => {
+    try {
+      const { userName, password, persist } = req.body;
 
-    const existingUser = await userservice.findUser({ userName: userName });
+      const existingUser = await userService.findUser({ userName: userName });
+      if (!existingUser) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Invalid User Name', res);
+      }
+
+      const passwordValid = await bcrypt.compare(password, existingUser.password);
+      if (!passwordValid) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Invalid Password', res);
+      }
+      const user = await User.findOne({ userName: userName });
+      if (!user) {
+        throw new CustomError('User not found', null, statusCode.badRequest)
+      }
+      const balance = user.wallet;
+
+      const accessTokenResponse = {
+        id: existingUser._id,
+        name: existingUser.firstname,
+        userName: existingUser.userName,
+        role: existingUser.role,
+        balance: balance
+      };
+      const accessToken = jwt.sign(accessTokenResponse, process.env.JWT_SECRET_KEY, {
+        expiresIn: persist ? '1y' : '8h',
+      });
+      return apiResponseSuccess({
+        userName: existingUser.userName,
+        accessToken: accessToken,
+        role: existingUser.role,
+        balance: balance
+      }, true, statusCode.success, 'User login Successfully', res);
+
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+
+    }
+  },
+
+  sendResetPasswordEmail: async (req,res) => {
+    try {
+      const { email } = req.body;
+    const existingUser = await userService.findUser({ email: email });
+
     if (!existingUser) {
-      throw { code: 401, message: 'Invalid User Name  or Password' };
+      throw new CustomError('First Register with Gamex', null, statusCode.exist)
     }
 
-    const passwordValid = await bcrypt.compare(password, existingUser.password);
-    if (!passwordValid) {
-      throw { code: 401, message: 'Invalid User Name or Password' };
-    }
-
-    const accessTokenResponse = {
-      id: existingUser._id,
-      name: existingUser.firstname,
-      userName: existingUser.userName,
-      role: existingUser.role,
-    };
-    console.log(accessTokenResponse);
-    const accessToken = jwt.sign(accessTokenResponse, process.env.JWT_SECRET_KEY, {
-      expiresIn: persist ? '1y' : '8h',
-    });
-
-    return {
-      userName: existingUser.userName,
-      accessToken: accessToken,
-      role: existingUser.role,
-    };
-  },
-
-  sendResetPasswordEmail: async (email) => {
-    const existingUser = await userservice.findUser({ email: email });
-
-    if (!existingUser) {
-      throw { code: 409, message: 'First Register with Gamex' };
-    }
-
-    const emailVerificationCode = await crypto.randomBytes(6).toString('hex');
+    const emailVerificationCode =crypto.randomBytes(6).toString('hex');
     existingUser.tokens.passwordReset = emailVerificationCode;
     existingUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: 'Failed to save new password' };
+      throw new CustomError( 'Failed to save new password', null, statusCode.badRequest)
     });
 
     nodemailer
@@ -225,18 +227,83 @@ export const userservice = {
         subject: 'Password Reset Code',
         text: `The verification code to reset your password is ${emailVerificationCode}. (Note) : If you have not initiated a password reset then contact support as soon as possible. `,
       })
-      .catch((err) => {
-        console.error(err);
-        throw { code: 500, message: 'Failed to send verification email' };
-      });
-
-    return existingUser;
+      return apiResponseSuccess(existingUser, true, statusCode.success, 'Password Reset Code Sent', res);
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res); 
+    }
   },
+  
+  updateBankDetails : async (req, res) => {
+    try {
+      const { accountHolderName, bankName, ifscCode, accountNumber } = req.body;
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
+      }
+  
+      
+      user.bankDetail.accountHolderName = accountHolderName;
+      user.bankDetail.bankName = bankName;
+      user.bankDetail.ifscCode = ifscCode;
+      user.bankDetail.accountNumber = accountNumber;
+  
+     const bankDetails= await user.save();
+     return apiResponseSuccess(bankDetails, true, statusCode.success, 'Bank details updated successfully.', res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+   addWebsiteDetails :async (req, res) => {
+    try {
+      const { websiteName } = req.body;
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
+      }
+  
+      const newWebsiteDetail = {
+        websiteName: websiteName,
+      };
+  
+      user.webSiteDetail.push(newWebsiteDetail);
+     const response= await user.save();
+      return apiResponseSuccess(response, true, statusCode.success, 'Website details updated successfully.', res);
+    } catch (error) {
+      
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  updateUpiDetails : async (req, res) => {
+    try {
+      const { upiId, upiApp, upiNumber } = req.body;
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
+      }
+  
+      user.upiDetail.upiId = upiId;
+      user.upiDetail.upiApp = upiApp;
+      user.upiDetail.upiNumber = upiNumber;
+      const response = await user.save();
+      return apiResponseSuccess(response, true, statusCode.success, 'UPI details updated successfully.', res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
 
   UserPasswordResetCode: async (req, res) => {
     try {
       const { userName, password } = req.body;
-      const existingUser = await userservice.findUser({ userName: userName });
+      const existingUser = await userService.findUser({ userName: userName });
 
       if (!existingUser) {
         throw new CustomError('User not found', null, 404);
@@ -289,7 +356,7 @@ export const userservice = {
   },
 
   userPasswordResetCode: async (userName, oldPassword, password) => {
-    const existingUser = await userservice.findUser({
+    const existingUser = await userService.findUser({
       userName: userName,
     });
 
