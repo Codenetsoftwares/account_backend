@@ -250,3 +250,9 @@ export const validateIntroducerProfileUpdate = [
   body('firstname').optional().isString().withMessage('Firstname must be a string'),
   body('lastname').optional().isString().withMessage('Lastname must be a string'),
 ];
+
+export const validateResetPassword = [
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('oldPassword').notEmpty().withMessage('Old Password is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+];

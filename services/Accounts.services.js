@@ -126,40 +126,41 @@ const AccountServices = {
     return true;
   },
 
-  SuperAdminPasswordResetCode: async (userName, oldPassword, password) => {
-    const existingUser = await AccountServices.findAdmin({
-      userName: userName,
-    });
-
-    const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
-
-    if (!oldPasswordIsCorrect) {
-      throw {
-        code: 401,
-        message: 'Invalid old password',
-      };
+  SuperAdminPasswordResetCode: async (req, res) => {
+    try {
+      const { userName, oldPassword, password } = req.body;
+      const existingUser = await AccountServices.findAdmin({ userName });
+  
+      if (!existingUser) {
+        return apiResponseErr(null, false, statusCode.badRequest, 'User not found', res);
+      }
+  
+      const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
+  
+      if (!oldPasswordIsCorrect) {
+        return apiResponseErr(null, false, statusCode.unauthorize, 'Invalid old password', res);
+      }
+  
+      const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+  
+      if (passwordIsDuplicate) {
+        return apiResponseErr(null, false, statusCode.exist, 'New password cannot be the same as existing password', res);
+      }
+  
+      const passwordSalt = await bcrypt.genSalt();
+      const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+  
+      existingUser.password = encryptedPassword;
+  
+     const user = await existingUser.save();
+      
+      return apiResponseSuccess(user, true, statusCode.success, 'Password reset successfully', res);
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
-
-    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
-
-    if (passwordIsDuplicate) {
-      throw {
-        code: 409,
-        message: 'New Password cannot be the same as existing password',
-      };
-    }
-
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
-
-    existingUser.password = encryptedPassword;
-    existingUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: 'Failed to save new password' };
-    });
-
-    return true;
   },
+  
 
   generateAdminAccessToken: async (userName, password, persist) => {
   
