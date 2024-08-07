@@ -123,35 +123,34 @@ export const userService = {
 
   findUser: async (filter) => {
     if (!filter) {
-      throw new CustomError('Required parameter: filter', null, statusCode.exist)
+      throw new CustomError('Required parameter: filter', null, statusCode.exist);
     }
     return await User.findOne(filter).exec();
   },
 
-  verifyEmail: async (req,res) => {
+  verifyEmail: async (req, res) => {
     try {
       const { email, code } = req.body;
       const existingUser = await userService.findUser({ email: email });
-      if (!existingUser){
+      if (!existingUser) {
         return apiResponseErr(null, true, statusCode.badRequest, `Invalid user: ${email}`, res);
       }
-  
+
       if (existingUser.emailVerified) {
         return apiResponseErr(null, true, statusCode.badRequest, `Email already verified for ${email}`, res);
       }
-  
+
       if (existingUser.tokens.emailVerification !== code) {
         return apiResponseErr(null, true, statusCode.badRequest, `Invalid verification code: ${code}`, res);
       }
-  
+
       existingUser.emailVerified = true;
       existingUser.tokens.emailVerification = null;
-     const result=await existingUser.save();
+      const result = await existingUser.save();
       return apiResponseSuccess(result, true, statusCode.create, 'Email verified Successfully', res);
     } catch (error) {
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
-   
   },
 
   generateAccessToken: async (req, res) => {
@@ -169,7 +168,7 @@ export const userService = {
       }
       const user = await User.findOne({ userName: userName });
       if (!user) {
-        throw new CustomError('User not found', null, statusCode.badRequest)
+        throw new CustomError('User not found', null, statusCode.badRequest);
       }
       const balance = user.wallet;
 
@@ -178,117 +177,119 @@ export const userService = {
         name: existingUser.firstname,
         userName: existingUser.userName,
         role: existingUser.role,
-        balance: balance
+        balance: balance,
       };
       const accessToken = jwt.sign(accessTokenResponse, process.env.JWT_SECRET_KEY, {
         expiresIn: persist ? '1y' : '8h',
       });
-      return apiResponseSuccess({
-        userName: existingUser.userName,
-        accessToken: accessToken,
-        role: existingUser.role,
-        balance: balance
-      }, true, statusCode.success, 'User login Successfully', res);
-
+      return apiResponseSuccess(
+        {
+          userName: existingUser.userName,
+          accessToken: accessToken,
+          role: existingUser.role,
+          balance: balance,
+        },
+        true,
+        statusCode.success,
+        'User login Successfully',
+        res,
+      );
     } catch (error) {
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
-
     }
   },
 
-  sendResetPasswordEmail: async (req,res) => {
+  sendResetPasswordEmail: async (req, res) => {
     try {
       const { email } = req.body;
-    const existingUser = await userService.findUser({ email: email });
+      const existingUser = await userService.findUser({ email: email });
 
-    if (!existingUser) {
-      throw new CustomError('First Register with Gamex', null, statusCode.exist)
-    }
+      if (!existingUser) {
+        throw new CustomError('First Register with Gamex', null, statusCode.exist);
+      }
 
-    const emailVerificationCode =crypto.randomBytes(6).toString('hex');
-    existingUser.tokens.passwordReset = emailVerificationCode;
-    existingUser.save().catch((err) => {
-      throw new CustomError( 'Failed to save new password', null, statusCode.badRequest)
-    });
+      const emailVerificationCode = crypto.randomBytes(6).toString('hex');
+      existingUser.tokens.passwordReset = emailVerificationCode;
+      existingUser.save().catch((err) => {
+        throw new CustomError('Failed to save new password', null, statusCode.badRequest);
+      });
 
-    nodemailer
-      .createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: true,
-        auth: {
-          user: process.env.SMTP_CLIENTID,
-          pass: process.env.SMTP_CLIENTSECRET,
-        },
-      })
-      .sendMail({
-        from: `'Customer Relationship Manager' <${process.env.SMTP_SENDER}>`,
-        to: email,
-        subject: 'Password Reset Code',
-        text: `The verification code to reset your password is ${emailVerificationCode}. (Note) : If you have not initiated a password reset then contact support as soon as possible. `,
-      })
+      nodemailer
+        .createTransport({
+          host: process.env.SMTP_HOST,
+          port: process.env.SMTP_PORT,
+          secure: true,
+          auth: {
+            user: process.env.SMTP_CLIENTID,
+            pass: process.env.SMTP_CLIENTSECRET,
+          },
+        })
+        .sendMail({
+          from: `'Customer Relationship Manager' <${process.env.SMTP_SENDER}>`,
+          to: email,
+          subject: 'Password Reset Code',
+          text: `The verification code to reset your password is ${emailVerificationCode}. (Note) : If you have not initiated a password reset then contact support as soon as possible. `,
+        });
       return apiResponseSuccess(existingUser, true, statusCode.success, 'Password Reset Code Sent', res);
     } catch (error) {
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res); 
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
-  
-  updateBankDetails : async (req, res) => {
+
+  updateBankDetails: async (req, res) => {
     try {
       const { accountHolderName, bankName, ifscCode, accountNumber } = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-  
+
       if (!user) {
         return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
       }
-  
-      
+
       user.bankDetail.accountHolderName = accountHolderName;
       user.bankDetail.bankName = bankName;
       user.bankDetail.ifscCode = ifscCode;
       user.bankDetail.accountNumber = accountNumber;
-  
-     const bankDetails= await user.save();
-     return apiResponseSuccess(bankDetails, true, statusCode.success, 'Bank details updated successfully.', res);
+
+      const bankDetails = await user.save();
+      return apiResponseSuccess(bankDetails, true, statusCode.success, 'Bank details updated successfully.', res);
     } catch (error) {
       return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
 
-   addWebsiteDetails :async (req, res) => {
+  addWebsiteDetails: async (req, res) => {
     try {
       const { websiteName } = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-  
+
       if (!user) {
         return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
       }
-  
+
       const newWebsiteDetail = {
         websiteName: websiteName,
       };
-  
+
       user.webSiteDetail.push(newWebsiteDetail);
-     const response= await user.save();
+      const response = await user.save();
       return apiResponseSuccess(response, true, statusCode.success, 'Website details updated successfully.', res);
     } catch (error) {
-      
       return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
 
-  updateUpiDetails : async (req, res) => {
+  updateUpiDetails: async (req, res) => {
     try {
       const { upiId, upiApp, upiNumber } = req.body;
       const userId = req.user.id;
       const user = await User.findById(userId);
-  
+
       if (!user) {
         return apiResponseErr(null, true, statusCode.badRequest, 'User not found.', res);
       }
-  
+
       user.upiDetail.upiId = upiId;
       user.upiDetail.upiApp = upiApp;
       user.upiDetail.upiNumber = upiNumber;
@@ -298,7 +299,6 @@ export const userService = {
       return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
-
 
   UserPasswordResetCode: async (req, res) => {
     try {

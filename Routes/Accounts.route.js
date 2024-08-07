@@ -10,16 +10,21 @@ import { string } from '../constructor/string.js';
 import customErrorHandler from '../utils/customErrorHandler.js';
 import { apiResponseErr, apiResponseSuccess } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
-import { userValidator, validateCreateAdmin, validateInteroducer,validateUserProfileUpdate, validateLogin, validateRole, validateIntroducerUser, validateIntroducerProfileUpdate, validateResetPassword } from '../utils/commonSchema.js';
+import {
+  userValidator,
+  validateCreateAdmin,
+  validateInteroducer,
+  validateUserProfileUpdate,
+  validateLogin,
+  validateRole,
+  validateIntroducerUser,
+  validateIntroducerProfileUpdate,
+  validateResetPassword,
+} from '../utils/commonSchema.js';
 
 const AccountsRoute = (app) => {
   // API For Admin Login
-  app.post(
-    '/admin/login', 
-    validateLogin, 
-    customErrorHandler, 
-    AccountServices.adminLogin
-  );
+  app.post('/admin/login', validateLogin, customErrorHandler, AccountServices.adminLogin);
 
   app.post(
     '/api/create/user-admin',
@@ -32,8 +37,8 @@ const AccountsRoute = (app) => {
 
   app.get(
     '/api/user-profile/:page',
-    Authorize([string.superAdmin, string.userProfileView , string.profileView]),
-    AccountServices.getUserProfile
+    Authorize([string.superAdmin, string.userProfileView, string.profileView]),
+    AccountServices.getUserProfile,
   );
 
   // API To Edit User Profiles
@@ -41,9 +46,8 @@ const AccountsRoute = (app) => {
     '/api/admin/user-profile-edit/:id',
     validateUserProfileUpdate,
     customErrorHandler,
-    Authorize([string.superAdmin, string.userProfileView , string.profileView]),
-   AccountServices.updateUserProfile
-       
+    Authorize([string.superAdmin, string.userProfileView, string.profileView]),
+    AccountServices.updateUserProfile,
   );
 
   app.get(
@@ -59,8 +63,8 @@ const AccountsRoute = (app) => {
       string.profileView,
       string.introducerProfileView,
     ]),
-    AccountServices.getBankViewAdmins
-     );
+    AccountServices.getBankViewAdmins,
+  );
 
   app.get(
     '/api/admin/sub-admin-name',
@@ -75,7 +79,7 @@ const AccountsRoute = (app) => {
       string.profileView,
       string.introducerProfileView,
     ]),
-   AccountServices.getSubAdminName
+    AccountServices.getSubAdminName,
   );
 
   // pagination not needed
@@ -92,7 +96,7 @@ const AccountsRoute = (app) => {
       string.profileView,
       string.introducerProfileView,
     ]),
-    AccountServices.getWebsiteViewAdmins
+    AccountServices.getWebsiteViewAdmins,
   );
 
   app.get(
@@ -114,18 +118,19 @@ const AccountsRoute = (app) => {
     validateIntroducerUser,
     customErrorHandler,
     Authorize([string.superAdmin, string.createIntroducer, string.createAdmin]),
-     introducerUser.createintroducerUser   
+    introducerUser.createintroducerUser,
   );
 
-  app.post('/api/admin/introducer/introducerCut/:id', 
-    Authorize([string.superAdmin]), 
-     introducerUser.introducerPercentageCut  
-);
+  app.post(
+    '/api/admin/introducer/introducerCut/:id',
+    Authorize([string.superAdmin]),
+    introducerUser.introducerPercentageCut,
+  );
 
   app.get(
     '/api/admin/introducer-live-balance/:id',
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-    introducerUser.introducerLiveBalance
+    introducerUser.introducerLiveBalance,
   );
 
   app.put(
@@ -133,7 +138,7 @@ const AccountsRoute = (app) => {
     validateIntroducerProfileUpdate,
     customErrorHandler,
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-    introducerUser.updateIntroducerProfile 
+    introducerUser.updateIntroducerProfile,
   );
 
   app.get(
@@ -141,10 +146,9 @@ const AccountsRoute = (app) => {
     Authorize(['superAdmin', 'Introducer-Profile-View', 'Profile-View', 'Create-Introducer']),
     async (req, res) => {
       try {
-      const page = req.params.page;
-      const userName = req.query.search;
+        const page = req.params.page;
+        const userName = req.query.search;
 
-      
         let introducerUser = await IntroducerUser.find().exec();
         let introData = JSON.parse(JSON.stringify(introducerUser));
         if (userName) {
@@ -180,13 +184,13 @@ const AccountsRoute = (app) => {
   app.get(
     '/api/intoducer/client-data/:id',
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-   introducerUser.getIntroducerClientData
+    introducerUser.getIntroducerClientData,
   );
 
-  app.get( 
+  app.get(
     '/api/get-single-Introducer/:id',
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-  introducerUser. getSingleIntroducer
+    introducerUser.getSingleIntroducer,
   );
 
   app.get(
@@ -224,21 +228,13 @@ const AccountsRoute = (app) => {
     '/api/admin/user/register',
     userValidator,
     customErrorHandler,
-    Authorize([string.superAdmin, string.createAdmin, string.createUser ]),
+    Authorize([string.superAdmin, string.createAdmin, string.createUser]),
     userService.createUser,
   );
 
-  app.get(
-    '/api/admin/view-sub-admins/:page',
-    Authorize([string.superAdmin]),
-    AccountServices.viewSubAdminPage,
-  );
+  app.get('/api/admin/view-sub-admins/:page', Authorize([string.superAdmin]), AccountServices.viewSubAdminPage);
 
-  app.post(
-    '/api/admin/single-sub-admin/:id',
-    Authorize([string.superAdmin]),
-    AccountServices.getSingleSubAdmin,
-  );
+  app.post('/api/admin/single-sub-admin/:id', Authorize([string.superAdmin]), AccountServices.getSingleSubAdmin);
 
   app.put(
     '/api/admin/edit-subadmin-roles/:id',
@@ -250,7 +246,7 @@ const AccountsRoute = (app) => {
 
   app.get(
     '/introducer-user-single-data/:id',
-    Authorize([string.superAdmin,  string.introducerProfileView, string.profileView]),
+    Authorize([string.superAdmin, string.introducerProfileView, string.profileView]),
     AccountServices.userSingleData,
   );
 
@@ -267,22 +263,29 @@ const AccountsRoute = (app) => {
     validateLogin,
     customErrorHandler,
     Authorize([string.superAdmin, string.createUser, string.createAdmin, string.profileView, string.userProfileView]),
-    userService.UserPasswordResetCode
-     
+    userService.UserPasswordResetCode,
   );
 
   app.post(
-    '/api/admin/intorducer/reset-password',validateLogin,customErrorHandler,
-    Authorize([string.superAdmin, string.createAdmin, string.createIntroducer, string.introducerProfileView, string.profileView]),
-     introducerUser.intorducerPasswordResetCode
-      
+    '/api/admin/intorducer/reset-password',
+    validateLogin,
+    customErrorHandler,
+    Authorize([
+      string.superAdmin,
+      string.createAdmin,
+      string.createIntroducer,
+      string.introducerProfileView,
+      string.profileView,
+    ]),
+    introducerUser.intorducerPasswordResetCode,
   );
 
-  app.get('/api/admin/user/introducersUserName/:userId',
-     Authorize([string.superAdmin]), 
-     introducerUser.getInteroducerUserName
-);
-app.post(
+  app.get(
+    '/api/admin/user/introducersUserName/:userId',
+    Authorize([string.superAdmin]),
+    introducerUser.getInteroducerUserName,
+  );
+  app.post(
     '/api/admin/filter-data',
     Authorize([
       string.superAdmin,
@@ -294,27 +297,26 @@ app.post(
       string.bankView,
       string.reportMyTxn,
     ]),
-    AccountServices.adminFilterData
+    AccountServices.adminFilterData,
   );
 
   app.post(
     '/api/admin/create/introducer/deposit-transaction',
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-    TransactionServices.createIntroducerDepositTransaction
-     
+    TransactionServices.createIntroducerDepositTransaction,
   );
 
   app.post(
-    '/api/admin/create/introducer/withdraw-transaction',customErrorHandler,
+    '/api/admin/create/introducer/withdraw-transaction',
+    customErrorHandler,
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-     TransactionServices.createIntroducerWithdrawTransaction
-   
+    TransactionServices.createIntroducerWithdrawTransaction,
   );
 
   app.get(
     '/api/admin/introducer-account-summary/:id',
     Authorize([string.superAdmin, string.profileView, string.introducerProfileView]),
-    introducerUser.accountSummary
+    introducerUser.accountSummary,
   );
 
   app.post(
@@ -339,20 +341,20 @@ app.post(
       string.createUser,
       string.createIntroducer,
     ]),
-     AccountServices.SuperAdminPasswordResetCode
-       
+    AccountServices.SuperAdminPasswordResetCode,
   );
 
   app.get(
     '/api/single-user-profile/:id',
     Authorize([string.superAdmin, string.profileView, string.userProfileView]),
-    AccountServices.getSingleUserProfile
+    AccountServices.getSingleUserProfile,
   );
 
-  app.put('/api/admin/subAdmin-profile-edit/:id', 
+  app.put(
+    '/api/admin/subAdmin-profile-edit/:id',
     Authorize([string.superAdmin]),
-  AccountServices.updateSubAdminProfile
-);
+    AccountServices.updateSubAdminProfile,
+  );
 
   app.get(
     '/api/view-subadmin-transaction/:subadminId',

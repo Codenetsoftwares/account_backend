@@ -10,17 +10,9 @@ import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from '../ut
 import { statusCode } from '../utils/statusCodes.js';
 
 export const IntroducerRoutes = (app) => {
-  app.post('/api/introducer/user/login',
-    validateLogin, 
-    customErrorHandler,
-    introducerUser.introducerLogin
-  );
+  app.post('/api/introducer/user/login', validateLogin, customErrorHandler, introducerUser.introducerLogin);
 
-  app.get(
-    '/api/intoducer/profile',
-    AuthorizeRole([string.introducer]),
-    introducerUser.getInroducerProfile,
-  );
+  app.get('/api/intoducer/profile', AuthorizeRole([string.introducer]), introducerUser.getInroducerProfile);
 
   app.put(
     '/api/intoducer-profile-edit/:id',
@@ -29,35 +21,35 @@ export const IntroducerRoutes = (app) => {
     AuthorizeRole([string.introducer]),
     introducerUser.updateIntroducerProfile,
   );
-  app.get('/api/intoducer/user-data/:id', 
+  app.get('/api/intoducer/user-data/:id', AuthorizeRole([string.introducer]), introducerUser.getIntroducerUserData);
+
+  app.get('/api/list-introducer-user/:id', AuthorizeRole([string.introducer]), introducerUser.getListIntroducerUser);
+
+  app.get(
+    '/api/introducer-user-single-data/:id',
     AuthorizeRole([string.introducer]),
-    introducerUser.getIntroducerUserData
+    introducerUser.getIntroducerUserSingleData,
   );
 
-  app.get('/api/list-introducer-user/:id', 
-    AuthorizeRole([string.introducer]), 
-    introducerUser.getListIntroducerUser
-   );
-
-  app.get('/api/introducer-user-single-data/:id', 
+  app.get(
+    '/api/introducer/introducer-live-balance/:id',
     AuthorizeRole([string.introducer]),
-    introducerUser.getIntroducerUserSingleData 
-   );
+    introducerUser.getIntroducerLiveBalance,
+  );
 
-  app.get('/api/introducer/introducer-live-balance/:id', 
-    AuthorizeRole([string.introducer]), 
-    introducerUser. getIntroducerLiveBalance 
-   );
+  app.get(
+    '/api/introducer-account-summary/:id',
+    AuthorizeRole([string.introducer]),
+    introducerUser.getIntroducerAccountSummary,
+  );
 
-  app.get('/api/introducer-account-summary/:id', 
-    AuthorizeRole([string.introducer]), 
-    introducerUser.getIntroducerAccountSummary 
-   );
-
-  app.post('/api/introducer/reset-password',validateResetPassword,customErrorHandler,
-    AuthorizeRole([string.introducer]), 
-    introducerUser.introducerPasswordResetCode
-    );
+  app.post(
+    '/api/introducer/reset-password',
+    validateResetPassword,
+    customErrorHandler,
+    AuthorizeRole([string.introducer]),
+    introducerUser.introducerPasswordResetCode,
+  );
 
   // app.get("/api/introducer/data/:id",AuthorizeRole(["introducer"]),
   //   async (req, res) => {
@@ -98,7 +90,7 @@ export const IntroducerRoutes = (app) => {
   app.get(
     '/api/introducer-user/accountsummary/:introducerUsername',
     AuthorizeRole(['introducer']),
-    introducerUser.getIntroducerUserAccountSummary
+    introducerUser.getIntroducerUserAccountSummary,
   );
 };
 
