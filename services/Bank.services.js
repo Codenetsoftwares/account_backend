@@ -467,7 +467,7 @@ export const BankServices = {
     }
   },
 
-  mannualBankAccountSummary: async (req, res) => {
+  manualBankAccountSummary: async (req, res) => {
     try {
       let balances = 0;
       const bankId = req.params.bankId;
@@ -535,6 +535,29 @@ export const BankServices = {
       };
 
       return apiResponsePagination(resultArray, true, statusCode.success, 'Success', pagination, res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  isActive: async (req, res) => {
+    try {
+      const bankId = req.params.bankId;
+      const { isActive } = req.body;
+      if (typeof isActive !== 'boolean') {
+        return apiResponseErr(null, false, statusCode.badRequest, 'isApproved field must be a boolean value', res);
+      }
+      const bank = await Bank.findById(bankId);
+      if (!bank) {
+        return apiResponseErr(null, false, statusCode.badRequest, 'Bank not found', res);
+      }
+
+      bank.isActive = isActive;
+
+      const response = await bank.save();
+
+      const message = isActive ? 'Bank activated successfully' : 'Bank inactivated successfully';
+      return apiResponseSuccess(response, true, statusCode.success, message, res);
     } catch (error) {
       return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }

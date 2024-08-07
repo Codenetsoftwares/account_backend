@@ -250,3 +250,12 @@ export const validateIntroducerProfileUpdate = [
   body('firstname').optional().isString().withMessage('Firstname must be a string'),
   body('lastname').optional().isString().withMessage('Lastname must be a string'),
 ];
+export const validateIsActive = [
+  param('bankId')
+    .isMongoId()
+    .withMessage('Invalid bankId format'),
+
+  body('isActive')
+    .isBoolean()
+    .withMessage('isActive field must be a boolean value')
+]

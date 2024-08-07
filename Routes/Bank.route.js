@@ -15,6 +15,7 @@ import {
   validateBankUpdate,
   validateId,
   validateImproveBank,
+  validateIsActive,
   validatePagination,
   withdrawalBankBalanceValidate,
 } from '../utils/commonSchema.js';
@@ -149,7 +150,7 @@ const BankRoutes = (app) => {
     validateBankId,
     customErrorHandler,
     Authorize([string.superAdmin, string.bankView, string.transactionView]),
-    BankServices.mannualBankAccountSummary,
+    BankServices.manualBankAccountSummary,
   );
 
   app.get(
@@ -159,6 +160,15 @@ const BankRoutes = (app) => {
     Authorize([string.superAdmin]),
     BankServices.viewBankEditRequest,
   );
+
+  app.post(
+    '/api/admin/bank/isactive/:bankId',
+    validateIsActive,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.requestAdmin]),
+    BankServices.isActive
+  );
+
 
   // API To Delete Bank Name
 
@@ -229,32 +239,6 @@ const BankRoutes = (app) => {
   //   }
   // );
 
-  app.post('/api/admin/bank/isactive/:bankId', Authorize(['superAdmin', 'RequestAdmin']), async (req, res) => {
-    try {
-      console.log('req', req.params.bankId);
-      const bankId = req.params.bankId;
-      const activeRequest = await Bank.findById(bankId);
-      console.log('act', activeRequest);
-      const { isActive } = req.body;
-      if (typeof isActive !== 'boolean') {
-        return res.status(400).send({ message: 'isApproved field must be a boolean value' });
-      }
-      const bank = await Bank.findById(bankId);
-      if (!bank) {
-        return res.status(404).send({ message: 'Bank not found' });
-      }
-
-      bank.isActive = isActive;
-
-      await bank.save();
-
-      const message = isActive ? 'Bank activated successfully' : 'Bank inactivated successfully';
-      return res.status(200).send({ message });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal server error' });
-    }
-  });
 
   // app.post("/api/admin/bank/assign-subadmin/:bankId", Authorize(["superAdmin", "RequestAdmin"]), async (req, res) => {
   //   try {
