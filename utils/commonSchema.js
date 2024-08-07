@@ -109,10 +109,7 @@ export const validateBankId = [
 ];
 export const validateRole = [body('roles').notEmpty().withMessage('Role is required')];
 export const validateEmailVerification = [
-  body('email')
-    .isEmail()
-    .withMessage('Invalid email address')
-    .normalizeEmail(),
+  body('email').isEmail().withMessage('Invalid email address').normalizeEmail(),
   body('code')
     .notEmpty()
     .withMessage('Verification code is required')
@@ -120,10 +117,7 @@ export const validateEmailVerification = [
     .withMessage('Verification code must be 6 characters long'),
 ];
 export const validateSendResetPasswordEmail = [
-  body('email')
-    .isEmail()
-    .withMessage('Invalid email address')
-    .normalizeEmail(),
+  body('email').isEmail().withMessage('Invalid email address').normalizeEmail(),
 ];
 
 export const validateBankDetails = [
@@ -133,11 +127,7 @@ export const validateBankDetails = [
     .isString()
     .withMessage('Account holder name must be a string'),
 
-  body('bankName')
-    .notEmpty()
-    .withMessage('Bank name is required')
-    .isString()
-    .withMessage('Bank name must be a string'),
+  body('bankName').notEmpty().withMessage('Bank name is required').isString().withMessage('Bank name must be a string'),
 
   body('ifscCode')
     .notEmpty()
@@ -159,25 +149,17 @@ export const validateWebsiteDetails = [
     .notEmpty()
     .withMessage('Website name is required')
     .isString()
-    .withMessage('Website name must be a string')
+    .withMessage('Website name must be a string'),
 ];
 
 export const validateUpiDetails = [
-  body('upiId')
-    .notEmpty()
-    .withMessage('UPI ID is required')
-    .isString()
-    .withMessage('UPI ID must be a string'),
-  body('upiApp')
-    .notEmpty()
-    .withMessage('UPI App is required')
-    .isString()
-    .withMessage('UPI App must be a string'),
+  body('upiId').notEmpty().withMessage('UPI ID is required').isString().withMessage('UPI ID must be a string'),
+  body('upiApp').notEmpty().withMessage('UPI App is required').isString().withMessage('UPI App must be a string'),
   body('upiNumber')
     .notEmpty()
     .withMessage('UPI Number is required')
     .isString()
-    .withMessage('UPI Number must be a string')
+    .withMessage('UPI Number must be a string'),
 ];
 
 export const validateCreateUser = [
@@ -244,7 +226,7 @@ export const validateIntroducerUser = [
   body('lastname').notEmpty().withMessage('Last name is required'),
   body('userName').notEmpty().withMessage('Username is required'),
   body('password').notEmpty().withMessage('Password is required').isString().withMessage('Password must be a string'),
- // body('role').isArray().withMessage('Role must be an array of strings')
+  // body('role').isArray().withMessage('Role must be an array of strings')
 ];
 export const validateIntroducerProfileUpdate = [
   body('firstname').optional().isString().withMessage('Firstname must be a string'),
@@ -259,3 +241,10 @@ export const validateIsActive = [
     .isBoolean()
     .withMessage('isActive field must be a boolean value')
 ]
+
+
+export const validateResetPassword = [
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('oldPassword').notEmpty().withMessage('Old Password is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+];

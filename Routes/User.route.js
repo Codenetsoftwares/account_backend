@@ -9,35 +9,66 @@ import { Website } from '../models/website.model.js';
 import { Bank } from '../models/bank.model.js';
 import { BankTransaction } from '../models/BankTransaction.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
-import { validateBankDetails, validateCreateUser, validateEmailVerification, validateLogin, validateSendResetPasswordEmail, validateUpiDetails, validateWebsiteDetails } from '../utils/commonSchema.js';
+import {
+  validateBankDetails,
+  validateCreateUser,
+  validateEmailVerification,
+  validateLogin,
+  validateSendResetPasswordEmail,
+  validateUpiDetails,
+  validateWebsiteDetails,
+} from '../utils/commonSchema.js';
 import customErrorHandler from '../utils/customErrorHandler.js';
 
 export const UserRoutes = (app) => {
   // API For User Login
 
-  app.post('/api/accounts/user/login',validateLogin,customErrorHandler, userService.generateAccessToken);
+  app.post('/api/accounts/user/login', validateLogin, customErrorHandler, userService.generateAccessToken);
 
   // API To Create User
 
-  app.post('/api/accounts/user/register',validateCreateUser,customErrorHandler,userService.createUser);
+  app.post('/api/accounts/user/register', validateCreateUser, customErrorHandler, userService.createUser);
 
   // API To Verify User Email-Id
 
-  app.post('/api/accounts/verify-email',validateEmailVerification, customErrorHandler, userService.verifyEmail);
+  app.post('/api/accounts/verify-email', validateEmailVerification, customErrorHandler, userService.verifyEmail);
 
   // API To Initiate Reset User Password
 
-  app.post('/api/accounts/initiate-reset-password',validateSendResetPasswordEmail,customErrorHandler,userService.sendResetPasswordEmail);
+  app.post(
+    '/api/accounts/initiate-reset-password',
+    validateSendResetPasswordEmail,
+    customErrorHandler,
+    userService.sendResetPasswordEmail,
+  );
 
   // API To Add Bank Name
 
-  app.post('/api/add-bank-name', validateBankDetails,customErrorHandler,AuthorizeRole(['user']), userService.updateBankDetails);
+  app.post(
+    '/api/add-bank-name',
+    validateBankDetails,
+    customErrorHandler,
+    AuthorizeRole(['user']),
+    userService.updateBankDetails,
+  );
 
   // API To Add Website Name
-  app.post('/api/user/add-website-name',validateWebsiteDetails,customErrorHandler, AuthorizeRole(['user']), userService.addWebsiteDetails);
+  app.post(
+    '/api/user/add-website-name',
+    validateWebsiteDetails,
+    customErrorHandler,
+    AuthorizeRole(['user']),
+    userService.addWebsiteDetails,
+  );
 
   // API To Add UPI Details
-  app.post('/api/user/add-upi-name',validateUpiDetails,customErrorHandler, AuthorizeRole(['user']),  userService.updateUpiDetails);
+  app.post(
+    '/api/user/add-upi-name',
+    validateUpiDetails,
+    customErrorHandler,
+    AuthorizeRole(['user']),
+    userService.updateUpiDetails,
+  );
   // API To Edit User Profiles
 
   app.put('/api/user-profile-edit/:id', AuthorizeRole(['user']), async (req, res) => {

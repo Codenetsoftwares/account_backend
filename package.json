@@ -26,6 +26,7 @@
     "mysql2": "^3.4.0",
     "nodemailer": "^6.9.4",
     "nodemon": "^2.0.22",
+    "prettier": "^3.3.3",
     "sequelize": "^6.32.1",
     "split": "^1.0.1",
     "sql": "^0.78.0",
