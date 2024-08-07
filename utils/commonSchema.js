@@ -296,3 +296,12 @@ export const updateUserValidator = [
     .trim()
     .escape(), // Escape potentially harmful characters
 ];
+
+export const validateTransaction = [
+  body('transactionID').notEmpty().withMessage('transactionID is required'),
+  body('amount').notEmpty().withMessage('Amount is required'),
+  body('paymentMethod').notEmpty().withMessage('Payment Method is required'),
+];
+export const validateParamsId = [
+  param('id').isMongoId().withMessage('Invalid transaction ID'),
+];

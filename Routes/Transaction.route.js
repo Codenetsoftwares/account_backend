@@ -10,90 +10,60 @@ import AccountServices from '../services/Accounts.services.js';
 import { User } from '../models/user.model.js';
 import TransactionService from '../services/Transaction.services.js';
 import { string } from '../constructor/string.js';
+import { validateParamsId, validateTransaction } from '../utils/commonSchema.js';
+import customErrorHandler from '../utils/customErrorHandler.js';
 
 const TransactionRoutes = (app) => {
   // API To Create Transaction
 
   app.post(
     '/api/admin/create/transaction',
+    validateTransaction,
+    customErrorHandler,
     Authorize([
-      'superAdmin',
-      'Dashboard-View',
-      'Create-Deposit-Transaction',
-      'Create-Withdraw-Transaction',
-      'Create-Transaction',
+      string.superAdmin,
+      string.dashboardView,
+      string.createDepositTransaction,
+      string.createWithdrawTransaction,
+      string.createTransaction,
     ]),
-    async (req, res) => {
-      try {
-        const subAdminName = req.user;
-        await TransactionServices.createTransaction(req, res, subAdminName);
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+      TransactionServices.createTransaction
   );
 
   // API To View Deposit Transaction Details
   // not in use
-  app.get('/api/deposit/view', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      await TransactionServices.depositView(req, res);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
+  app.get('/api/deposit/view', 
+    Authorize([string.superAdmin]), 
+   TransactionServices.depositView
+   );
 
   // API To View Withdraw Transaction Details
   // not in used
-  app.get('/api/withdraw/view', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      await TransactionServices.withdrawView(req, res);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
+  app.get('/api/withdraw/view', 
+    Authorize([string.superAdmin]), 
+    TransactionServices.withdrawView
+);
 
   // API To Edit Transaction Detail and Send Request For Approval From Super Admin
 
   app.put(
     '/api/admin/edit-transaction-request/:id',
-    Authorize(['superAdmin', 'Dashboard-View', 'Transaction-Edit-Request']),
-    async (req, res) => {
-      try {
-        const user = req.user;
-        const trans = await Transaction.findById(req.params.id);
-        const updateResult = await TransactionServices.updateTransaction(trans, req.body, user);
-        if (updateResult) {
-          res.status(201).send('Transaction update request send to Super Admin');
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    validateParamsId,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.dashboardView, string.transactionEditRequest]),
+    TransactionServices.updateTransaction
   );
 
   app.put(
     '/api/admin/edit-bank-transaction-request/:id',
-    Authorize(['superAdmin', 'Dashboard-View', 'Transaction-Edit-Request']),
-    async (req, res) => {
-      try {
-        const user = req.user;
-        const bankTransaction = await BankTransaction.findById(req.params.id);
-        console.log('id', req.params.id);
-        const updateResult = await TransactionServices.updateBankTransaction(bankTransaction, req.body, user);
-        console.log(updateResult);
-        if (updateResult) {
-          res.status(201).send('Bank Transaction update request send to Super Admin');
-        }
-      } catch (e) {
-        console.error(e);
-        res.status(e.code).send({ message: e.message });
-      }
-    },
+    validateParamsId,
+    customErrorHandler,
+    Authorize([ 
+      string.superAdmin,
+      string.dashboardView, 
+      string.transactionEditRequest
+    ]),
+     TransactionServices.updateBankTransaction    
   );
 
   app.put(

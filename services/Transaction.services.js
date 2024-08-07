@@ -1,22 +1,22 @@
-import { EditRequest } from '../models/EditRequest.model.js';
-import { Transaction } from '../models/transaction.js';
-import { Website } from '../models/website.model.js';
-import { User } from '../models/user.model.js';
-import { BankTransaction } from '../models/BankTransaction.model.js';
-import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
-import { Bank } from '../models/bank.model.js';
-import { IntroducerTransaction } from '../models/IntroducerTransaction.model.js';
-import { IntroducerEditRequest } from '../models/IntroducerEditRequest.model.js';
-import { IntroducerUser } from '../models/introducer.model.js';
-import { introducerUser } from '../services/introducer.services.js';
-import AccountServices from '../services/Accounts.services.js';
-import { apiResponsePagination } from '../utils/response.js';
-import { statusCode } from '../utils/statusCodes.js';
-import { BankServices } from './Bank.services.js';
+import { EditRequest } from "../models/EditRequest.model.js";
+import { Transaction } from "../models/transaction.js";
+import { Website } from "../models/website.model.js";
+import { User } from "../models/user.model.js";
+import { BankTransaction } from "../models/BankTransaction.model.js";
+import { WebsiteTransaction } from "../models/WebsiteTransaction.model.js";
+import { Bank } from "../models/bank.model.js";
+import { IntroducerTransaction } from "../models/IntroducerTransaction.model.js";
+import { IntroducerEditRequest } from "../models/IntroducerEditRequest.model.js";
+import { IntroducerUser } from "../models/introducer.model.js";
+import AccountServices from "../services/Accounts.services.js";
+import { apiResponseErr, apiResponsePagination, apiResponseSuccess,} from "../utils/response.js";
+import { statusCode } from "../utils/statusCodes.js";
+import { BankServices } from "./Bank.services.js";
 
 const TransactionService = {
-  createTransaction: async (req, res, subAdminName) => {
+  createTransaction: async (req, res,) => {
     try {
+      const subAdminName = req.user;
       const {
         transactionID,
         transactionType,
@@ -31,17 +31,6 @@ const TransactionService = {
         bonus,
         remarks,
       } = req.body;
-      if (!transactionID) {
-        throw { code: 400, message: 'Transaction ID is required' };
-      }
-
-      if (!amount || isNaN(amount)) {
-        throw { code: 400, message: 'Amount is required and must be a number' };
-      }
-
-      if (!paymentMethod) {
-        throw { code: 400, message: 'Payment Method is required' };
-      }
 
       const existingTransaction = await Transaction.findOne({
         transactionID: transactionID,
@@ -49,21 +38,28 @@ const TransactionService = {
           $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
         },
       }).exec();
+
       if (existingTransaction) {
-        return res
-          .status(400)
-          .json({ status: false, message: 'Transaction ID is already in use. Please try again after 48 hours.' });
+        return apiResponseSuccess(null, false, statusCode.exist, "Transaction ID is already in use. Please try again after 48 hours.", res)
       }
 
       // Website
-      const dbWebsiteData = await Website.findOne({ websiteName: websiteName }).exec();
+      const dbWebsiteData = await Website.findOne({
+        websiteName: websiteName,
+      }).exec();
+      if(!dbWebsiteData)
+      {
+  
+        return apiResponseErr(null, false, statusCode.badRequest, "Website not found", res)
+      }
+      console.log(dbWebsiteData)
       const websiteId = dbWebsiteData._id;
       const websiteBalance = await AccountServices.getWebsiteBalance(websiteId);
       const totalBalance = bonus + amount;
       if (websiteBalance < totalBalance) {
-        throw { code: 400, message: 'Insufficient Website balance' };
+        return apiResponseErr(null, false, statusCode.badRequest, "Insufficient Website balance", res)
       }
-      console.log('totalBalance', totalBalance);
+      console.log("totalBalance", totalBalance);
 
       // Bank
       const dbBankData = await Bank.findOne({ bankName: bankName }).exec();
@@ -71,18 +67,19 @@ const TransactionService = {
       const bankBalance = await BankServices.getBankBalance(bankId);
       const totalBankBalance = bankCharges + amount;
       if (bankBalance < totalBankBalance) {
-        throw { code: 400, message: 'Insufficient Bank balance' };
+        return apiResponseErr(null, false, statusCode.badRequest, "Insufficient Bank balance", res)
       }
 
       // User
       const user = await User.findOne({ userName: userName }).exec();
       if (!user) {
-        return res.status(404).send('User not found');
+
+        return apiResponseErr(null, false, statusCode.badRequest, "User not found", res)
       }
       // Introducer
       const introducersUserName = user.introducersUserName;
       // Calculation of Deposit---- Amount will transfer from Website to Bank (Bonus)
-      if (transactionType === 'Deposit') {
+      if (transactionType === "Deposit") {
         const newTransaction = new Transaction({
           bankId: dbBankData._id,
           websiteId: dbWebsiteData._id,
@@ -106,13 +103,14 @@ const TransactionService = {
         await newTransaction.save();
         const user = await User.findOne({ userName: userName });
         if (!user) {
-          return res.status(404).json({ status: false, message: 'User not found' });
+          
+          return apiResponseErr(null, false, statusCode.badRequest, "User not found", res)
         }
         user.transactionDetail.push(newTransaction);
         await user.save();
       }
       // Calculation of Withdraw---- Amount will transfer from Bank to Website (Bank Charge)
-      if (transactionType === 'Withdraw') {
+      if (transactionType === "Withdraw") {
         const newTransaction = new Transaction({
           bankId: dbBankData._id,
           websiteId: dbWebsiteData._id,
@@ -137,24 +135,34 @@ const TransactionService = {
         const user = await User.findOne({ userName: userName });
 
         if (!user) {
-          return res.status(404).json({ status: false, message: 'User not found' });
+          return apiResponseErr(null, false, statusCode.badRequest, "User not found", res)
         }
         user.transactionDetail.push(newTransaction);
-        await user.save();
+      
       }
-      return res.status(200).json({ status: true, message: 'Transaction created successfully' });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal server error' });
+      const users =  await user.save();
+      return apiResponseSuccess(users, true, statusCode.success, 'Transaction created successfully!', res)
+
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res)
     }
   },
 
   createIntroducerDepositTransaction: async (req, res, subAdminName) => {
     try {
-      const { amount, transactionType, remarks, subAdminId, subAdminName, introducerUserName } = req.body;
+      const {
+        amount,
+        transactionType,
+        remarks,
+        subAdminId,
+        subAdminName,
+        introducerUserName,
+      } = req.body;
 
-      const introId = await IntroducerUser.findOne({ userName: introducerUserName }).exec();
-      if (transactionType === 'Deposit') {
+      const introId = await IntroducerUser.findOne({
+        userName: introducerUserName,
+      }).exec();
+      if (transactionType === "Deposit") {
         const NewIntroducerTransaction = new IntroducerTransaction({
           introUserId: introId._id,
           amount: amount,
@@ -167,19 +175,32 @@ const TransactionService = {
         });
         await NewIntroducerTransaction.save();
       }
-      return res.status(200).json({ status: true, message: 'Transaction created successfully' });
+      return res
+        .status(200)
+        .json({ status: true, message: "Transaction created successfully" });
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal server error' });
+      res
+        .status(e.code || 500)
+        .send({ message: e.message || "Internal server error" });
     }
   },
 
   createIntroducerWithdrawTransaction: async (req, res, subAdminName) => {
     try {
-      const { amount, transactionType, remarks, subAdminId, subAdminName, introducerUserName } = req.body;
+      const {
+        amount,
+        transactionType,
+        remarks,
+        subAdminId,
+        subAdminName,
+        introducerUserName,
+      } = req.body;
 
-      const introId = await IntroducerUser.findOne({ userName: introducerUserName }).exec();
-      if (transactionType === 'Withdraw') {
+      const introId = await IntroducerUser.findOne({
+        userName: introducerUserName,
+      }).exec();
+      if (transactionType === "Withdraw") {
         const NewIntroducerTransaction = new IntroducerTransaction({
           introUserId: introId._id,
           amount: amount,
@@ -192,229 +213,330 @@ const TransactionService = {
         });
         await NewIntroducerTransaction.save();
       }
-      return res.status(200).json({ status: true, message: 'Transaction created successfully' });
+      return res
+        .status(200)
+        .json({ status: true, message: "Transaction created successfully" });
     } catch (e) {
       console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal server error' });
+      res
+        .status(e.code || 500)
+        .send({ message: e.message || "Internal server error" });
     }
   },
 
   withdrawView: async (req, res) => {
     try {
-      const withdraws = await Transaction.find({ transactionType: 'Withdraw' }).sort({ createdAt: -1 }).exec();
+      const withdraws = await Transaction.find({ transactionType: "Withdraw" })
+        .sort({ createdAt: -1 })
+        .exec();
       let sum = 0;
       for (let i = 0; i < withdraws.length; i++) {
         sum = sum + withdraws[i].withdrawAmount;
       }
-      res.send({ totalWithdraws: sum, withdraws: withdraws });
+      return apiResponseSuccess(
+        { totalWithdraws: sum, withdraws: withdraws },
+        true,
+        statusCode.success,
+        "Withdraw retrieved successfully!",
+        res
+      );
     } catch (error) {
-      return res.status(500).json({ status: false, message: error });
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
   depositView: async (req, res) => {
     try {
-      const deposits = await Transaction.find({ transactionType: 'Deposit' }).sort({ createdAt: -1 }).exec();
+      const deposits = await Transaction.find({ transactionType: "Deposit" })
+        .sort({ createdAt: -1 })
+        .exec();
       let sum = 0;
       for (let i = 0; i < deposits.length; i++) {
         sum = sum + deposits[i].depositAmount;
       }
-      res.send({ totalDeposits: sum, deposits: deposits });
+      return apiResponseSuccess(
+        { totalDeposits: sum, deposits: deposits },
+        true,
+        statusCode.success,
+        "Deposits retrieved successfully!",
+        res
+      );
     } catch (error) {
-      return res.status(500).json({ status: false, message: error });
+      return apiResponseErr(
+        null,
+        false,
+        statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
-  updateTransaction: async (trans, data, user) => {
-    const existingTransaction = await Transaction.findById(trans);
+  updateTransaction: async (req, res) => {
+    try {
+      const user = req.user;
+      const trans = req.params.id;
+      const {
+        transactionID,
+        transactionType,
+        amount,
+        paymentMethod,
+        userName,
+        userId,
+        subAdminId,
+        bankName,
+        websiteName,
+        remarks,
+        
+      } = req.body
 
-    const existingEditRequest = await EditRequest.findOne({ id: trans, type: 'Edit' });
-    if (existingEditRequest) {
-      throw { code: 409, message: 'Edit Request Already Sent For Approval' };
-    }
+      const existingTransaction = await Transaction.findById(trans);
 
-    let updatedTransactionData = {};
-    let changedFields = {};
+      if(!existingTransaction){
+        return apiResponseErr(null, false, statusCode.notFound, 'Transaction ID Not Found', res)
+      }
 
-    if (existingTransaction.transactionType === 'Deposit') {
-      updatedTransactionData = {
-        id: trans._id,
-        transactionID: data.transactionID || existingTransaction.transactionID,
-        transactionType: data.transactionType || existingTransaction.transactionType,
-        amount: data.amount || existingTransaction.amount,
-        paymentMethod: data.paymentMethod || existingTransaction.paymentMethod,
-        userId: data.userId || existingTransaction.userId,
-        subAdminId: data.subAdminId || existingTransaction.subAdminId,
-        bankName: data.bankName || existingTransaction.bankName,
-        websiteName: data.websiteName || existingTransaction.websiteName,
-        remarks: data.remarks || existingTransaction.remarks,
-        userName: data.userName || existingTransaction.userName,
-      };
+      const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit",});
+      if (existingEditRequest) {
+        return apiResponseErr( null, false, statusCode.exist, "Edit Request Already Sent For Approval", res);
+      }
 
-      const originalTransactionData = { ...existingTransaction.toObject() };
-      for (const key in data) {
-        if (existingTransaction[key] !== data[key]) {
-          changedFields[key] = {
-            oldValue: originalTransactionData[key],
-            newValue: data[key],
-          };
+      let updatedTransactionData = {};
+      let changedFields = {};
+
+      if (existingTransaction.transactionType === "Deposit") {
+        updatedTransactionData = {
+          id: trans._id,
+          transactionID:transactionID || existingTransaction.transactionID,
+          transactionType: transactionType || existingTransaction.transactionType, 
+          amount: amount || existingTransaction.amount,
+          paymentMethod:paymentMethod || existingTransaction.paymentMethod,   
+          userId: userId || existingTransaction.userId,
+          subAdminId: subAdminId || existingTransaction.subAdminId,
+          bankName: bankName || existingTransaction.bankName,
+          websiteName: websiteName || existingTransaction.websiteName,
+          remarks: remarks || existingTransaction.remarks,
+          userName: userName || existingTransaction.userName,
+        };
+
+        const originalTransactionData = { ...existingTransaction.toObject() };
+        for (const key in updatedTransactionData) {
+          if (existingTransaction[key] !== updatedTransactionData[key]) {
+            changedFields[key] = {
+              oldValue: originalTransactionData[key],
+              newValue: updatedTransactionData[key],
+            };
+          }
         }
-      }
-      if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
-      }
-      const editRequest = new EditRequest({
-        ...updatedTransactionData,
-        originalData: changedFields,
-        isApproved: false,
-        isSubmit: false,
-        type: 'Edit',
-        requesteduserName: user.firstname,
-        message: 'Deposit transaction is being edited.',
-      });
-      await editRequest.save();
-    } else if (existingTransaction.transactionType === 'Withdraw') {
-      updatedTransactionData = {
-        id: trans._id,
-        transactionID: data.transactionID || existingTransaction.transactionID,
-        transactionType: data.transactionType || existingTransaction.transactionType,
-        amount: data.amount || existingTransaction.amount,
-        paymentMethod: data.paymentMethod || existingTransaction.paymentMethod,
-        userId: data.userId || existingTransaction.userId,
-        subAdminId: data.subAdminId || existingTransaction.subAdminId,
-        bankName: data.bankName || existingTransaction.bankName,
-        websiteName: data.websiteName || existingTransaction.websiteName,
-        remark: data.remark || existingTransaction.remarks,
-      };
 
-      const originalTransactionData = { ...existingTransaction.toObject() };
-      for (const key in data) {
-        if (existingTransaction[key] !== data[key]) {
-          changedFields[key] = {
-            oldValue: originalTransactionData[key],
-            newValue: data[key],
-          };
+        if (Object.keys(changedFields).length === 0) {
+          return apiResponseSuccess( [], true, statusCode.success, "No changes were made to the transaction.", res);
         }
+
+        const editRequest = new EditRequest({
+          ...updatedTransactionData,
+          originalData: changedFields,
+          isApproved: false,
+          isSubmit: false,
+          type: "Edit",
+          requesteduserName: user.firstname,
+          message: "Deposit transaction is being edited.",
+        });
+        await editRequest.save();
+        
+      } else if (existingTransaction.transactionType === "Withdraw") {
+        updatedTransactionData = {
+          id: trans._id,
+          transactionID: transactionID || existingTransaction.transactionID,  
+          transactionType:transactionType || existingTransaction.transactionType,           
+          amount: amount || existingTransaction.amount,
+          paymentMethod:paymentMethod || existingTransaction.paymentMethod,            
+          userId: userId || existingTransaction.userId,
+          subAdminId: subAdminId || existingTransaction.subAdminId,
+          bankName: bankName || existingTransaction.bankName,
+          websiteName: websiteName || existingTransaction.websiteName,
+          remark: remarks || existingTransaction.remarks,
+        };
+
+        const originalTransactionData = { ...existingTransaction.toObject() };
+        for (const key in updatedTransactionData) {
+          if (existingTransaction[key] !== updatedTransactionData[key]) {
+            changedFields[key] = {
+              oldValue: originalTransactionData[key],
+              newValue: updatedTransactionData[key],
+            };
+          }
+        }
+        if (Object.keys(changedFields).length === 0) {
+          return apiResponseSuccess( [], true, statusCode.success, "No changes were made to the transaction.", res );
+        }
+        const editRequest = new EditRequest({
+          ...updatedTransactionData,
+          originalData: changedFields,
+          isApproved: false,
+          isSubmit: false,
+          type: "Edit",
+          requesteduserName: user.firstname,
+          message: "Withdraw transaction is being edited.",
+        });
+        await editRequest.save();
       }
-      if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
-      }
-      const editRequest = new EditRequest({
-        ...updatedTransactionData,
-        originalData: changedFields,
-        isApproved: false,
-        isSubmit: false,
-        type: 'Edit',
-        requesteduserName: user.firstname,
-        message: 'Withdraw transaction is being edited.',
-      });
-      await editRequest.save();
+      return apiResponseSuccess(changedFields, true, statusCode.success, "Transaction update request send to Super Admin", res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res)
     }
-    return changedFields;
   },
 
-  updateBankTransaction: async (bankTransaction, data, user) => {
-    const existingBankTransaction = await BankTransaction.findById(bankTransaction);
-
-    const existingEditRequest = await EditRequest.findOne({ id: bankTransaction, type: 'Edit' });
-    if (existingEditRequest) {
-      throw { code: 409, message: 'Edit Request Already Sent For Approval' };
-    }
-
-    let updatedTransactionData = {};
-    let changedFields = {};
-
-    if (existingBankTransaction.transactionType === 'Manual-Bank-Deposit') {
-      updatedTransactionData = {
-        id: bankTransaction._id,
-        bankId: existingBankTransaction.bankId,
-        bankName: data.bankName || existingBankTransaction.bankName,
-        transactionType: data.transactionType || existingBankTransaction.transactionType,
-        remarks: data.remarks || existingBankTransaction.remarks,
-        depositAmount: data.depositAmount || existingBankTransaction.depositAmount,
-        subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
-        subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
-        accountNumber: existingBankTransaction.accountNumber,
-      };
-      const originalTransactionData = { ...existingBankTransaction.toObject() };
-      for (const key in data) {
-        if (existingBankTransaction[key] !== data[key]) {
-          changedFields[key] = {
-            oldValue: originalTransactionData[key],
-            newValue: data[key],
-          };
+  updateBankTransaction: async (req, res) => {
+    try {
+      const user = req.user;
+      const trans = req.params.id;
+      const {
+        bankName,
+        transactionType,
+        remarks,
+        depositAmount,
+        withdrawAmount, // Add this line
+        subAdminId,
+        subAdminName,
+        accountNumber,
+        bankId
+      } = req.body;
+  
+      const existingBankTransaction = await BankTransaction.findById(trans);
+      if (!existingBankTransaction) {
+        return apiResponseErr(null, false, statusCode.notFound, 'Bank Transaction ID Not Found', res);
+      }
+  
+      const existingEditRequest = await EditRequest.findOne({ id: trans, type: "Edit" });
+      if (existingEditRequest) {
+        return apiResponseErr(null, false, statusCode.exist, "Edit Request Already Sent For Approval", res);
+      }
+  
+      let updatedTransactionData = {};
+      let changedFields = {};
+  
+      if (existingBankTransaction.transactionType === "Manual-Bank-Deposit") {
+        updatedTransactionData = {
+          id: trans,
+          bankId: bankId || existingBankTransaction.bankId,
+          bankName: bankName || existingBankTransaction.bankName,
+          transactionType: transactionType || existingBankTransaction.transactionType,
+          remarks: remarks || existingBankTransaction.remarks,
+          depositAmount: depositAmount || existingBankTransaction.depositAmount,
+          subAdminId: subAdminId || existingBankTransaction.subAdminId,
+          subAdminName: subAdminName || existingBankTransaction.subAdminName,
+          accountNumber: accountNumber || existingBankTransaction.accountNumber,
+        };
+  
+        const originalTransactionData = { ...existingBankTransaction.toObject() };
+        for (const key in updatedTransactionData) {
+          if (existingBankTransaction[key] !== updatedTransactionData[key]) {
+            changedFields[key] = {
+              oldValue: originalTransactionData[key],
+              newValue: updatedTransactionData[key],
+            };
+          }
         }
-      }
-      if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
-      }
-      const editRequest = new EditRequest({
-        ...updatedTransactionData,
-        originalData: changedFields,
-        isApproved: false,
-        type: 'Edit',
-        requesteduserName: user.firstname,
-        message: 'Manual-Bank-Deposit transaction is being edited.',
-      });
-      await editRequest.save();
-    } else if (existingBankTransaction.transactionType === 'Manual-Bank-Withdraw') {
-      updatedTransactionData = {
-        id: bankTransaction._id,
-        bankId: existingBankTransaction.bankId,
-        bankName: data.bankName || existingBankTransaction.bankName,
-        transactionType: data.transactionType || existingBankTransaction.transactionType,
-        remarks: data.remarks || existingBankTransaction.remarks,
-        withdrawAmount: data.withdrawAmount || existingBankTransaction.withdrawAmount,
-        subAdminId: data.subAdminId || existingBankTransaction.subAdminId,
-        subAdminName: data.subAdminName || existingBankTransaction.subAdminName,
-        accountNumber: existingBankTransaction.accountNumber,
-      };
-      const originalTransactionData = { ...existingBankTransaction.toObject() };
-      for (const key in data) {
-        if (existingBankTransaction[key] !== data[key]) {
-          changedFields[key] = {
-            oldValue: originalTransactionData[key],
-            newValue: data[key],
-          };
+  
+        if (Object.keys(changedFields).length === 0) {
+          return apiResponseSuccess([], true, statusCode.success, "No changes were made to the transaction.", res);
         }
+  
+        const editRequest = new EditRequest({
+          ...updatedTransactionData,
+          originalData: changedFields,
+          isApproved: false,
+          type: "Edit",
+          requesteduserName: user.firstname,
+          message: "Manual-Bank-Deposit transaction is being edited.",
+        });
+        await editRequest.save();
+  
+      } else if (existingBankTransaction.transactionType === "Manual-Bank-Withdraw") {
+        updatedTransactionData = {
+          id: trans,
+          bankId: bankId || existingBankTransaction.bankId,
+          bankName: bankName || existingBankTransaction.bankName,
+          transactionType: transactionType || existingBankTransaction.transactionType,
+          remarks: remarks || existingBankTransaction.remarks,
+          withdrawAmount: withdrawAmount || existingBankTransaction.withdrawAmount,
+          subAdminId: subAdminId || existingBankTransaction.subAdminId,
+          subAdminName: subAdminName || existingBankTransaction.subAdminName,
+          accountNumber: accountNumber || existingBankTransaction.accountNumber,
+        };
+  
+        const originalTransactionData = { ...existingBankTransaction.toObject() };
+        for (const key in updatedTransactionData) {
+          if (existingBankTransaction[key] !== updatedTransactionData[key]) {
+            changedFields[key] = {
+              oldValue: originalTransactionData[key],
+              newValue: updatedTransactionData[key],
+            };
+          }
+        }
+  
+        if (Object.keys(changedFields).length === 0) {
+          return apiResponseSuccess([], true, statusCode.success, "No changes were made to the transaction.", res);
+        }
+  
+        const editRequest = new EditRequest({
+          ...updatedTransactionData,
+          originalData: changedFields,
+          isApproved: false,
+          type: "Edit",
+          requesteduserName: user.firstname,
+          message: "Manual-Bank-Withdraw transaction is being edited.",
+        });
+        await editRequest.save();
+  
       }
-      if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
-      }
-      const editRequest = new EditRequest({
-        ...updatedTransactionData,
-        originalData: changedFields,
-        isApproved: false,
-        type: 'Edit',
-        requesteduserName: user.firstname,
-        message: 'Manual-Bank-Withdraw transaction is being edited.',
-      });
-      await editRequest.save();
+  
+      return apiResponseSuccess(changedFields, true, statusCode.success, 'Bank Transaction update request sent to Super Admin', res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
-    return changedFields;
   },
+  
 
   updateWebsiteTransaction: async (websiteTransaction, data, user) => {
-    const existingWebsiteTransaction = await WebsiteTransaction.findById(websiteTransaction);
+    const existingWebsiteTransaction =
+      await WebsiteTransaction.findById(websiteTransaction);
 
-    const existingEditRequest = await EditRequest.findOne({ id: websiteTransaction, type: 'Edit' });
+    const existingEditRequest = await EditRequest.findOne({
+      id: websiteTransaction,
+      type: "Edit",
+    });
     if (existingEditRequest) {
-      throw { code: 409, message: 'Edit Request Already Sent For Approval' };
+      throw { code: 409, message: "Edit Request Already Sent For Approval" };
     }
 
     let updatedTransactionData = {};
     let changedFields = {};
-    if (existingWebsiteTransaction.transactionType === 'Manual-Website-Deposit') {
+    if (
+      existingWebsiteTransaction.transactionType === "Manual-Website-Deposit"
+    ) {
       updatedTransactionData = {
         id: websiteTransaction._id,
-        transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
+        transactionType:
+          data.transactionType || existingWebsiteTransaction.transactionType,
         remarks: data.remarks || existingWebsiteTransaction.remarks,
-        depositAmount: data.depositAmount || existingWebsiteTransaction.depositAmount,
+        depositAmount:
+          data.depositAmount || existingWebsiteTransaction.depositAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
-        subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
+        subAdminName:
+          data.subAdminName || existingWebsiteTransaction.subAdminName,
         websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
-      const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
+      const originalTransactionData = {
+        ...existingWebsiteTransaction.toObject(),
+      };
       for (const key in data) {
         if (existingWebsiteTransaction[key] !== data[key]) {
           changedFields[key] = {
@@ -424,7 +546,10 @@ const TransactionService = {
         }
       }
       if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
+        throw {
+          code: 400,
+          message: "No changes were made to the transaction.",
+        };
       }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
@@ -432,21 +557,28 @@ const TransactionService = {
         isApproved: false,
         isSubmit: false,
         requesteduserName: user.firstname,
-        type: 'Edit',
-        message: 'Manual-Website-Deposit transaction is being edited.',
+        type: "Edit",
+        message: "Manual-Website-Deposit transaction is being edited.",
       });
       await editRequest.save();
-    } else if (existingWebsiteTransaction.transactionType === 'Manual-Website-Withdraw') {
+    } else if (
+      existingWebsiteTransaction.transactionType === "Manual-Website-Withdraw"
+    ) {
       updatedTransactionData = {
         id: websiteTransaction._id,
-        transactionType: data.transactionType || existingWebsiteTransaction.transactionType,
+        transactionType:
+          data.transactionType || existingWebsiteTransaction.transactionType,
         remarks: data.remarks || existingWebsiteTransaction.remarks,
-        withdrawAmount: data.withdrawAmount || existingWebsiteTransaction.withdrawAmount,
+        withdrawAmount:
+          data.withdrawAmount || existingWebsiteTransaction.withdrawAmount,
         subAdminId: data.subAdminId || existingWebsiteTransaction.subAdminId,
-        subAdminName: data.subAdminName || existingWebsiteTransaction.subAdminName,
+        subAdminName:
+          data.subAdminName || existingWebsiteTransaction.subAdminName,
         websiteName: data.websiteName || existingWebsiteTransaction.websiteName,
       };
-      const originalTransactionData = { ...existingWebsiteTransaction.toObject() };
+      const originalTransactionData = {
+        ...existingWebsiteTransaction.toObject(),
+      };
       for (const key in data) {
         if (existingWebsiteTransaction[key] !== data[key]) {
           changedFields[key] = {
@@ -456,16 +588,19 @@ const TransactionService = {
         }
       }
       if (Object.keys(changedFields).length === 0) {
-        throw { code: 400, message: 'No changes were made to the transaction.' };
+        throw {
+          code: 400,
+          message: "No changes were made to the transaction.",
+        };
       }
       const editRequest = new EditRequest({
         ...updatedTransactionData,
         originalData: changedFields,
         isApproved: false,
         isSubmit: false,
-        type: 'Edit',
+        type: "Edit",
         requesteduserName: user.firstname,
-        message: 'Manual-Website-Withdraw transaction is being edited.',
+        message: "Manual-Website-Withdraw transaction is being edited.",
       });
       await editRequest.save();
     }
@@ -475,23 +610,28 @@ const TransactionService = {
   updateIntroTransaction: async (trans, data, user) => {
     const existingTransaction = await IntroducerTransaction.findById(trans);
 
-    const existingEditRequest = await IntroducerEditRequest.findOne({ id: trans, type: 'Edit' });
+    const existingEditRequest = await IntroducerEditRequest.findOne({
+      id: trans,
+      type: "Edit",
+    });
     if (existingEditRequest) {
-      throw { code: 409, message: 'Edit Request Already Sent For Approval' };
+      throw { code: 409, message: "Edit Request Already Sent For Approval" };
     }
 
     let updatedTransactionData = {};
     let changedFields = {};
 
-    if (existingTransaction.transactionType === 'Deposit') {
+    if (existingTransaction.transactionType === "Deposit") {
       updatedTransactionData = {
         id: trans._id,
-        transactionType: data.transactionType || existingTransaction.transactionType,
+        transactionType:
+          data.transactionType || existingTransaction.transactionType,
         amount: data.amount || existingTransaction.amount,
         subAdminId: data.subAdminId || existingTransaction.subAdminId,
         subAdminName: data.subAdminName || existingTransaction.subAdminName,
         remarks: data.remarks || existingTransaction.remarks,
-        introducerUserName: data.introducerUserName || existingTransaction.introducerUserName,
+        introducerUserName:
+          data.introducerUserName || existingTransaction.introducerUserName,
       };
 
       for (const key in data) {
@@ -504,20 +644,22 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
-        type: 'Edit',
+        type: "Edit",
         requesteduserName: user.firstname,
-        message: 'Introducer Deposit transaction is being edited.',
+        message: "Introducer Deposit transaction is being edited.",
       });
       await editRequest.save();
-    } else if (existingTransaction.transactionType === 'Withdraw') {
+    } else if (existingTransaction.transactionType === "Withdraw") {
       updatedTransactionData = {
         id: trans._id,
-        transactionType: data.transactionType || existingTransaction.transactionType,
+        transactionType:
+          data.transactionType || existingTransaction.transactionType,
         amount: data.amount || existingTransaction.amount,
         subAdminId: data.subAdminId || existingTransaction.subAdminId,
         subAdminName: data.subAdminName || existingTransaction.subAdminName,
         remarks: data.remarks || existingTransaction.remarks,
-        introducerUserName: data.introducerUserName || existingTransaction.introducerUserName,
+        introducerUserName:
+          data.introducerUserName || existingTransaction.introducerUserName,
       };
 
       for (const key in data) {
@@ -530,9 +672,9 @@ const TransactionService = {
         ...updatedTransactionData,
         changedFields,
         isApproved: false,
-        type: 'Edit',
+        type: "Edit",
         requesteduserName: user.firstname,
-        message: 'Introducer Withdraw transaction is being edited.',
+        message: "Introducer Withdraw transaction is being edited.",
       });
       await editRequest.save();
     }
@@ -545,7 +687,10 @@ const TransactionService = {
       const skip = (page - 1) * pageSize;
       const limit = parseInt(pageSize);
 
-      const dbBankData = await EditRequest.find().skip(skip).limit(limit).exec();
+      const dbBankData = await EditRequest.find()
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
       // Optionally, add balance fetching logic here
       // const bankData = JSON.parse(JSON.stringify(dbBankData));
@@ -562,17 +707,23 @@ const TransactionService = {
         dbBankData,
         true,
         statusCode.success,
-        'success',
+        "success",
         {
           page: parseInt(page),
           limit,
           totalPages,
           totalItems,
         },
-        res,
+        res
       );
     } catch (error) {
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 
@@ -582,7 +733,10 @@ const TransactionService = {
       const skip = (page - 1) * pageSize;
       const limit = parseInt(pageSize);
 
-      const introEdit = await IntroducerEditRequest.find().skip(skip).limit(limit).exec();
+      const introEdit = await IntroducerEditRequest.find()
+        .skip(skip)
+        .limit(limit)
+        .exec();
 
       const totalItems = await IntroducerEditRequest.countDocuments();
       const totalPages = Math.ceil(totalItems / limit);
@@ -591,17 +745,23 @@ const TransactionService = {
         introEdit,
         true,
         statusCode.success,
-        'success',
+        "success",
         {
           page: parseInt(page),
           limit,
           totalPages,
           totalItems,
         },
-        res,
+        res
       );
     } catch (error) {
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+      return apiResponseErr(
+        null,
+        false,
+        error.responseCode ?? statusCode.internalServerError,
+        error.message,
+        res
+      );
     }
   },
 };
