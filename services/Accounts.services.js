@@ -384,7 +384,7 @@ const AccountServices = {
       }
 
       // Sort the bankData by createdAt
-      bankData.sort((a, b) => b.createdAt - a.createdAt);
+      bankData.sort((a, b) => b.createdAt - a.createdAt).reverse();;
 
       return apiResponsePagination(
         bankData,
@@ -492,7 +492,7 @@ const AccountServices = {
       }
 
       // Sort the websiteData array by createdAt in descending order
-      websiteData.sort((a, b) => b.createdAt - a.createdAt);
+      websiteData.sort((a, b) => b.createdAt - a.createdAt).reverse();
 
       // Count total documents with the same search query for pagination
       const totalItems = await Website.countDocuments(searchQuery);

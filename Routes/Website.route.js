@@ -81,6 +81,7 @@ const WebisteRoutes = (app) => {
     async (req, res) => {
       try {
         const resultArray = await WebsiteRequest.find().exec();
+        resultArray.reverse();
         res.status(200).send(resultArray);
       } catch (error) {
         console.log(error);

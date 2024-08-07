@@ -139,7 +139,7 @@ const BankRoutes = (app) => {
     Authorize(["superAdmin"]),
     async (req, res) => {
       try {
-        const resultArray = await BankRequest.find().exec();
+        const resultArray = await (await BankRequest.find()).reverse();
         res.status(200).send(resultArray);
       } catch (error) {
         console.log(error);
