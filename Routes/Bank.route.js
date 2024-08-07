@@ -133,7 +133,6 @@ const BankRoutes = (app) => {
   });
 
 
-
   app.get(
     "/api/superadmin/view-bank-requests",
     Authorize(["superAdmin"]),
@@ -146,6 +145,7 @@ const BankRoutes = (app) => {
         res.status(500).send("Internal Server error");
       }
     });
+
 
 
   app.delete("/api/bank/reject/:id", Authorize(["superAdmin"]), async (req, res) => {
