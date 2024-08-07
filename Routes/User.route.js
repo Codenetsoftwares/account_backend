@@ -108,7 +108,7 @@ export const UserRoutes = (app) => {
     validateUserProfiles,
     customErrorHandler,
     Authorize(['superAdmin']),
-    userService.getUserProfiles,
+    userService.getUserProfiles, 
   );
 
   app.post('/api/super-admin/login', validateLogin, customErrorHandler, userService.superAdminLogin);
