@@ -6,9 +6,11 @@ import { User } from '../models/user.model.js';
 import { IntroducerUser } from '../models/introducer.model.js';
 import dotenv from 'dotenv';
 import { Admin } from '../models/admin_user.js';
-import { apiResponseErr, apiResponseSuccess } from '../utils/response.js';
+import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
 import CustomError from '../utils/extendError.js';
+import { Transaction } from '../models/transaction.js';
+import AccountServices from './Accounts.services.js';
 dotenv.config();
 
 export const userService = {
@@ -312,10 +314,6 @@ export const userService = {
       const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
 
       if (passwordIsDuplicate) {
-        // throw {
-        //   code: 409,
-        //   message: 'New Password cannot be the same as existing password',
-        // };
         throw new CustomError('New Password cannot be the same as existing password', null, 409);
       }
 
@@ -326,67 +324,187 @@ export const userService = {
       const user = await existingUser.save();
       return apiResponseSuccess(user, true, statusCode.success, 'Password Reset Successfully!', res);
     } catch (error) {
-      console.log(error);
       return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
   },
 
-  updateUserProfile: async (id, data) => {
-    const existingUser = await User.findById(id);
-    if (!existingUser) {
-      throw { code: 404, message: `Existing User not found with id : ${id}` };
+  updateUserProfile: async (req, res) => {
+    try {
+
+      let existingUser = await User.findById( req.params.id);
+
+      if (!existingUser) {
+        return apiResponseErr(null, true, statusCode.notFound, `Existing User not found with id: ${id}`, res);
+      }
+
+      existingUser = {...existingUser, ...req.body}
+
+      const updateUserProfile = await existingUser.save();
+
+      return apiResponseSuccess(updateUserProfile, true, statusCode.success, 'Profile updated', res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
-
-    existingUser.firstname = data.firstname ? data.firstname : existingUser.firstname;
-    existingUser.lastname = data.lastname ? data.lastname : existingUser.lastname;
-    existingUser.contactNumber = data.contactNumber ? data.contactNumber : existingUser.contactNumber;
-    // existingUser.bankDetail = data.bankDetail ? data.bankDetail : existingUser.bankDetail;
-    // existingUser.upiDetail = data.upiDetail ? data.upiDetail : existingUser.upiDetail;
-    // existingUser.webSiteDetail = data.webSiteDetail ? data.webSiteDetail : existingUser.webSiteDetail;
-
-    existingUser.save().catch((err) => {
-      console.error(err);
-      throw {
-        code: 500,
-        message: `Failed to update User Profile with id : ${id}`,
-      };
-    });
-
-    return true;
   },
 
-  userPasswordResetCode: async (userName, oldPassword, password) => {
-    const existingUser = await userService.findUser({
-      userName: userName,
-    });
+  getUserProfileData: async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const userData = await User.findById(userId).sort({ createdAt: 1 }).exec();
 
-    const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
+      if (!userData) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found', res);
+      }
 
-    if (!oldPasswordIsCorrect) {
-      throw {
-        code: 401,
-        message: 'Invalid old password',
-      };
+      return apiResponseSuccess(userData, true, statusCode.success, 'User data retrieved successfully', res);
+    } catch (error) {
+      console.error(error);
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
+  },
 
-    const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+  userPasswordResetCode: async (req, res) => {
+    try {
+      const { userName, oldPassword, password } = req.body;
+      const existingUser = await User.findOne({ userName });
+      if (!existingUser) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found', res);
+      }
+      const oldPasswordIsCorrect = await bcrypt.compare(oldPassword, existingUser.password);
+      if (!oldPasswordIsCorrect) {
+        return apiResponseErr(null, true, statusCode.unauthorize, 'Invalid old password', res);
+      }
 
-    if (passwordIsDuplicate) {
-      throw {
-        code: 409,
-        message: 'New Password cannot be the same as existing password',
-      };
+      const passwordIsDuplicate = await bcrypt.compare(password, existingUser.password);
+      if (passwordIsDuplicate) {
+        throw new CustomError('New Password cannot be the same as existing password', null, 409);
+      }
+      const passwordSalt = await bcrypt.genSalt();
+      const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+
+      existingUser.password = encryptedPassword;
+      const passwordReset = await existingUser.save();
+
+      return apiResponseSuccess(passwordReset, true, statusCode.success, 'Password reset successful!', res);
+    } catch (error) {
+      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
     }
+  },
 
-    const passwordSalt = await bcrypt.genSalt();
-    const encryptedPassword = await bcrypt.hash(password, passwordSalt);
+  getUserProfiles: async (req, res) => {
+    try {
+      const page = parseInt(req.params.page, 10) || 1;
+      const limit = 10; 
+      const searchQuery = req.query.search;
+      let userProfiles = [];
+      let totalItems = 0;
 
-    existingUser.password = encryptedPassword;
-    existingUser.save().catch((err) => {
-      console.error(err);
-      throw { code: 500, message: 'Failed to save new password' };
-    });
+      if (searchQuery) {
+        const users = await User.find({
+          userName: { $regex: new RegExp(searchQuery, 'i') },
+        }).exec();
+        userProfiles = users;
+        totalItems = users.length;
+      } else {
+        const allUsers = await User.find({}).exec();
+        totalItems = allUsers.length;
+        const startIndex = (page - 1) * limit;
+        const endIndex = Math.min(startIndex + limit, totalItems);
+        userProfiles = allUsers.slice(startIndex, endIndex);
+      }
 
-    return true;
+      if (userProfiles.length === 0) {
+        return apiResponseErr(null, false, statusCode.badRequest, 'No data found for the selected criteria.', res);
+      }
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return apiResponsePagination(
+        userProfiles,
+        true,
+        statusCode.success,
+        'User profiles retrieved successfully',
+        {
+          page,
+          limit,
+          totalPages,
+          totalItems,
+        },
+        res,
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  deleteUserAndTransactions: async (req, res) => {
+    try {
+      const userName = req.params.userName;
+      await Transaction.deleteMany({ userName });
+      const deleteUser = await User.findOneAndDelete({ userName });
+      if (!deleteUser) {
+        return apiResponseErr(null, true, statusCode.notFound, 'User not found', res);
+      }
+      const result = await deleteUserAndTransactions(userName);
+      return apiResponseSuccess(
+        result,
+        true,
+        statusCode.success,
+        'User and associated transactions deleted successfully',
+        res,
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+    updateUserNameAndTransactions: async (req, res) => {
+    try {
+      const userName = req.params.userName;
+      const newUserName = req.body.newUserName;
+      const userToUpdate = await User.findOne({ userName: userName });
+      if (!userToUpdate) {
+        return apiResponseErr(null, true, statusCode.notFound, 'User not found', res);
+      }
+
+      userToUpdate.userName = newUserName;
+      const userUpdate = await userToUpdate.save();
+      const transactions = await Transaction.find({ userName: userName });
+      const transactionResponses = await Promise.all(
+        transactions.map(async (transaction) => {
+          transaction.userName = newUserName;
+          return transaction.save();
+        }),
+      );
+      return apiResponseSuccess(
+        { userUpdate, transactionResponses },
+        true,
+        statusCode.success,
+        'User username and associated transactions updated successfully',
+        res,
+      );
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  superAdminLogin: async (req, res) => {
+    try {
+      const { userName, password, persist } = req.body;
+
+      const user = await Admin.findOne({ userName: userName });
+      if (!user) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'User not found', res);
+      }
+
+      const accessToken = await AccountServices.generateAdminAccessToken(userName, password, persist);
+
+      if (!accessToken) {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Failed to generate access token', res);
+      }
+      return apiResponseSuccess({ token: accessToken }, true, statusCode.success, 'Login successfully', res);
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
   },
 };

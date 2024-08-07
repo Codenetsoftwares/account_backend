@@ -248,3 +248,51 @@ export const validateResetPassword = [
   body('oldPassword').notEmpty().withMessage('Old Password is required'),
   body('password').notEmpty().withMessage('Password is required'),
 ];
+
+
+export const validateUserProfile = [
+  param('id').notEmpty().withMessage('ID  is required').isMongoId().withMessage('ID must be a valid ID'),
+  body('firstname').optional().isString().withMessage('Firstname must be a string'),
+  body('lastname').optional().isString().withMessage('Lastname must be a string'),
+  body('contactNumber').optional().isMobilePhone().withMessage('Invalid contact number'),
+];
+
+export const validateUserId = [
+  param('userId').notEmpty().withMessage('User Id  is required').isMongoId().withMessage('User Id must be a valid ID'),
+];
+
+export const validatePasswordReset = [
+  body('userName').notEmpty().withMessage('Username is required'),
+  body('oldPassword').notEmpty().withMessage('Old password is required'),
+  body('password')
+    .notEmpty()
+    .withMessage('password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+];
+export const validateUserProfiles = [
+  param('page').optional().isInt({ min: 1 }).withMessage('Page must be an integer greater than or equal to 1'),
+  query('search').optional().isString().withMessage('Search query must be a string'),
+];
+export const validateDeleteUser = [
+  param('userName')
+    .notEmpty()
+    .withMessage('Username cannot be empty')
+    .isString()
+    .withMessage('Username must be a string'),
+];
+
+export const updateUserValidator = [
+  param('userName')
+    .notEmpty()
+    .withMessage('Username cannot be empty')
+    .isString()
+    .withMessage('Username must be a string'),
+  body('newUserName')
+    .isString()
+    .withMessage('New user name must be a string')
+    .notEmpty()
+    .withMessage('New user name is required')
+    .trim()
+    .escape(), // Escape potentially harmful characters
+];
