@@ -303,5 +303,5 @@ export const validateTransaction = [
   body('paymentMethod').notEmpty().withMessage('Payment Method is required'),
 ];
 export const validateParamsId = [
-  param('id').isMongoId().withMessage('Invalid transaction ID'),
+  param('id').isMongoId().withMessage('Invalid Given ID'),
 ];
