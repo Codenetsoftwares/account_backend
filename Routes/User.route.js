@@ -51,7 +51,7 @@ export const UserRoutes = (app) => {
   // API To Add Bank Name
 
   app.post(
-    '/api/add-bank-name',
+    '/api/user/add-bank-name',
     validateBankDetails,
     customErrorHandler,
     AuthorizeRole(['user']),

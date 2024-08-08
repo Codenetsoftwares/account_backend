@@ -305,3 +305,12 @@ export const validateTransaction = [
 export const validateParamsId = [
   param('id').isMongoId().withMessage('Invalid transaction ID'),
 ];
+
+export const validateRequestId = [
+  body('requestId').notEmpty().withMessage('Request Id  is required').isMongoId().withMessage('ID must be a valid ID'),
+];
+export const validateRequestIdInParams = [
+  param('requestId').notEmpty().withMessage('Request Id  is required').isMongoId().withMessage('ID must be a valid ID'),
+  body('isApproved').notEmpty().withMessage('isApproved  is required') .isBoolean()
+  .withMessage('isApproved field must be a boolean value')
+];
