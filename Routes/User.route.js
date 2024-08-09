@@ -1,14 +1,6 @@
 import { AuthorizeRole } from '../middleware/auth.js';
-import AccountServices from '../services/Accounts.services.js';
 import { Authorize } from '../middleware/Authorize.js';
-import { User } from '../models/user.model.js';
 import { userService } from '../services/user.service.js';
-import { Transaction } from '../models/transaction.js';
-import { Admin } from '../models/admin_user.js';
-import { Website } from '../models/website.model.js';
-import { Bank } from '../models/bank.model.js';
-import { BankTransaction } from '../models/BankTransaction.model.js';
-import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
 import {
   updateUserValidator,
   validateBankDetails,

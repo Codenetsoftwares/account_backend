@@ -1,9 +1,5 @@
-import AccountServices from '../services/Accounts.services.js';
 import { Authorize } from '../middleware/Authorize.js';
 import { Bank } from '../models/bank.model.js';
-import { BankTransaction } from '../models/BankTransaction.model.js';
-import { Transaction } from '../models/transaction.js';
-import { EditBankRequest } from '../models/EditBankRequest.model.js';
 import { Website } from '../models/website.model.js';
 import { string } from '../constructor/string.js';
 import { BankServices } from '../services/Bank.services.js';
@@ -17,7 +13,9 @@ import {
   validateImproveBank,
   validateIsActive,
   validatePagination,
-  withdrawalBankBalanceValidate,
+  validateRemoveSubAdmin,
+  ValidateSubAdminId,
+  withdrawalBankBalanceValidate,      
 } from '../utils/commonSchema.js';
 import customErrorHandler from '../utils/customErrorHandler.js';
 
@@ -265,119 +263,13 @@ const BankRoutes = (app) => {
   //   }
   // });
 
-  app.get('/api/admin/bank/view-subadmin/:subadminId', Authorize(['superAdmin', 'RequestAdmin']), async (req, res) => {
-    try {
-      const subadminId = req.params.subadminId;
-      const dbBankData = await Bank.find({
-        'subAdmins.subAdminId': subadminId,
-      }).exec();
-      let bankData = JSON.parse(JSON.stringify(dbBankData));
+  app.get('/api/admin/bank/view-subadmin/:subadminId',ValidateSubAdminId,customErrorHandler ,Authorize([string.superAdmin, string.requestAdmin]), BankServices.getBankBalance);
 
-      for (var index = 0; index < bankData.length; index++) {
-        bankData[index].balance = await BankServices.getBankBalance(bankData[index]._id);
-      }
+  app.put('/api/bank/edit-request/:id',validateImproveBank,customErrorHandler, Authorize([string.superAdmin, string.requestAdmin,string.bankView ]),BankServices.editBankRequest );
 
-      bankData = bankData.filter((bank) => bank.isActive === true);
-      console.log('bankdata', bankData);
+  app.delete('/api/bank/delete-subadmin/:bankId/:subAdminId',validateRemoveSubAdmin,customErrorHandler,Authorize([string.superAdmin, string.requestAdmin,string.bankView]),BankServices.removeSubAdmin);
 
-      if (bankData.length === 0) {
-        return res.status(404).send({ message: 'No bank found' });
-      }
-
-      res.status(200).send(bankData);
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 400).send({ message: e.message || 'Internal server error' });
-    }
-  });
-
-  app.put('/api/bank/edit-request/:id', Authorize(['superAdmin', 'RequstAdmin', 'Bank-View']), async (req, res) => {
-    try {
-      const { subAdmins } = req.body;
-      const bankId = req.params.id;
-
-      const approvedBankRequest = await Bank.findById(bankId);
-
-      if (!approvedBankRequest) {
-        throw { code: 404, message: 'Bank not found!' };
-      }
-
-      for (const subAdminData of subAdmins) {
-        const { subAdminId, isDeposit, isWithdraw, isDelete, isRenew, isEdit } = subAdminData;
-        const subAdmin = approvedBankRequest.subAdmins.find((sa) => sa.subAdminId === subAdminId);
-
-        if (subAdmin) {
-          // If subAdmin exists, update its properties
-          subAdmin.isDeposit = isDeposit;
-          subAdmin.isWithdraw = isWithdraw;
-          subAdmin.isEdit = isEdit;
-          subAdmin.isRenew = isRenew;
-          subAdmin.isDelete = isDelete;
-        } else {
-          // If subAdmin doesn't exist, add a new one
-          approvedBankRequest.subAdmins.push({
-            subAdminId,
-            isDeposit,
-            isWithdraw,
-            isEdit,
-            isRenew,
-            isDelete,
-          });
-        }
-      }
-
-      await approvedBankRequest.save();
-
-      res.status(200).send({ message: 'Updated successfully' });
-    } catch (error) {
-      res.status(error.code || 500).send({ message: error.message || 'An error occurred' });
-    }
-  });
-
-  app.delete(
-    '/api/bank/delete-subadmin/:bankId/:subAdminId',
-    Authorize(['superAdmin', 'RequstAdmin', 'Bank-View']),
-    async (req, res) => {
-      try {
-        const { bankId, subAdminId } = req.params;
-
-        const bank = await Bank.findById(bankId);
-        if (!bank) {
-          throw { code: 404, message: 'Bank not found!' };
-        }
-
-        // Remove the subAdmin with the specified subAdminId
-        bank.subAdmins = bank.subAdmins.filter((sa) => sa.subAdminId !== subAdminId);
-
-        await bank.save();
-
-        res.status(200).send({ message: 'SubAdmin removed successfully' });
-      } catch (error) {
-        res.status(error.code || 500).send({ message: error.message || 'An error occurred' });
-      }
-    },
-  );
-
-  app.get('/api/active-visible-bank', Authorize(['superAdmin', 'RequstAdmin']), async (req, res) => {
-    try {
-      let getBank = await Bank.find({ isActive: true }).exec();
-      let getWebsite = await Website.find({ isActive: true }).exec();
-      console.log('web', getWebsite);
-      if (getBank.length === 0) {
-        return res.status(404).send({ message: 'No bank found' });
-      }
-      if (getWebsite.length === 0) {
-        return res.status(404).send({ message: 'No Website found' });
-      }
-
-      const bankNames = getBank.map((bank) => bank.bankName);
-      const websiteNames = getWebsite.map((website) => website.websiteName);
-      console.log('web', websiteNames);
-      return res.send({ bank: bankNames, website: websiteNames });
-    } catch (err) {
-      console.error(err);
-    }
-  });
+  app.get('/api/active-visible-bank',customErrorHandler, Authorize([string.superAdmin, string.requestAdmin]),BankServices.activeVisibleBank );
 };
 
 export default BankRoutes;

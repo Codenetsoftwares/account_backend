@@ -1,10 +1,7 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { apiResponseErr, apiResponsePagination, apiResponseSuccess } from '../utils/response.js';
+import { apiResponseErr,apiResponseSuccess } from '../utils/response.js';
 import { statusCode } from '../utils/statusCodes.js';
 import { BankTransaction } from '../models/BankTransaction.model.js';
-import AccountServices from './Accounts.services.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { Trash } from '../models/Trash.model.js';
 import { WebsiteTransaction } from '../models/WebsiteTransaction.model.js';
@@ -255,7 +252,6 @@ dotenv.config();
           editRequest.isApproved = true;
           if (editRequest.isApproved === true) {
             const deletedEditRequest = await EditWebsiteRequest.deleteOne({ _id: req.params.requestId });
-            console.log(deletedEditRequest);
             if (!deletedEditRequest) {
               return apiResponseErr(null, true, statusCode.badRequest, 'Error deleting edit request', res);
             }
@@ -263,10 +259,97 @@ dotenv.config();
           return apiResponseSuccess(updatedTransaction, true, statusCode.success, 'Edit request approved and data updated', res);
          
         } else {
-          return apiResponseSuccess(updatedTransaction, true, statusCode.success, 'Edit request rejected', res);
+          return apiResponseErr(null, true, statusCode.badRequest, 'Edit request rejected', res);
         }
       } catch (error) {
         return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
       }
     },
+
+   deleteBank:async (req, res) => {
+    try {
+      const id = req.params.id;
+      const editRequest = await EditBankRequest.findById(id).exec();
+
+      if (!editRequest) {
+        return apiResponseErr(null, true, statusCode.notFound, 'Bank Request not found', res);
+      }
+
+      const isApproved = true;
+
+      if (isApproved) {
+        await Bank.deleteOne({ _id: editRequest.id }).exec();
+        await EditBankRequest.deleteOne({ _id: req.params.id }).exec();
+        return apiResponseSuccess(editRequest, true, statusCode.success, 'Bank deleted Successfully', res);
+      } else {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Approval request rejected by super admin', res);
+      }
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  } ,
+
+  deleteWebsite : async (req, res) => {
+    try {
+      const id = req.params.id;
+      const editRequest = await EditWebsiteRequest.findById(id).exec();
+
+      if (!editRequest) {
+        return apiResponseErr(null, true, statusCode.notFound, 'Website Request not found', res);
+      }
+
+      const isApproved = true;
+
+      if (isApproved) {
+        await Website.deleteOne({ _id: editRequest.id }).exec();
+        await EditWebsiteRequest.deleteOne({ _id: req.params.id }).exec();
+        return apiResponseSuccess(editRequest, true, statusCode.success, 'Website deleted Successfully', res);
+      } else {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Approval request rejected by super admin', res);
+      }
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  rejectBankDetails:async (req, res) => {
+    try {
+      const id = req.params.id;
+      const result = await EditBankRequest.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        return apiResponseSuccess(result, true, statusCode.success, 'Data deleted successfully', res);
+      } else {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Data not found', res);
+      }
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+
+  rejectWebsiteDetails:  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const result = await EditWebsiteRequest.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        return apiResponseSuccess(result, true, statusCode.success, 'Data deleted successfully', res);
+      } else {
+        return apiResponseErr(null, true, statusCode.badRequest, 'Data not found', res);
+      }
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

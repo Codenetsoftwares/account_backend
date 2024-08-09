@@ -10,6 +10,7 @@ import { Transaction } from '../models/transaction.js';
 import { EditRequest } from '../models/EditRequest.model.js';
 import { string } from '../constructor/string.js';
 import { EditBankRequest } from '../models/EditBankRequest.model.js';
+import { Website } from '../models/website.model.js';
 
 export const BankServices = {
   addBank: async (req, res) => {
@@ -252,50 +253,68 @@ export const BankServices = {
     }
   },
 
-  getBankBalance: async (bankId) => {
+  getBankBalance: async (req, res) => {
     try {
-      const bankTransactions = await BankTransaction.find({
-        bankId: bankId,
-      }).exec();
-      const transactions = await Transaction.find({ bankId: bankId }).exec();
-      const editTransaction = await EditRequest.find({ bankId: bankId }).exec();
-      let balance = 0;
-      bankTransactions.forEach((transaction) => {
-        if (transaction.depositAmount) {
-          balance += transaction.depositAmount;
-        }
-        if (transaction.withdrawAmount) {
-          balance -= transaction.withdrawAmount;
-        }
-      });
-      transactions.forEach((transaction) => {
-        if (transaction.transactionType === 'Deposit') {
-          balance += transaction.amount;
-        } else {
-          const totalBalance = balance - transaction.bankCharges - transaction.amount;
-          balance = totalBalance;
-        }
-      });
-      editTransaction.forEach((data) => {
-        if (data.transactionType === 'Manual-Bank-Deposit') {
-          balance += data.depositAmount;
-        }
-        if (data.transactionType === 'Manual-Bank-Withdraw') {
-          balance -= data.withdrawAmount;
-        }
-        if (data.transactionType === 'Deposit') {
-          balance += data.amount;
-        }
-        if (data.transactionType === 'Withdraw') {
-          const netAmount = balance - data.bankCharges - data.amount;
-          balance = netAmount;
-        }
-      });
+      const subadminId = req.params.subadminId;
 
-      return balance;
+      const dbBankData = await Bank.find({
+        'subAdmins.subAdminId': subadminId,
+      }).exec();
+      let bankData = JSON.parse(JSON.stringify(dbBankData));
+
+      for (let index = 0; index < bankData.length; index++) {
+        const bankId = bankData[index]._id;
+        let balance = 0;
+
+        const bankTransactions = await BankTransaction.find({
+          bankId: bankId,
+        }).exec();
+        bankTransactions.forEach((transaction) => {
+          if (transaction.depositAmount) {
+            balance += transaction.depositAmount;
+          }
+          if (transaction.withdrawAmount) {
+            balance -= transaction.withdrawAmount;
+          }
+        });
+
+        const transactions = await Transaction.find({ bankId: bankId }).exec();
+        transactions.forEach((transaction) => {
+          if (transaction.transactionType === 'Deposit') {
+            balance += transaction.amount;
+          } else {
+            balance -= transaction.amount + transaction.bankCharges;
+          }
+        });
+
+        const editTransaction = await EditRequest.find({ bankId: bankId }).exec();
+        editTransaction.forEach((data) => {
+          if (data.transactionType === 'Manual-Bank-Deposit') {
+            balance += data.depositAmount;
+          }
+          if (data.transactionType === 'Manual-Bank-Withdraw') {
+            balance -= data.withdrawAmount;
+          }
+          if (data.transactionType === 'Deposit') {
+            balance += data.amount;
+          }
+          if (data.transactionType === 'Withdraw') {
+            balance -= data.amount + data.bankCharges;
+          }
+        });
+
+        bankData[index].balance = balance;
+      }
+
+      bankData = bankData.filter((bank) => bank.isActive === true);
+
+
+      if (bankData.length === 0) {
+        return apiResponseErr(null, false, statusCode.notFound, 'No bank found', res);
+      }
+      return apiResponseSuccess(bankData, true, statusCode.success, 'Successfully', res);
     } catch (error) {
-      console.error('Error in getBankBalance:', error);
-      throw error;
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
 
@@ -562,4 +581,83 @@ export const BankServices = {
       return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
+
+  editBankRequest:async (req, res) => {
+    try {
+      const { subAdmins } = req.body;
+      const bankId = req.params.id;
+
+      const approvedBankRequest = await Bank.findById(bankId);
+
+      if (!approvedBankRequest) {
+        return apiResponseErr(null, false, statusCode.notFound, 'Bank not found!', res);
+      }
+
+      for (const subAdminData of subAdmins) {
+        const { subAdminId, isDeposit, isWithdraw, isDelete, isRenew, isEdit } = subAdminData;
+        const subAdmin = approvedBankRequest.subAdmins.find((sa) => sa.subAdminId === subAdminId);
+
+        if (subAdmin) {
+          subAdmin.isDeposit = isDeposit;
+          subAdmin.isWithdraw = isWithdraw;
+          subAdmin.isEdit = isEdit;
+          subAdmin.isRenew = isRenew;
+          subAdmin.isDelete = isDelete;
+        } else {
+          approvedBankRequest.subAdmins.push({
+            subAdminId,
+            isDeposit,
+            isWithdraw,
+            isEdit,
+            isRenew,
+            isDelete,
+          });
+        }
+      }
+
+     const result= await approvedBankRequest.save();
+      return apiResponseSuccess(result, true, statusCode.success,'Updated successfully', res);
+
+    } catch (error) {
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+    }
+  },
+removeSubAdmin:async (req, res) => {
+  try {
+    const { bankId, subAdminId } = req.params;
+
+    const bank = await Bank.findById(bankId);
+    if (!bank) {
+      return apiResponseErr(null, false, statusCode.notFound, 'Bank not found!', res);
+    }
+
+    bank.subAdmins = bank.subAdmins.filter((sa) => sa.subAdminId !== subAdminId);
+
+   const response= await bank.save();
+    return apiResponseSuccess(response, true, statusCode.success,'SubAdmin removed successfully', res);
+  } catch (error) {
+    return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+  }
+},
+
+activeVisibleBank:async (req, res) => {
+  try {
+    let getBank = await Bank.find({ isActive: true }).exec();
+    let getWebsite = await Website.find({ isActive: true }).exec();
+    if (getBank.length === 0) {
+      return apiResponseErr(null, false, statusCode.badRequest, 'Bank not found!', res);
+    }
+    if (getWebsite.length === 0) {
+      return apiResponseErr(null, false, statusCode.badRequest, 'No Website found', res);
+    }
+
+    const bankNames = getBank.map((bank) => bank.bankName);
+    const websiteNames = getWebsite.map((website) => website.websiteName);
+    
+    return apiResponseSuccess({ bank: bankNames, website: websiteNames }, true, statusCode.success,'Successfully', res);
+  } catch (error) {
+    return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
+  }
+}
+
 };
