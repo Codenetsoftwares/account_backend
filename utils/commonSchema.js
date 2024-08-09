@@ -229,6 +229,7 @@ export const validateIntroducerUser = [
   // body('role').isArray().withMessage('Role must be an array of strings')
 ];
 export const validateIntroducerProfileUpdate = [
+  param('id').isMongoId().withMessage('ID must be a valid ID'),
   body('firstname').optional().isString().withMessage('Firstname must be a string'),
   body('lastname').optional().isString().withMessage('Lastname must be a string'),
 ];
@@ -321,6 +322,35 @@ export const validateRequestIdInParams = [
   param('requestId').isMongoId().withMessage('ID must be a valid ID'),
   body('isApproved').notEmpty().withMessage('isApproved  is required') .isBoolean()
   .withMessage('isApproved field must be a boolean value')
+];
+
+export const validateWebsiteId = [
+  param('websiteId').isMongoId().withMessage('website Id must be a valid ID'),
+];
+
+export const validateTransactionId=[
+  param('transactionID').notEmpty().withMessage('transactionID is required'),
+]
+
+export const validateIntroducerId=[
+  param('introUserId').isMongoId().withMessage('introUser Id must be a valid ID'),
+]
+
+export const ValidateSubAdminId =[
+ param('subadminId')
+ .notEmpty()
+ .withMessage('subadmin ID is required.')
+]
+
+export const validateRemoveSubAdmin = [
+  param('bankId')
+    .notEmpty()
+    .withMessage('Bank ID is required.')
+    .isMongoId()
+    .withMessage('Bank ID must be a valid MongoDB ObjectId.'),
+  param('subAdminId')
+    .notEmpty()
+    .withMessage('SubAdmin ID is required.')
 ];
 
 

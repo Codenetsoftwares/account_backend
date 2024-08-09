@@ -203,7 +203,7 @@ export const introducerUser = {
       const { firstname, lastname } = req.body;
       const existingUser = await IntroducerUser.findById(id);
       if (!existingUser) {
-        throw new CustomError(` User not found with id : ${id}`, null, 404);
+        return apiResponseErr(null,false,statusCode.notFound,` User not found with id : ${id}`,res)
       }
 
       existingUser.firstname = firstname || existingUser.firstname;
@@ -212,7 +212,7 @@ export const introducerUser = {
       const user = await existingUser.save();
       return apiResponseSuccess(user, true, statusCode.success, 'Profile Update Successfully!', res);
     } catch (error) {
-      return apiResponseErr(null, false, error.responseCode ?? statusCode.internalServerError, error.message, res);
+      return apiResponseErr(null, false, statusCode.internalServerError, error.message, res);
     }
   },
 
