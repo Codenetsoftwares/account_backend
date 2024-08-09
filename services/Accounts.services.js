@@ -427,34 +427,7 @@ const AccountServices = {
   //   return balance;
   // },
 
-  updateWebsite: async (id, data) => {
-    const existingTransaction = await Website.findById(id);
-    if (!existingTransaction) {
-      throw { code: 404, message: `Website not found with id: ${id}` };
-    }
-    let changedFields = {};
-    if (data.websiteName !== existingTransaction.websiteName) {
-      changedFields.websiteName = data.websiteName;
-    }
-    const duplicateWebsite = await Website.findOne({
-      websiteName: data.websiteName,
-    });
-    if (duplicateWebsite && duplicateWebsite._id.toString() !== id) {
-      throw { code: 400, message: 'Website name already exists!' };
-    }
-    const updatedTransactionData = {
-      id: id._id,
-      websiteName: data.websiteName || existingTransaction.websiteName,
-    };
-    const backupTransaction = new EditWebsiteRequest({
-      ...updatedTransactionData,
-      changedFields,
-      message: "Website Detail's has been edited",
-      isApproved: false,
-    });
-    await backupTransaction.save();
-    return true;
-  },
+  
 
   updateUserProfile: async (req, res) => {
     try {

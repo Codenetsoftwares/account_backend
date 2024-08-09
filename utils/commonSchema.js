@@ -301,16 +301,96 @@ export const validateTransaction = [
   body('transactionID').notEmpty().withMessage('transactionID is required'),
   body('amount').notEmpty().withMessage('Amount is required'),
   body('paymentMethod').notEmpty().withMessage('Payment Method is required'),
+  body('transactionType').notEmpty().withMessage('Transaction Type is Required'),
+  body('userName').notEmpty().withMessage('User Name is Required'),
+  body('bankName').notEmpty().withMessage('Bank Name is Required'),
+  body('bankCharges').notEmpty().withMessage('Bank Charges is Required'),
+  body('bonus').notEmpty().withMessage('Bonus is Required'),
+  body('remarks').notEmpty().withMessage('Remarks is Required'),
+  body('websiteName').notEmpty().withMessage('Website Name is Required'),
+
 ];
 export const validateParamsId = [
-  param('id').isMongoId().withMessage('Invalid transaction ID'),
+  param('id').isMongoId().withMessage('ID must be a valid MongoDB ObjectId'),
 ];
 
 export const validateRequestId = [
-  body('requestId').notEmpty().withMessage('Request Id  is required').isMongoId().withMessage('ID must be a valid ID'),
+  body('requestId').notEmpty().withMessage('Request Id is Required').isMongoId().withMessage('ID must be a valid ID'),
 ];
 export const validateRequestIdInParams = [
-  param('requestId').notEmpty().withMessage('Request Id  is required').isMongoId().withMessage('ID must be a valid ID'),
+  param('requestId').isMongoId().withMessage('ID must be a valid ID'),
   body('isApproved').notEmpty().withMessage('isApproved  is required') .isBoolean()
   .withMessage('isApproved field must be a boolean value')
 ];
+
+
+ export const validateTransactionUpdate = [
+  // Validate the ID parameter
+  param('id').notEmpty().isMongoId().withMessage('Transaction ID must be a valid MongoDB ObjectId'),
+  body('transactionID').optional().isString().withMessage('Transaction ID must be a string'),
+  body('transactionType').optional().isIn(['Deposit', 'Withdraw']).withMessage('Transaction Type must be Deposit or Withdraw'),
+  body('amount').optional().isFloat({ gt: 0 }).withMessage('Amount must be a positive number'),
+  body('paymentMethod').optional().isString().withMessage('Payment Method must be a string'),
+  body('userName').optional().isString().withMessage('User Name must be a string'),
+  body('userId').optional().isString().withMessage('User ID must be a string'),
+  body('subAdminId').optional().isString().withMessage('Sub Admin ID must be a string'),
+  body('bankName').optional().isString().withMessage('Bank Name must be a string'),
+  body('websiteName').optional().isString().withMessage('Website Name must be a string'),
+  body('remarks').optional().isString().withMessage('Remarks must be a string'),
+];
+
+
+export const validateBankTransactionUpdate = [
+  param('id').notEmpty().isMongoId().withMessage('Transaction ID must be a valid MongoDB ObjectId'),
+  body('transactionType').optional().isIn(['Manual-Bank-Deposit', 'Manual-Bank-Withdraw']).withMessage('Transaction Type must be Manual-Bank-Deposit or Manual-Bank-Withdraw'),
+  body('websiteName').optional().isString().withMessage('Website Name must be a string'),
+  body('subAdminId').optional().isString().withMessage('Sub Admin ID must be a string'),
+  body('subAdminName').optional().isString().withMessage('Sub Admin Name must be a string'),
+  body('accountNumber').optional().isString().withMessage('Account Number must be a string'),
+  body('withdrawAmount').optional().isFloat({ gt: 0 }).withMessage('Withdraw Amount must be a positive number'),
+  body('depositAmount').optional().isFloat({ gt: 0 }).withMessage('Withdraw Amount must be a positive number'),
+  body('remarks').optional().isString().withMessage('Remarks must be a string'),
+];
+
+export const validateWebsitetransactionUpdate = [
+  param('id').notEmpty().isMongoId().withMessage('Transaction ID must be a valid MongoDB ObjectId'),
+  body('transactionType').optional().isIn(['Manual-Website-Deposit', 'Manual-Website-Withdraw']).withMessage('Transaction Type must be Manual-Website-Deposit or Manual-Website-Withdraw'),
+  body('depositAmount').optional().isFloat({ gt: 0 }).withMessage('Deposite Amount must be a positive number'),
+  body('withdrawAmount').optional().isFloat({ gt: 0 }).withMessage('Withdraw Amount must be a positive number'),
+  body('subAdminId').optional().isString().withMessage('Sub Admin ID must be a string'),
+  body('subAdminName').optional().isString().withMessage('Sub Admin Name must be a string'),
+  body('websiteName').optional().isString().withMessage('Website Name must be a string'),
+  body('remarks').optional().isString().withMessage('Remarks must be a string'),
+];
+
+export const validateIntroducerTransactionUpdate = [
+  param('id').notEmpty().isMongoId().withMessage('Transaction ID must be a valid MongoDB ObjectId'),
+  body('transactionType').optional().isIn(['Deposit', 'Withdraw']).withMessage('Transaction Type must be Deposit or Withdraw'),
+  body('amount').optional().isFloat({ gt: 0 }).withMessage('Amount must be a positive number'),
+  body('subAdminId').optional().isString().withMessage('Sub Admin ID must be a string'),
+  body('subAdminName').optional().isString().withMessage('Sub Admin Name must be a string'),
+  body('introducerUserName').optional().isString().withMessage('Introducer User Name must be a string'),
+];
+
+export const validateAddWebsiteName = [
+  body('websiteName').notEmpty().withMessage('website Name is Required')
+];
+
+export const approveWebsiteValidationRules = [
+  param('id').isMongoId().withMessage('Invalid website request ID'),
+  body('isApproved').isBoolean().withMessage('isApproved must be a boolean'),
+  body('subAdmins').optional().isArray().withMessage('subAdmins must be an array'),
+  body('subAdmins.*').optional().isString().withMessage('Each subAdmin ID must be a string'),
+
+];
+
+export const validateUpdateWebsite = [
+  param('id').isMongoId().withMessage('ID must be a valid MongoDB ObjectId'),
+  body('websiteName').notEmpty().withMessage('Website Name is Required'),
+];
+
+export const valiadteImproveWebsite = [
+  param('id').isMongoId().withMessage('Invalid website request ID'),
+  body('subAdmins').optional().isArray().withMessage('subAdmins must be an array'),
+]
+

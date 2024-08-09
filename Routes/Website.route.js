@@ -7,172 +7,67 @@ import lodash from 'lodash';
 import { EditWebsiteRequest } from '../models/EditWebsiteRequest.model.js';
 import { WebsiteRequest } from '../models/WebsiteRequest.model.js';
 import { string } from '../constructor/string.js';
+import { websiteService } from '../services/Website.services.js';
+import { approveWebsiteValidationRules, valiadteImproveWebsite, validateAddWebsiteName, validateParamsId, validateUpdateWebsite } from '../utils/commonSchema.js';
+import customErrorHandler from '../utils/customErrorHandler.js';
+import { statusCode } from '../utils/statusCodes.js';
 
 const WebisteRoutes = (app) => {
   // API To Add Website Name
 
-  app.post('/api/add-website-name', Authorize(['superAdmin', 'Transaction-View', 'Website-View']), async (req, res) => {
-    try {
-      const userName = req.user;
-      const websiteName = req.body.websiteName;
-      if (!websiteName) {
-        throw { code: 400, message: 'Please give a website name to add' };
-      }
-      const newWebsiteName = new WebsiteRequest({
-        websiteName: websiteName,
-        subAdminId: userName.userName,
-        subAdminName: userName.firstname,
-        isApproved: false,
-        isActive: false,
-      });
-      const id = await Website.find({ websiteName });
-      id.map((data) => {
-        console.log(data.websiteName);
-        if (newWebsiteName.websiteName.toLocaleLowerCase() === data.websiteName.toLocaleLowerCase()) {
-          throw { code: 400, message: 'Website name exists already!' };
-        }
-      });
-      await newWebsiteName.save();
-      res.status(200).send({ message: 'Website name sent for approval!' });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
+  app.post('/api/add-website-name', 
+    Authorize([string.superAdmin, string.transactionView, string.websiteView]),
+    validateAddWebsiteName,
+    customErrorHandler, 
+    websiteService.addWebsiteName
+    );
 
-  app.post('/api/approve-website/:id', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      const { isApproved, subAdmins } = req.body;
-      const bankId = req.params.id;
-      const approvedWebisteRequest = await WebsiteRequest.findById(bankId);
+  app.post('/api/approve-website/:id',
+    approveWebsiteValidationRules, 
+    customErrorHandler,
+    Authorize([string.superAdmin]), 
+    websiteService.approveWebsite
+   );
 
-      if (!approvedWebisteRequest) {
-        throw { code: 404, message: 'Website not found in the approval requests!' };
-      }
+  app.get('/api/superadmin/view-website-requests', 
+    Authorize([string.superAdmin]), 
+    websiteService.getViewWebsiteRequest 
+ );
 
-      if (isApproved) {
-        // Check if isApproved is true
-        const approvedWebsite = new Website({
-          websiteName: approvedWebisteRequest.websiteName,
-          subAdminId: approvedWebisteRequest.subAdminId,
-          subAdmins: subAdmins, // Assign the subAdmins array
-          subAdminName: approvedWebisteRequest.subAdminName,
-          isActive: true,
-        });
+  app.delete('/api/reject/:id', 
+    Authorize([string.superAdmin]), 
+    websiteService.deleteWebsiteRequest
+    );
 
-        await approvedWebsite.save();
+  app.delete('/api/website/reject/:id',
+    validateParamsId,
+    customErrorHandler, 
+    Authorize([string.superAdmin]), 
+    websiteService.websiteReject
+    );
 
-        await WebsiteRequest.deleteOne({ _id: approvedWebisteRequest._id });
-      } else {
-        throw { code: 400, message: 'Website approval was not granted.' };
-      }
-
-      res.status(200).send({ message: 'Website approved successfully & Subadmin Assigned' });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal Server Error' });
-    }
-  });
-
-  app.get('/api/superadmin/view-website-requests', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      const resultArray = await WebsiteRequest.find().exec();
-      res.status(200).send(resultArray);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send('Internal Server error');
-    }
-  });
-
-  app.delete('/api/reject/:id', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      const id = req.params.id;
-      const result = await WebsiteRequest.deleteOne({ _id: id });
-      if (result.deletedCount === 1) {
-        res.status(200).send({ message: 'Data deleted successfully' });
-      } else {
-        res.status(404).send({ message: 'Data not found' });
-      }
-    } catch (e) {
-      console.error(e);
-      res.status(500).send({ message: e.message });
-    }
-  });
-
-  app.delete('/api/website/reject/:id', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      const id = req.params.id;
-      const result = await WebsiteRequest.deleteOne({ _id: id });
-      console.log('result', result);
-      if (result.deletedCount === 1) {
-        res.status(200).send({ message: 'Data deleted successfully' });
-      } else {
-        res.status(404).send({ message: 'Data not found' });
-      }
-    } catch (e) {
-      console.error(e);
-      res.status(500).send({ message: e.message });
-    }
-  });
-
-  app.delete('/api/reject-website-edit/:id', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      const id = req.params.id;
-      const result = await EditWebsiteRequest.deleteOne({ _id: id });
-      if (result.deletedCount === 1) {
-        res.status(200).send({ message: 'Data deleted successfully' });
-      } else {
-        res.status(404).send({ message: 'Data not found' });
-      }
-    } catch (e) {
-      console.error(e);
-      res.status(500).send({ message: e.message });
-    }
-  });
+  app.delete('/api/reject-website-edit/:id',
+    validateParamsId,
+    customErrorHandler, 
+    Authorize([string.superAdmin]), 
+    websiteService.deleteEditWebsiteRequest
+  );
 
   // API To Edit Website Name
 
-  app.put('/api/website-edit/:id', Authorize(['superAdmin', 'Transaction-View', 'Website-View']), async (req, res) => {
-    try {
-      const id = await Website.findById(req.params.id);
-      console.log('id', id);
-      const updateResult = await AccountServices.updateWebsite(id, req.body);
-      console.log(updateResult);
-      if (updateResult) {
-        res.status(201).send("Website Detail's Sent to Super Admin For Approval");
-      }
-    } catch (e) {
-      console.error(e);
-      res.status(e.code).send({ message: e.message });
-    }
-  });
+  app.put('/api/website-edit/:id', 
+    validateUpdateWebsite,
+    customErrorHandler,
+    Authorize([string.superAdmin, string.transactionView, string.websiteView]), 
+   websiteService.updateWebsite
+   );
 
-  app.post('/api/improve-website/:id', Authorize(['superAdmin']), async (req, res) => {
-    try {
-      // console.log('req',subAdminId)
-      const { subAdmins } = req.body;
-      console.log('first', subAdmins);
-      const bankId = req.params.id;
-
-      const approvedBankRequest = await Website.findById(bankId);
-      console.log('first', approvedBankRequest);
-      if (!approvedBankRequest) {
-        throw { code: 404, message: 'website not found in the approval requests!' };
-      }
-
-      const approvedWebsite = new Website({
-        websiteName: approvedBankRequest.websiteName,
-        subAdmins: subAdmins,
-        isActive: true,
-      });
-      await approvedWebsite.save();
-      // await BankRequest.deleteOne({ _id: approvedBankRequest._id });
-      res.status(200).send({ message: 'Website Name approved successfully & Subadmin Assigned' });
-    } catch (e) {
-      console.error(e);
-      res.status(e.code || 500).send({ message: e.message || 'Internal Server Error' });
-    }
-  });
+  app.post('/api/improve-website/:id',
+    valiadteImproveWebsite,
+    customErrorHandler, 
+    Authorize([string.superAdmin]),
+    websiteService.improveWebsite 
+    );
 
   // API To Delete Website Name
 
